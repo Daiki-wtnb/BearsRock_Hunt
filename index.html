@@ -9,7 +9,6 @@
     --bg1:#0b1020;
     --bg2:#120a2a;
     --card: rgba(255,255,255,.08);
-    --card2: rgba(255,255,255,.12);
     --line: rgba(255,255,255,.18);
     --text: rgba(255,255,255,.92);
     --muted: rgba(255,255,255,.65);
@@ -30,8 +29,6 @@
       linear-gradient(180deg, var(--bg1), var(--bg2));
     padding: 22px;
   }
-
-  /* subtle noise */
   body:before{
     content:"";
     position:fixed; inset:0;
@@ -45,6 +42,7 @@
   .topbar{
     display:flex; align-items:center; justify-content:space-between;
     margin-bottom: 14px;
+    gap: 10px;
   }
   .brand{
     font-weight:800;
@@ -76,9 +74,6 @@
   p{ margin: 8px 0; color: var(--muted); }
 
   .row{ display:grid; gap: 12px; }
-  .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-  @media (max-width:640px){ .grid2{ grid-template-columns:1fr; } }
-
   .pillset{ display:flex; gap:10px; flex-wrap: wrap; }
 
   input{
@@ -116,6 +111,7 @@
     background: rgba(0,0,0,.12);
   }
 
+  a{ color: var(--text); }
   .linkbtn{
     display:inline-flex;
     padding:10px 12px;
@@ -142,9 +138,8 @@
     background: linear-gradient(90deg, rgba(69,240,138,.85), rgba(122,167,255,.85));
     transition: width .35s ease;
   }
-  .shake{
-    animation: shake .25s linear 0s 2;
-  }
+
+  .shake{ animation: shake .25s linear 0s 2; }
   @keyframes shake{
     0%{ transform: translateX(0); }
     25%{ transform: translateX(-4px); }
@@ -152,34 +147,45 @@
     75%{ transform: translateX(-3px); }
     100%{ transform: translateX(0); }
   }
-</style>
-
+  </style>
 </head>
+
 <body>
   <div class="shell">
-  <div class="topbar">
-    <div class="brand">🏁 BEARSROCK HUNT</div>
-    <div class="tag">QRスキャンで進行</div>
-  </div>
+    <div class="topbar">
+      <div class="brand">🏁 BEARSROCK HUNT</div>
+      <div class="tag">QRスキャンで進行</div>
+    </div>
 
-  <div class="card">
-    <h1>寮内QRハント</h1>
-    <div id="app"></div>
+    <div class="card">
+      <h1>寮内QRハント</h1>
+      <div id="app"></div>
+    </div>
   </div>
-</div>
 
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
+    // =========================
+    // 設定
+    // =========================
     const SUPABASE_URL = "https://ahynlwtcdrtkzykcccgb.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFoeW5sd3RjZHJ0a3p5a2NjY2diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc0MTA0MDQsImV4cCI6MjA4Mjk4NjQwNH0.HttRXUS-Qy6VA0t4UE8MIC58tgncg-2bucYfLr14LSA";
-    const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    persistSession: true,
-    autoRefreshToken: true
-  }
-});
 
+    // 進捗バーの最大（checkpointの数に合わせて変更）
+    const MAX_CHECKPOINT = 4;
+
+    // =========================
+    // Supabase 接続
+    // =========================
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: true, autoRefreshToken: true }
+    });
+
+    // =========================
+    // DOMユーティリティ
+    // =========================
+    const app = document.getElementById("app");
 
     const el = (html) => {
       const d = document.createElement("div");
@@ -187,29 +193,34 @@
       return d.firstChild;
     };
 
-    const app = document.getElementById("app");
+    const progressPercent = (current, max = MAX_CHECKPOINT) => {
+      const v = Math.max(0, Math.min(current, max));
+      return Math.round((v / max) * 100);
+    };
 
+    // =========================
+    // ルート（ページ分け）
+    // =========================
     const getCheckpointFromHash = () => {
-      // 例: https://.../#/c/2 なら checkpoint=2
       const m = location.hash.match(/^#\/c\/(\d+)$/);
       return m ? parseInt(m[1], 10) : null;
     };
 
     const getRoute = () => {
-  if (location.hash.startsWith("#/c/")) return { type: "cp", n: getCheckpointFromHash() };
-  if (location.hash === "#/login") return { type: "login" };
-  if (location.hash === "#/signup") return { type: "signup" };
-  if (location.hash === "#/") return { type: "home" };
-  // 何もなければログインへ
-  return { type: "login" };
-};
+      if (location.hash.startsWith("#/c/")) return { type: "cp", n: getCheckpointFromHash() };
+      if (location.hash === "#/login") return { type: "login" };
+      if (location.hash === "#/signup") return { type: "signup" };
+      if (location.hash === "#/" || location.hash === "" || location.hash === "#") return { type: "home" };
+      return { type: "login" };
+    };
 
-
+    // =========================
+    // 認証（匿名）
+    // =========================
     async function ensureAnonLogin() {
       const { data: { session } } = await sb.auth.getSession();
       if (session) return session;
 
-      // 匿名ログイン
       const { data, error } = await sb.auth.signInAnonymously();
       if (error) throw error;
       return data.session;
@@ -220,6 +231,9 @@
       return user;
     }
 
+    // =========================
+    // DB操作
+    // =========================
     async function getNickname(user_id) {
       const { data, error } = await sb
         .from("players")
@@ -228,20 +242,6 @@
         .maybeSingle();
       if (error) throw error;
       return data?.nickname ?? null;
-    }
-
-    async function setNickname(user_id, nickname) {
-      // players を作る
-      const { error: e1 } = await sb
-        .from("players")
-        .insert({ user_id, nickname });
-      if (e1) throw e1;
-
-      // progress も作る（checkpoint=0）
-      const { error: e2 } = await sb
-        .from("progress")
-        .insert({ user_id, checkpoint: 0 });
-      if (e2) throw e2;
     }
 
     async function getProgress(user_id) {
@@ -254,11 +254,10 @@
       return data ?? { checkpoint: 0, updated_at: null };
     }
 
+    // 方式1：current+1 の時だけ進める
     async function advanceIfAllowed(user_id, targetCheckpoint) {
-      // 現在の進捗を取得
       const current = await getProgress(user_id);
 
-      // 方式1のゲート： target は current+1 の時だけOK
       if (targetCheckpoint !== current.checkpoint + 1) {
         return { ok: false, current: current.checkpoint };
       }
@@ -272,167 +271,10 @@
       return { ok: true, current: targetCheckpoint };
     }
 
-    function renderHome(nickname, prog) {
-      app.innerHTML = "";
-      app.appendChild(el(`
-        <div class="row">
-        <div class="pillset">
-  <span class="tag">👤 ${nickname}</span>
-  <span class="tag">📍 進捗 ${prog.checkpoint}</span>
-</div>
-
-<div class="progressWrap" aria-label="progress">
-  <div class="bar" style="width:${progressPercent(prog.checkpoint)}%"></div>
-</div>
-
-          <div>
-            <div class="pill">参加者：${nickname}</div>
-            <div class="pill">進捗：${prog.checkpoint}</div>
-          </div>
-          <p>QRをスキャンして進んでください。</p>
-
-          <p class="muted">
-            テスト用リンク：<br>
-            <a href="#/c/1">checkpoint 1</a> /
-            <a href="#/c/2">checkpoint 2</a> /
-            <a href="#/c/3">checkpoint 3</a> /
-            <a href="#/c/4">checkpoint 4</a>
-          </p>
-
-          <p class="muted">※本番はQRに「#/c/数字」付きURLを入れるだけ。</p>
-        </div>
-      `));
-    }
-
-    function renderLogin() {
-  app.innerHTML = "";
-
-  const node = el(`
-    <div class="row">
-      <h2>ログイン</h2>
-      <p class="muted">ニックネームとPIN（4桁）を入力して続きから再開します。</p>
-
-      <input id="nick" maxlength="20" placeholder="ニックネーム" />
-      <input id="pin" inputmode="numeric" maxlength="4" placeholder="PIN（4桁）" />
-      <button id="btn">ログイン</button>
-
-      <p id="msg" class="msg-bad"></p>
-
-      <p class="muted">
-        はじめての方は <a class="linkbtn" href="#/signup">新規登録はこちら</a>
-      </p>
-    </div>
-  `);
-
-  node.querySelector("#btn").onclick = async () => {
-    const nick = node.querySelector("#nick").value.trim();
-    const pin  = node.querySelector("#pin").value.trim();
-    const msg  = node.querySelector("#msg");
-    msg.textContent = "";
-
-    if (!nick) { msg.textContent = "ニックネームを入れて"; return; }
-    if (!/^[0-9]{4}$/.test(pin)) { msg.textContent = "PINは4桁の数字にして"; return; }
-
-    try {
-      await sb.rpc("claim_player", { nick, pin });
-      location.hash = "#/";
-    } catch (e) {
-      msg.textContent = "ニックネーム or PIN が違う";
-    }
-  };
-
-  app.appendChild(node);
-}
-
-    function renderSignup() {
-  app.innerHTML = "";
-
-  const node = el(`
-    <div class="row">
-      <h2>新規登録</h2>
-      <p class="muted">ニックネームとPIN（4桁）を設定します。PINは忘れると復帰できません。</p>
-
-      <input id="nick" maxlength="20" placeholder="ニックネーム" />
-      <input id="pin" inputmode="numeric" maxlength="4" placeholder="PIN（4桁）" />
-      <button id="btn">登録して開始</button>
-
-      <p id="msg" class="msg-bad"></p>
-
-      <p class="muted">
-        すでに登録済みなら <a class="linkbtn" href="#/login">ログインはこちら</a>
-      </p>
-    </div>
-  `);
-
-  node.querySelector("#btn").onclick = async () => {
-    const nick = node.querySelector("#nick").value.trim();
-    const pin  = node.querySelector("#pin").value.trim();
-    const msg  = node.querySelector("#msg");
-    msg.textContent = "";
-
-    if (!nick) { msg.textContent = "ニックネームを入れて"; return; }
-    if (!/^[0-9]{4}$/.test(pin)) { msg.textContent = "PINは4桁の数字にして"; return; }
-
-    try {
-      await sb.rpc("register_player", { nick, pin });
-      location.hash = "#/";
-    } catch (e) {
-      msg.textContent = "登録できませんでした（同じニックネームが既にあるかも）";
-    }
-  };
-
-  app.appendChild(node);
-}
-
-
-  // 新規登録
-  node.querySelector("#btn_new").onclick = async () => {
-    const nick = node.querySelector("#nick_new").value.trim();
-    const pin  = node.querySelector("#pin_new").value.trim();
-    const msg  = node.querySelector("#msg_new");
-    msg.textContent = "";
-
-    if (!nick) { msg.textContent = "ニックネームを入れて"; return; }
-    if (!/^[0-9]{4}$/.test(pin)) { msg.textContent = "PINは4桁の数字にして"; return; }
-
-    try {
-      await sb.rpc("register_player", { nick, pin });
-      await route();
-    } catch (e) {
-      msg.textContent = "登録できませんでした（同じニックネームが既にあるかも）";
-    }
-  };
-
-  // ログイン（引き継ぎ）
-  node.querySelector("#btn_login").onclick = async () => {
-    const nick = node.querySelector("#nick_login").value.trim();
-    const pin  = node.querySelector("#pin_login").value.trim();
-    const msg  = node.querySelector("#msg_login");
-    msg.textContent = "";
-
-    if (!nick) { msg.textContent = "ニックネームを入れて"; return; }
-    if (!/^[0-9]{4}$/.test(pin)) { msg.textContent = "PINは4桁の数字にして"; return; }
-
-    try {
-      await sb.rpc("claim_player", { nick, pin });
-      await route();
-    } catch (e) {
-      msg.textContent = "ニックネーム or PIN が違う";
-    }
-  };
-
-  app.appendChild(node);
-}
-
-
-    function progressPercent(current, max=4){
-  const v = Math.max(0, Math.min(current, max));
-  return Math.round((v / max) * 100);
-}
-
-    
+    // =========================
+    // 文章（ここだけ好きに変える）
+    // =========================
     function hintText(n) {
-      // ここだけ好きに書き換えればOK
       const hints = {
         1: "ヒント1：毎朝、靴が集まる場所の“上”を見ろ。",
         2: "ヒント2：洗濯の音がする場所。そこに次がある。",
@@ -442,6 +284,122 @@
       return hints[n] ?? "（このチェックポイントの文を追加してね）";
     }
 
+    // =========================
+    // 画面（UI）
+    // =========================
+    function renderHome(nickname, prog) {
+      app.innerHTML = "";
+      app.appendChild(el(`
+        <div class="row">
+          <div class="pillset">
+            <span class="tag">👤 ${nickname}</span>
+            <span class="tag">📍 進捗 ${prog.checkpoint}</span>
+          </div>
+
+          <div class="progressWrap" aria-label="progress">
+            <div class="bar" style="width:${progressPercent(prog.checkpoint)}%"></div>
+          </div>
+
+          <p>QRをスキャンして進んでください。</p>
+
+          <p class="muted">
+            テスト用リンク（本番はQRに入れる）：<br>
+            <a href="#/c/1">CP1</a> /
+            <a href="#/c/2">CP2</a> /
+            <a href="#/c/3">CP3</a> /
+            <a href="#/c/4">CP4</a> /
+            <a href="#/c/999">TRAP</a>
+          </p>
+        </div>
+      `));
+    }
+
+    function renderLogin() {
+      app.innerHTML = "";
+
+      const node = el(`
+        <div class="row">
+          <h2>ログイン</h2>
+          <p class="muted">ニックネームとPIN（4桁）で続きから再開します。</p>
+
+          <input id="nick" maxlength="20" placeholder="ニックネーム" />
+          <input id="pin" inputmode="numeric" maxlength="4" placeholder="PIN（4桁）" />
+          <button id="btn">ログイン</button>
+
+          <p id="msg" class="msg-bad"></p>
+
+          <p class="muted">
+            はじめての方は <a class="linkbtn" href="#/signup">新規登録はこちら</a>
+          </p>
+        </div>
+      `);
+
+      node.querySelector("#btn").onclick = async () => {
+        const nick = node.querySelector("#nick").value.trim();
+        const pin  = node.querySelector("#pin").value.trim();
+        const msg  = node.querySelector("#msg");
+        msg.textContent = "";
+
+        if (!nick) { msg.textContent = "ニックネームを入れて"; node.classList.add("shake"); setTimeout(()=>node.classList.remove("shake"),400); return; }
+        if (!/^[0-9]{4}$/.test(pin)) { msg.textContent = "PINは4桁の数字にして"; node.classList.add("shake"); setTimeout(()=>node.classList.remove("shake"),400); return; }
+
+        try {
+          // ✅ Supabaseに作った関数（SQL）を呼ぶ：ニックネーム+PINが正しければ復帰
+          await sb.rpc("claim_player", { nick, pin });
+          location.hash = "#/";
+        } catch (e) {
+          msg.textContent = "ニックネーム or PIN が違う";
+          node.classList.add("shake");
+          setTimeout(()=>node.classList.remove("shake"),400);
+        }
+      };
+
+      app.appendChild(node);
+    }
+
+    function renderSignup() {
+      app.innerHTML = "";
+
+      const node = el(`
+        <div class="row">
+          <h2>新規登録</h2>
+          <p class="muted">ニックネームとPIN（4桁）を設定します。PINは忘れると復帰できません。</p>
+
+          <input id="nick" maxlength="20" placeholder="ニックネーム" />
+          <input id="pin" inputmode="numeric" maxlength="4" placeholder="PIN（4桁）" />
+          <button id="btn">登録して開始</button>
+
+          <p id="msg" class="msg-bad"></p>
+
+          <p class="muted">
+            すでに登録済みなら <a class="linkbtn" href="#/login">ログインはこちら</a>
+          </p>
+        </div>
+      `);
+
+      node.querySelector("#btn").onclick = async () => {
+        const nick = node.querySelector("#nick").value.trim();
+        const pin  = node.querySelector("#pin").value.trim();
+        const msg  = node.querySelector("#msg");
+        msg.textContent = "";
+
+        if (!nick) { msg.textContent = "ニックネームを入れて"; node.classList.add("shake"); setTimeout(()=>node.classList.remove("shake"),400); return; }
+        if (!/^[0-9]{4}$/.test(pin)) { msg.textContent = "PINは4桁の数字にして"; node.classList.add("shake"); setTimeout(()=>node.classList.remove("shake"),400); return; }
+
+        try {
+          // ✅ Supabaseに作った関数（SQL）を呼ぶ：新規登録
+          await sb.rpc("register_player", { nick, pin });
+          location.hash = "#/";
+        } catch (e) {
+          msg.textContent = "登録できませんでした（同じニックネームが既にあるかも）";
+          node.classList.add("shake");
+          setTimeout(()=>node.classList.remove("shake"),400);
+        }
+      };
+
+      app.appendChild(node);
+    }
+
     function renderCheckpoint(nickname, prog, target) {
       app.innerHTML = "";
 
@@ -449,15 +407,19 @@
 
       const node = el(`
         <div class="row">
-          <div>
-            <div class="pill">参加者：${nickname}</div>
-            <div class="pill">進捗：${prog.checkpoint}</div>
+          <div class="pillset">
+            <span class="tag">👤 ${nickname}</span>
+            <span class="tag">📍 進捗 ${prog.checkpoint}</span>
+          </div>
+
+          <div class="progressWrap" aria-label="progress">
+            <div class="bar" style="width:${progressPercent(prog.checkpoint)}%"></div>
           </div>
 
           <h2>Checkpoint ${target}</h2>
 
           ${locked
-            ? `<p class="error">まだ早い！先に checkpoint ${target - 1} をクリアしてね。</p>`
+            ? `<p class="msg-bad">🔒 ロック中：先に checkpoint ${target - 1} をクリアしてね。</p>`
             : `<p class="muted">このQRに到達した人だけ、進捗を更新できます。</p>`
           }
 
@@ -465,32 +427,40 @@
           <p id="msg"></p>
 
           <div id="hint" style="display:none;">
-            <p class="ok">OK！</p>
+            <p class="msg-good">OK！</p>
             <p>${hintText(target)}</p>
-            <p><a href="#/">ホームへ</a></p>
+            <p><a class="linkbtn" href="#/">ホームへ</a></p>
           </div>
 
-          <p class="muted">ハズレQR用： <a href="#/c/999">#/c/999</a>（演出テスト）</p>
+          <p class="muted">ハズレQR： <a href="#/c/999">#/c/999</a></p>
         </div>
       `);
 
       node.querySelector("#claim").onclick = async () => {
         const msg = node.querySelector("#msg");
         msg.textContent = "";
+        msg.className = "";
+
         try {
           const me = await getMe();
           const res = await advanceIfAllowed(me.id, target);
+
           if (!res.ok) {
-            msg.className = "error";
+            msg.className = "msg-bad";
             msg.textContent = `順番が違います。あなたの現在進捗は ${res.current} です。`;
+            node.classList.add("shake");
+            setTimeout(()=>node.classList.remove("shake"),400);
             return;
           }
-          msg.className = "ok";
+
+          msg.className = "msg-good";
           msg.textContent = "進捗を更新しました！";
           node.querySelector("#hint").style.display = "block";
         } catch (e) {
-          msg.className = "error";
+          msg.className = "msg-bad";
           msg.textContent = "エラーが起きました。もう一回押してみて。";
+          node.classList.add("shake");
+          setTimeout(()=>node.classList.remove("shake"),400);
         }
       };
 
@@ -501,44 +471,45 @@
       app.innerHTML = "";
       app.appendChild(el(`
         <div class="row">
-          <div>
-            <div class="pill">参加者：${nickname}</div>
-            <div class="pill">進捗：${prog.checkpoint}</div>
+          <div class="pillset">
+            <span class="tag">👤 ${nickname}</span>
+            <span class="tag">📍 進捗 ${prog.checkpoint}</span>
           </div>
-          <h2>ハズレ！</h2>
+
+          <h2>😈 ハズレ！</h2>
           <p>残念。ここには何もない。だが君の好奇心は評価する。</p>
-          <p><a href="#/">ホームへ戻る</a></p>
+          <p><a class="linkbtn" href="#/">ホームへ戻る</a></p>
         </div>
       `));
     }
 
+    // =========================
+    // 司令塔：ここが1つだけあるのが重要
+    // =========================
     async function route() {
-  await ensureAnonLogin();
-  const r = getRoute();
+      await ensureAnonLogin();
+      const r = getRoute();
 
-  const me = await getMe();
-  const nick = await getNickname(me.id);
-  const prog = nick ? await getProgress(me.id) : { checkpoint: 0, updated_at: null };
+      const me = await getMe();
+      const nick = await getNickname(me.id);
+      const prog = nick ? await getProgress(me.id) : { checkpoint: 0, updated_at: null };
 
-  // ログイン/登録はいつでも見せる
-  if (r.type === "login") { renderLogin(); return; }
-  if (r.type === "signup") { renderSignup(); return; }
+      // ログイン/登録はいつでも見せる
+      if (r.type === "login") { renderLogin(); return; }
+      if (r.type === "signup") { renderSignup(); return; }
 
-  // ここから先（home/cp）は登録済みが必須
-  if (!nick) {
-    location.hash = "#/login";
-    return;
-  }
+      // home/cp は登録必須
+      if (!nick) { location.hash = "#/login"; return; }
 
-  if (r.type === "home") { renderHome(nick, prog); return; }
-  if (r.type === "cp") {
-    if (r.n === 999) { renderTrap(nick, prog); return; }
-    renderCheckpoint(nick, prog, r.n);
-    return;
-  }
+      if (r.type === "home") { renderHome(nick, prog); return; }
+      if (r.type === "cp") {
+        if (r.n === 999) { renderTrap(nick, prog); return; }
+        renderCheckpoint(nick, prog, r.n);
+        return;
+      }
 
-  location.hash = "#/login";
-}
+      location.hash = "#/login";
+    }
 
     window.addEventListener("hashchange", route);
     route();
