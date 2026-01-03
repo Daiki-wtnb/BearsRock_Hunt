@@ -173,7 +173,13 @@
 
     const SUPABASE_URL = "https://ahynlwtcdrtkzykcccgb.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFoeW5sd3RjZHJ0a3p5a2NjY2diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc0MTA0MDQsImV4cCI6MjA4Mjk4NjQwNH0.HttRXUS-Qy6VA0t4UE8MIC58tgncg-2bucYfLr14LSA";
-    const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true
+  }
+});
+
 
     const el = (html) => {
       const d = document.createElement("div");
@@ -289,31 +295,74 @@
     }
 
     function renderSignup() {
-      app.innerHTML = "";
-      const node = el(`
-        <div class="row">
-          <p>まずニックネームを登録してください。</p>
-          <input id="nick" maxlength="20" placeholder="例：Daiki / SnowKing / etc" />
-          <button id="go">登録して開始</button>
-          <p class="muted">※個人情報いりません。ニックネームだけ。</p>
-          <p id="msg" class="error"></p>
+  app.innerHTML = "";
+
+  const node = el(`
+    <div class="row">
+      <h2>参加</h2>
+      <p class="muted">このゲームは「ニックネーム + 4桁PIN」で続きから再開できます。</p>
+
+      <div class="grid2">
+        <div class="card" style="padding:14px;">
+          <h3 style="margin:0 0 8px;">新規登録</h3>
+          <input id="nick_new" maxlength="20" placeholder="ニックネーム" />
+          <input id="pin_new" inputmode="numeric" maxlength="4" placeholder="PIN（4桁）" />
+          <button id="btn_new">登録して開始</button>
+          <p id="msg_new" class="error"></p>
         </div>
-      `);
-      node.querySelector("#go").onclick = async () => {
-        const nick = node.querySelector("#nick").value.trim();
-        const msg = node.querySelector("#msg");
-        msg.textContent = "";
-        if (!nick) { msg.textContent = "ニックネームを入れて"; return; }
-        try {
-          const me = await getMe();
-          await setNickname(me.id, nick);
-          await route();
-        } catch (e) {
-          msg.textContent = "登録できませんでした（同じニックネームが既に使われてるかも）";
-        }
-      };
-      app.appendChild(node);
+
+        <div class="card" style="padding:14px;">
+          <h3 style="margin:0 0 8px;">ログイン</h3>
+          <input id="nick_login" maxlength="20" placeholder="ニックネーム" />
+          <input id="pin_login" inputmode="numeric" maxlength="4" placeholder="PIN（4桁）" />
+          <button id="btn_login">続きから</button>
+          <p id="msg_login" class="error"></p>
+        </div>
+      </div>
+
+      <p class="muted">※PINは忘れると復帰できません（メモ推奨）</p>
+    </div>
+  `);
+
+  // 新規登録
+  node.querySelector("#btn_new").onclick = async () => {
+    const nick = node.querySelector("#nick_new").value.trim();
+    const pin  = node.querySelector("#pin_new").value.trim();
+    const msg  = node.querySelector("#msg_new");
+    msg.textContent = "";
+
+    if (!nick) { msg.textContent = "ニックネームを入れて"; return; }
+    if (!/^[0-9]{4}$/.test(pin)) { msg.textContent = "PINは4桁の数字にして"; return; }
+
+    try {
+      await sb.rpc("register_player", { nick, pin });
+      await route();
+    } catch (e) {
+      msg.textContent = "登録できませんでした（同じニックネームが既にあるかも）";
     }
+  };
+
+  // ログイン（引き継ぎ）
+  node.querySelector("#btn_login").onclick = async () => {
+    const nick = node.querySelector("#nick_login").value.trim();
+    const pin  = node.querySelector("#pin_login").value.trim();
+    const msg  = node.querySelector("#msg_login");
+    msg.textContent = "";
+
+    if (!nick) { msg.textContent = "ニックネームを入れて"; return; }
+    if (!/^[0-9]{4}$/.test(pin)) { msg.textContent = "PINは4桁の数字にして"; return; }
+
+    try {
+      await sb.rpc("claim_player", { nick, pin });
+      await route();
+    } catch (e) {
+      msg.textContent = "ニックネーム or PIN が違う";
+    }
+  };
+
+  app.appendChild(node);
+}
+
 
     function progressPercent(current, max=4){
   const v = Math.max(0, Math.min(current, max));
