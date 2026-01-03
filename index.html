@@ -156,11 +156,17 @@
 
 </head>
 <body>
+  <div class="shell">
+  <div class="topbar">
+    <div class="brand">🏁 BEARSROCK HUNT</div>
+    <div class="tag">QRスキャンで進行</div>
+  </div>
+
   <div class="card">
     <h1>寮内QRハント</h1>
-    <p class="muted">※ニックネームだけで参加できます（メール不要）</p>
     <div id="app"></div>
   </div>
+</div>
 
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -254,6 +260,15 @@
       app.innerHTML = "";
       app.appendChild(el(`
         <div class="row">
+        <div class="pillset">
+  <span class="tag">👤 ${nickname}</span>
+  <span class="tag">📍 進捗 ${prog.checkpoint}</span>
+</div>
+
+<div class="progressWrap" aria-label="progress">
+  <div class="bar" style="width:${progressPercent(prog.checkpoint)}%"></div>
+</div>
+
           <div>
             <div class="pill">参加者：${nickname}</div>
             <div class="pill">進捗：${prog.checkpoint}</div>
@@ -300,6 +315,12 @@
       app.appendChild(node);
     }
 
+    function progressPercent(current, max=4){
+  const v = Math.max(0, Math.min(current, max));
+  return Math.round((v / max) * 100);
+}
+
+    
     function hintText(n) {
       // ここだけ好きに書き換えればOK
       const hints = {
