@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dorm QR Hunt</title>
+  <style>
+    body { font-family: system-ui, sans-serif; padding: 18px; line-height: 1.7; }
+    .card { max-width: 760px; margin: 0 auto; border: 1px solid #ddd; border-radius: 16px; padding: 16px; }
+    input, button { font-size: 1rem; padding: 10px; }
+    input { width: 100%; box-sizing: border-box; }
+    button { cursor: pointer; }
+    .row { display: grid; gap: 10px; }
+    .muted { color: #666; }
+    .error { color: #b00020; }
+    .ok { color: #0a7a0a; }
+    a { word-break: break-all; }
+    .pill { display:inline-block; padding: 4px 10px; border:1px solid #ccc; border-radius: 999px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>寮内QRハント</h1>
+    <p class="muted">※ニックネームだけで参加できます（メール不要）</p>
+    <div id="app"></div>
+  </div>
+
+  <script type="module">
+    import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+    const SUPABASE_URL = "https://ahynlwtcdrtkzykcccgb.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFoeW5sd3RjZHJ0a3p5a2NjY2diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc0MTA0MDQsImV4cCI6MjA4Mjk4NjQwNH0.HttRXUS-Qy6VA0t4UE8MIC58tgncg-2bucYfLr14LSA";
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const el = (html) => {
+      const d = document.createElement("div");
+      d.innerHTML = html.trim();
+      return d.firstChild;
+    };
+
+    const app = document.getElementById("app");
+
+    const getCheckpointFromHash = () => {
+      // 例: https://.../#/c/2 なら checkpoint=2
+      const m = location.hash.match(/^#\/c\/(\d+)$/);
+      return m ? parseInt(m[1], 10) : null;
+    };
+
+    async function ensureAnonLogin() {
+      const { data: { session } } = await sb.auth.getSession();
+      if (session) return session;
+
+      // 匿名ログイン
+      const { data, error } = await sb.auth.signInAnonymously();
+      if (error) throw error;
+      return data.session;
+    }
+
+    async function getMe() {
+      const { data: { user } } = await sb.auth.getUser();
+      return user;
+    }
+
+    async function getNickname(user_id) {
+      const { data, error } = await sb
+        .from("players")
+        .select("nickname")
+        .eq("user_id", user_id)
+        .maybeSingle();
+      if (error) throw error;
+      return data?.nickname ?? null;
+    }
+
+    async function setNickname(user_id, nickname) {
+      // players を作る
+      const { error: e1 } = await sb
+        .from("players")
+        .insert({ user_id, nickname });
+      if (e1) throw e1;
+
+      // progress も作る（checkpoint=0）
+      const { error: e2 } = await sb
+        .from("progress")
+        .insert({ user_id, checkpoint: 0 });
+      if (e2) throw e2;
+    }
+
+    async function getProgress(user_id) {
+      const { data, error } = await sb
+        .from("progress")
+        .select("checkpoint, updated_at")
+        .eq("user_id", user_id)
+        .maybeSingle();
+      if (error) throw error;
+      return data ?? { checkpoint: 0, updated_at: null };
+    }
+
+    async function advanceIfAllowed(user_id, targetCheckpoint) {
+      // 現在の進捗を取得
+      const current = await getProgress(user_id);
+
+      // 方式1のゲート： target は current+1 の時だけOK
+      if (targetCheckpoint !== current.checkpoint + 1) {
+        return { ok: false, current: current.checkpoint };
+      }
+
+      const { error } = await sb
+        .from("progress")
+        .update({ checkpoint: targetCheckpoint })
+        .eq("user_id", user_id);
+
+      if (error) throw error;
+      return { ok: true, current: targetCheckpoint };
+    }
+
+    function renderHome(nickname, prog) {
+      app.innerHTML = "";
+      app.appendChild(el(`
+        <div class="row">
+          <div>
+            <div class="pill">参加者：${nickname}</div>
+            <div class="pill">進捗：${prog.checkpoint}</div>
+          </div>
+          <p>QRをスキャンして進んでください。</p>
+
+          <p class="muted">
+            テスト用リンク：<br>
+            <a href="#/c/1">checkpoint 1</a> /
+            <a href="#/c/2">checkpoint 2</a> /
+            <a href="#/c/3">checkpoint 3</a> /
+            <a href="#/c/4">checkpoint 4</a>
+          </p>
+
+          <p class="muted">※本番はQRに「#/c/数字」付きURLを入れるだけ。</p>
+        </div>
+      `));
+    }
+
+    function renderSignup() {
+      app.innerHTML = "";
+      const node = el(`
+        <div class="row">
+          <p>まずニックネームを登録してください。</p>
+          <input id="nick" maxlength="20" placeholder="例：Daiki / SnowKing / etc" />
+          <button id="go">登録して開始</button>
+          <p class="muted">※個人情報いりません。ニックネームだけ。</p>
+          <p id="msg" class="error"></p>
+        </div>
+      `);
+      node.querySelector("#go").onclick = async () => {
+        const nick = node.querySelector("#nick").value.trim();
+        const msg = node.querySelector("#msg");
+        msg.textContent = "";
+        if (!nick) { msg.textContent = "ニックネームを入れて"; return; }
+        try {
+          const me = await getMe();
+          await setNickname(me.id, nick);
+          await route();
+        } catch (e) {
+          msg.textContent = "登録できませんでした（同じニックネームが既に使われてるかも）";
+        }
+      };
+      app.appendChild(node);
+    }
+
+    function hintText(n) {
+      // ここだけ好きに書き換えればOK
+      const hints = {
+        1: "ヒント1：毎朝、靴が集まる場所の“上”を見ろ。",
+        2: "ヒント2：洗濯の音がする場所。そこに次がある。",
+        3: "ヒント3：みんなが集まる掲示板の近くを探せ。",
+        4: "最終：食堂へ。クリア画面を見せて景品ゲット！"
+      };
+      return hints[n] ?? "（このチェックポイントの文を追加してね）";
+    }
+
+    function renderCheckpoint(nickname, prog, target) {
+      app.innerHTML = "";
+
+      const locked = prog.checkpoint < target - 1;
+
+      const node = el(`
+        <div class="row">
+          <div>
+            <div class="pill">参加者：${nickname}</div>
+            <div class="pill">進捗：${prog.checkpoint}</div>
+          </div>
+
+          <h2>Checkpoint ${target}</h2>
+
+          ${locked
+            ? `<p class="error">まだ早い！先に checkpoint ${target - 1} をクリアしてね。</p>`
+            : `<p class="muted">このQRに到達した人だけ、進捗を更新できます。</p>`
+          }
+
+          <button id="claim" ${locked ? "disabled" : ""}>ここに到達した（次へ進む）</button>
+          <p id="msg"></p>
+
+          <div id="hint" style="display:none;">
+            <p class="ok">OK！</p>
+            <p>${hintText(target)}</p>
+            <p><a href="#/">ホームへ</a></p>
+          </div>
+
+          <p class="muted">ハズレQR用： <a href="#/c/999">#/c/999</a>（演出テスト）</p>
+        </div>
+      `);
+
+      node.querySelector("#claim").onclick = async () => {
+        const msg = node.querySelector("#msg");
+        msg.textContent = "";
+        try {
+          const me = await getMe();
+          const res = await advanceIfAllowed(me.id, target);
+          if (!res.ok) {
+            msg.className = "error";
+            msg.textContent = `順番が違います。あなたの現在進捗は ${res.current} です。`;
+            return;
+          }
+          msg.className = "ok";
+          msg.textContent = "進捗を更新しました！";
+          node.querySelector("#hint").style.display = "block";
+        } catch (e) {
+          msg.className = "error";
+          msg.textContent = "エラーが起きました。もう一回押してみて。";
+        }
+      };
+
+      app.appendChild(node);
+    }
+
+    function renderTrap(nickname, prog) {
+      app.innerHTML = "";
+      app.appendChild(el(`
+        <div class="row">
+          <div>
+            <div class="pill">参加者：${nickname}</div>
+            <div class="pill">進捗：${prog.checkpoint}</div>
+          </div>
+          <h2>ハズレ！</h2>
+          <p>残念。ここには何もない。だが君の好奇心は評価する。</p>
+          <p><a href="#/">ホームへ戻る</a></p>
+        </div>
+      `));
+    }
+
+    async function route() {
+      await ensureAnonLogin();
+      const me = await getMe();
+      const nick = await getNickname(me.id);
+
+      if (!nick) {
+        renderSignup();
+        return;
+      }
+
+      const prog = await getProgress(me.id);
+      const cp = getCheckpointFromHash();
+
+      if (cp === null) {
+        renderHome(nick, prog);
+        return;
+      }
+
+      if (cp === 999) {
+        renderTrap(nick, prog);
+        return;
+      }
+
+      renderCheckpoint(nick, prog, cp);
+    }
+
+    window.addEventListener("hashchange", route);
+    route();
+  </script>
+</body>
+</html>
