@@ -335,24 +335,44 @@
       `);
 
       node.querySelector("#btn").onclick = async () => {
-        const nick = node.querySelector("#nick").value.trim();
-        const pin  = node.querySelector("#pin").value.trim();
-        const msg  = node.querySelector("#msg");
-        msg.textContent = "";
+  const btn = node.querySelector("#btn");
+  const nick = node.querySelector("#nick").value.trim();
+  const pin  = node.querySelector("#pin").value.trim();
+  const msg  = node.querySelector("#msg");
 
-        if (!nick) { msg.textContent = "ニックネームを入れて"; node.classList.add("shake"); setTimeout(()=>node.classList.remove("shake"),400); return; }
-        if (!/^[0-9]{4}$/.test(pin)) { msg.textContent = "PINは4桁の数字にして"; node.classList.add("shake"); setTimeout(()=>node.classList.remove("shake"),400); return; }
+  msg.textContent = "";
+  msg.className = "msg-bad";
 
-        try {
-          // ✅ Supabaseに作った関数（SQL）を呼ぶ：ニックネーム+PINが正しければ復帰
-          await sb.rpc("claim_player", { nick, pin });
-          location.hash = "#/";
-        } catch (e) {
-          msg.textContent = "ニックネーム or PIN が違う";
-          node.classList.add("shake");
-          setTimeout(()=>node.classList.remove("shake"),400);
-        }
-      };
+  // 入力チェック
+  if (!nick) { msg.textContent = "ニックネームを入れて"; return; }
+  if (!/^[0-9]{4}$/.test(pin)) { msg.textContent = "PINは4桁の数字にして"; return; }
+
+  // ローディング表示
+  btn.disabled = true;
+  const oldText = btn.textContent;
+  btn.textContent = "ログイン中...";
+
+  try {
+    // セッションがないとRPCが死ぬので念のため
+    await ensureAnonLogin();
+
+    const { data, error } = await sb.rpc("claim_player", { nick, pin });
+
+    if (error) throw error;
+
+    // ここに来たら成功
+    msg.className = "msg-good";
+    msg.textContent = "OK! 続きに戻ります…";
+    location.hash = "#/"; // 画面遷移
+  } catch (e) {
+    // これで「何が原因か」が表示される
+    msg.textContent = `ログイン失敗: ${e?.message ?? e}`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = oldText;
+  }
+};
+
 
       app.appendChild(node);
     }
