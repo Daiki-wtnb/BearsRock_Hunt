@@ -195,6 +195,16 @@
       return m ? parseInt(m[1], 10) : null;
     };
 
+    const getRoute = () => {
+  if (location.hash.startsWith("#/c/")) return { type: "cp", n: getCheckpointFromHash() };
+  if (location.hash === "#/login") return { type: "login" };
+  if (location.hash === "#/signup") return { type: "signup" };
+  if (location.hash === "#/") return { type: "home" };
+  // 何もなければログインへ
+  return { type: "login" };
+};
+
+
     async function ensureAnonLogin() {
       const { data: { session } } = await sb.auth.getSession();
       if (session) return session;
@@ -294,35 +304,86 @@
       `));
     }
 
+    function renderLogin() {
+  app.innerHTML = "";
+
+  const node = el(`
+    <div class="row">
+      <h2>ログイン</h2>
+      <p class="muted">ニックネームとPIN（4桁）を入力して続きから再開します。</p>
+
+      <input id="nick" maxlength="20" placeholder="ニックネーム" />
+      <input id="pin" inputmode="numeric" maxlength="4" placeholder="PIN（4桁）" />
+      <button id="btn">ログイン</button>
+
+      <p id="msg" class="msg-bad"></p>
+
+      <p class="muted">
+        はじめての方は <a class="linkbtn" href="#/signup">新規登録はこちら</a>
+      </p>
+    </div>
+  `);
+
+  node.querySelector("#btn").onclick = async () => {
+    const nick = node.querySelector("#nick").value.trim();
+    const pin  = node.querySelector("#pin").value.trim();
+    const msg  = node.querySelector("#msg");
+    msg.textContent = "";
+
+    if (!nick) { msg.textContent = "ニックネームを入れて"; return; }
+    if (!/^[0-9]{4}$/.test(pin)) { msg.textContent = "PINは4桁の数字にして"; return; }
+
+    try {
+      await sb.rpc("claim_player", { nick, pin });
+      location.hash = "#/";
+    } catch (e) {
+      msg.textContent = "ニックネーム or PIN が違う";
+    }
+  };
+
+  app.appendChild(node);
+}
+
     function renderSignup() {
   app.innerHTML = "";
 
   const node = el(`
     <div class="row">
-      <h2>参加</h2>
-      <p class="muted">このゲームは「ニックネーム + 4桁PIN」で続きから再開できます。</p>
+      <h2>新規登録</h2>
+      <p class="muted">ニックネームとPIN（4桁）を設定します。PINは忘れると復帰できません。</p>
 
-      <div class="grid2">
-        <div class="card" style="padding:14px;">
-          <h3 style="margin:0 0 8px;">新規登録</h3>
-          <input id="nick_new" maxlength="20" placeholder="ニックネーム" />
-          <input id="pin_new" inputmode="numeric" maxlength="4" placeholder="PIN（4桁）" />
-          <button id="btn_new">登録して開始</button>
-          <p id="msg_new" class="error"></p>
-        </div>
+      <input id="nick" maxlength="20" placeholder="ニックネーム" />
+      <input id="pin" inputmode="numeric" maxlength="4" placeholder="PIN（4桁）" />
+      <button id="btn">登録して開始</button>
 
-        <div class="card" style="padding:14px;">
-          <h3 style="margin:0 0 8px;">ログイン</h3>
-          <input id="nick_login" maxlength="20" placeholder="ニックネーム" />
-          <input id="pin_login" inputmode="numeric" maxlength="4" placeholder="PIN（4桁）" />
-          <button id="btn_login">続きから</button>
-          <p id="msg_login" class="error"></p>
-        </div>
-      </div>
+      <p id="msg" class="msg-bad"></p>
 
-      <p class="muted">※PINは忘れると復帰できません（メモ推奨）</p>
+      <p class="muted">
+        すでに登録済みなら <a class="linkbtn" href="#/login">ログインはこちら</a>
+      </p>
     </div>
   `);
+
+  node.querySelector("#btn").onclick = async () => {
+    const nick = node.querySelector("#nick").value.trim();
+    const pin  = node.querySelector("#pin").value.trim();
+    const msg  = node.querySelector("#msg");
+    msg.textContent = "";
+
+    if (!nick) { msg.textContent = "ニックネームを入れて"; return; }
+    if (!/^[0-9]{4}$/.test(pin)) { msg.textContent = "PINは4桁の数字にして"; return; }
+
+    try {
+      await sb.rpc("register_player", { nick, pin });
+      location.hash = "#/";
+    } catch (e) {
+      msg.textContent = "登録できませんでした（同じニックネームが既にあるかも）";
+    }
+  };
+
+  app.appendChild(node);
+}
+
 
   // 新規登録
   node.querySelector("#btn_new").onclick = async () => {
@@ -452,30 +513,32 @@
     }
 
     async function route() {
-      await ensureAnonLogin();
-      const me = await getMe();
-      const nick = await getNickname(me.id);
+  await ensureAnonLogin();
+  const r = getRoute();
 
-      if (!nick) {
-        renderSignup();
-        return;
-      }
+  const me = await getMe();
+  const nick = await getNickname(me.id);
+  const prog = nick ? await getProgress(me.id) : { checkpoint: 0, updated_at: null };
 
-      const prog = await getProgress(me.id);
-      const cp = getCheckpointFromHash();
+  // ログイン/登録はいつでも見せる
+  if (r.type === "login") { renderLogin(); return; }
+  if (r.type === "signup") { renderSignup(); return; }
 
-      if (cp === null) {
-        renderHome(nick, prog);
-        return;
-      }
+  // ここから先（home/cp）は登録済みが必須
+  if (!nick) {
+    location.hash = "#/login";
+    return;
+  }
 
-      if (cp === 999) {
-        renderTrap(nick, prog);
-        return;
-      }
+  if (r.type === "home") { renderHome(nick, prog); return; }
+  if (r.type === "cp") {
+    if (r.n === 999) { renderTrap(nick, prog); return; }
+    renderCheckpoint(nick, prog, r.n);
+    return;
+  }
 
-      renderCheckpoint(nick, prog, cp);
-    }
+  location.hash = "#/login";
+}
 
     window.addEventListener("hashchange", route);
     route();
