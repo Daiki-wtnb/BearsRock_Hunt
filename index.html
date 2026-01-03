@@ -5,18 +5,155 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Dorm QR Hunt</title>
   <style>
-    body { font-family: system-ui, sans-serif; padding: 18px; line-height: 1.7; }
-    .card { max-width: 760px; margin: 0 auto; border: 1px solid #ddd; border-radius: 16px; padding: 16px; }
-    input, button { font-size: 1rem; padding: 10px; }
-    input { width: 100%; box-sizing: border-box; }
-    button { cursor: pointer; }
-    .row { display: grid; gap: 10px; }
-    .muted { color: #666; }
-    .error { color: #b00020; }
-    .ok { color: #0a7a0a; }
-    a { word-break: break-all; }
-    .pill { display:inline-block; padding: 4px 10px; border:1px solid #ccc; border-radius: 999px; }
-  </style>
+  :root{
+    --bg1:#0b1020;
+    --bg2:#120a2a;
+    --card: rgba(255,255,255,.08);
+    --card2: rgba(255,255,255,.12);
+    --line: rgba(255,255,255,.18);
+    --text: rgba(255,255,255,.92);
+    --muted: rgba(255,255,255,.65);
+    --bad:#ff5a7a;
+    --good:#45f08a;
+    --accent:#7aa7ff;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    margin:0;
+    color:var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Hiragino Sans", "Noto Sans JP", sans-serif;
+    background:
+      radial-gradient(1200px 800px at 20% 10%, rgba(122,167,255,.20), transparent 60%),
+      radial-gradient(900px 700px at 90% 20%, rgba(255,90,122,.18), transparent 60%),
+      radial-gradient(900px 700px at 40% 90%, rgba(69,240,138,.14), transparent 60%),
+      linear-gradient(180deg, var(--bg1), var(--bg2));
+    padding: 22px;
+  }
+
+  /* subtle noise */
+  body:before{
+    content:"";
+    position:fixed; inset:0;
+    pointer-events:none;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.12'/%3E%3C/svg%3E");
+    mix-blend-mode: overlay;
+    opacity:.5;
+  }
+
+  .shell{ max-width: 860px; margin: 0 auto; }
+  .topbar{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom: 14px;
+  }
+  .brand{
+    font-weight:800;
+    letter-spacing:.02em;
+    font-size: 1.05rem;
+    opacity:.95;
+  }
+  .tag{
+    display:inline-flex; gap:8px; align-items:center;
+    padding:8px 12px;
+    border:1px solid var(--line);
+    border-radius:999px;
+    background: rgba(0,0,0,.18);
+    backdrop-filter: blur(10px);
+    color: var(--muted);
+    font-size:.9rem;
+  }
+
+  .card{
+    border:1px solid var(--line);
+    background: linear-gradient(180deg, var(--card), rgba(0,0,0,.18));
+    border-radius: 20px;
+    padding: 18px;
+    backdrop-filter: blur(14px);
+    box-shadow: 0 18px 60px rgba(0,0,0,.35);
+  }
+  h1{ margin: 0 0 10px; font-size: 1.45rem; }
+  h2{ margin: 10px 0 6px; font-size: 1.2rem; }
+  p{ margin: 8px 0; color: var(--muted); }
+
+  .row{ display:grid; gap: 12px; }
+  .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  @media (max-width:640px){ .grid2{ grid-template-columns:1fr; } }
+
+  .pillset{ display:flex; gap:10px; flex-wrap: wrap; }
+
+  input{
+    width:100%;
+    padding: 13px 14px;
+    border-radius: 14px;
+    border:1px solid var(--line);
+    background: rgba(0,0,0,.20);
+    color: var(--text);
+    outline:none;
+  }
+  input:focus{
+    border-color: rgba(122,167,255,.65);
+    box-shadow: 0 0 0 4px rgba(122,167,255,.15);
+  }
+
+  button{
+    width:100%;
+    padding: 13px 14px;
+    border-radius: 14px;
+    border:1px solid rgba(122,167,255,.65);
+    background: linear-gradient(180deg, rgba(122,167,255,.35), rgba(122,167,255,.10));
+    color: var(--text);
+    font-weight: 800;
+    letter-spacing:.02em;
+    cursor:pointer;
+    transition: transform .06s ease, filter .15s ease, opacity .15s ease;
+  }
+  button:hover{ filter: brightness(1.12); }
+  button:active{ transform: translateY(1px) scale(.99); }
+  button:disabled{
+    opacity:.45;
+    cursor:not-allowed;
+    border-color: var(--line);
+    background: rgba(0,0,0,.12);
+  }
+
+  .linkbtn{
+    display:inline-flex;
+    padding:10px 12px;
+    border-radius: 12px;
+    border:1px solid var(--line);
+    color: var(--text);
+    text-decoration:none;
+    background: rgba(0,0,0,.16);
+  }
+
+  .msg-bad{ color: var(--bad); font-weight:700; }
+  .msg-good{ color: var(--good); font-weight:800; }
+
+  .progressWrap{
+    border:1px solid var(--line);
+    background: rgba(0,0,0,.18);
+    border-radius: 999px;
+    padding: 6px;
+  }
+  .bar{
+    height: 10px;
+    border-radius: 999px;
+    width: 0%;
+    background: linear-gradient(90deg, rgba(69,240,138,.85), rgba(122,167,255,.85));
+    transition: width .35s ease;
+  }
+  .shake{
+    animation: shake .25s linear 0s 2;
+  }
+  @keyframes shake{
+    0%{ transform: translateX(0); }
+    25%{ transform: translateX(-4px); }
+    50%{ transform: translateX(4px); }
+    75%{ transform: translateX(-3px); }
+    100%{ transform: translateX(0); }
+  }
+</style>
+
 </head>
 <body>
   <div class="card">
