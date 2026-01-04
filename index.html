@@ -249,12 +249,31 @@ input{ font-size: 1rem; padding: 14px 14px; }
     };
 
     const getRoute = () => {
-      if (location.hash.startsWith("#/c/")) return { type: "cp", n: getCheckpointFromHash() };
-      if (location.hash === "#/login") return { type: "login" };
-      if (location.hash === "#/signup") return { type: "signup" };
-      if (location.hash === "#/" || location.hash === "" || location.hash === "#") return { type: "home" };
-      return { type: "login" };
-    };
+  if (location.hash.startsWith("#/c/")) return { type: "cp", n: getCheckpointFromHash() };
+  if (location.hash === "#/login") return { type: "login" };
+  if (location.hash === "#/signup") return { type: "signup" };
+
+  if (location.hash === "#/scan") return { type: "scan" };
+  if (location.hash === "#/leaderboard") return { type: "leaderboard" };
+  if (location.hash === "#/me") return { type: "me" };
+
+  if (location.hash === "#/" || location.hash === "" || location.hash === "#") return { type: "home" };
+  return { type: "login" };
+};
+
+    function setNavActive() {
+  const links = document.querySelectorAll("#navbar .navbtn");
+  links.forEach(a => a.classList.remove("active"));
+  const h = location.hash || "#/";
+  const target =
+    h.startsWith("#/c/") ? "#/" :
+    ["#/scan","#/leaderboard","#/me","#/"].includes(h) ? h :
+    "#/login";
+  links.forEach(a => {
+    if (a.getAttribute("href") === target) a.classList.add("active");
+  });
+}
+
 
     // =========================
     // 認証（匿名）
@@ -544,11 +563,176 @@ input{ font-size: 1rem; padding: 14px 14px; }
         </div>
       `));
     }
+function renderScan(nickname, prog){
+  app.innerHTML = "";
+
+  const node = el(`
+    <div class="row">
+      <div class="pillset">
+        <span class="tag">👤 ${nickname}</span>
+        <span class="tag">📍 進捗 ${prog.checkpoint}</span>
+      </div>
+
+      <h2>📷 スキャン</h2>
+      <p>QRをカメラで読み取ります。うまくいかない時は下の入力欄に貼り付け。</p>
+
+      <video id="v" style="width:100%;border-radius:16px;border:1px solid var(--line);background:rgba(0,0,0,.25);" playsinline></video>
+      <button id="start" type="button">カメラ起動</button>
+      <button id="stop" type="button" disabled>停止</button>
+
+      <input id="manual" placeholder="QRのURLを貼り付け（例: https://.../#/c/2）" />
+      <button id="go" type="button">開く</button>
+
+      <p id="msg" class="msg-bad"></p>
+    </div>
+  `);
+
+  const v = node.querySelector("#v");
+  const startBtn = node.querySelector("#start");
+  const stopBtn = node.querySelector("#stop");
+  const msg = node.querySelector("#msg");
+
+  let stream = null;
+  let raf = null;
+
+  const stopCamera = () => {
+    if (raf) cancelAnimationFrame(raf);
+    raf = null;
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    stream = null;
+    v.srcObject = null;
+    stopBtn.disabled = true;
+    startBtn.disabled = false;
+  };
+
+  const openResult = (text) => {
+    // QRの中身がURLならそのまま開く。#/c/ を含むならゲーム進行へ。
+    // 例: https://bearsrock-hunt.pages.dev/#/c/2
+    if (text.includes("#/c/") || text.includes("#/")) {
+      location.href = text; // URLごと飛ぶ（同一ドメインならhash遷移）
+      return;
+    }
+    // hashだけのケース: #/c/2
+    if (text.startsWith("#/")) {
+      location.hash = text;
+      return;
+    }
+    msg.textContent = "QRの内容がURLっぽくない： " + text;
+  };
+
+  startBtn.onclick = async () => {
+    msg.textContent = "";
+    try{
+      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio:false });
+      v.srcObject = stream;
+      await v.play();
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+
+      if (!("BarcodeDetector" in window)) {
+        msg.textContent = "この端末は自動スキャン非対応。下の入力欄に貼り付けてね。";
+        return;
+      }
+
+      const det = new BarcodeDetector({ formats: ["qr_code"] });
+
+      const tick = async () => {
+        try{
+          const barcodes = await det.detect(v);
+          if (barcodes && barcodes[0]?.rawValue) {
+            const text = barcodes[0].rawValue;
+            stopCamera();
+            openResult(text);
+            return;
+          }
+        } catch(e) {}
+        raf = requestAnimationFrame(tick);
+      };
+      tick();
+
+    } catch(e){
+      msg.textContent = "カメラ起動に失敗: " + (e?.message ?? e);
+      stopCamera();
+    }
+  };
+
+  stopBtn.onclick = () => stopCamera();
+
+  node.querySelector("#go").onclick = () => {
+    const text = node.querySelector("#manual").value.trim();
+    if (!text) { msg.textContent = "貼り付けてから押して"; return; }
+    openResult(text);
+  };
+
+  app.appendChild(node);
+}
+
+    function renderMe(nickname, prog){
+  app.innerHTML = "";
+
+  let hintsHtml = "";
+  for (let i=1; i<=prog.checkpoint; i++){
+    hintsHtml += `<div class="tag" style="border-radius:14px;">✅ CP${i}: ${hintText(i)}</div>`;
+  }
+  if (!hintsHtml) hintsHtml = `<p class="muted">まだヒントはありません。まずはCP1へ。</p>`;
+
+  app.appendChild(el(`
+    <div class="row">
+      <h2>👤 マイページ</h2>
+
+      <div class="pillset">
+        <span class="tag">👤 ${nickname}</span>
+        <span class="tag">📍 進捗 ${prog.checkpoint}</span>
+      </div>
+
+      <div class="progressWrap"><div class="bar" style="width:${progressPercent(prog.checkpoint)}%"></div></div>
+
+      <h2>📜 過去ヒント</h2>
+      <div class="row">${hintsHtml}</div>
+
+      <a class="linkbtn" href="#/">🏠 Home</a>
+    </div>
+  `));
+}
+
+    async function renderLeaderboard(nickname, prog){
+  app.innerHTML = "";
+  app.appendChild(el(`
+    <div class="row">
+      <h2>🏆 ランキング</h2>
+      <p class="muted">進捗が高い順。タイは到達が早い方が上。</p>
+      <div id="list" class="row"></div>
+    </div>
+  `));
+
+  const list = document.getElementById("list");
+  list.innerHTML = `<p class="muted">読み込み中...</p>`;
+
+  try{
+    const { data, error } = await sb.rpc("get_leaderboard");
+    if (error) throw error;
+
+    if (!data?.length) { list.innerHTML = `<p class="muted">まだ誰もいない</p>`; return; }
+
+    const rows = data.map((r, idx) => {
+      const me = (r.nickname === nickname);
+      return `
+        <div class="tag" style="border-radius:14px;${me ? "border-color: rgba(69,240,138,.7);" : ""}">
+          <b>#${idx+1}</b> ${r.nickname} — CP${r.checkpoint}
+        </div>`;
+    }).join("");
+
+    list.innerHTML = rows;
+  } catch(e){
+    list.innerHTML = `<p class="msg-bad">取得失敗: ${e?.message ?? e}</p>`;
+  }
+}
 
     // =========================
     // 司令塔：ここが1つだけあるのが重要
     // =========================
     async function route() {
+        setNavActive();
       await ensureAnonLogin();
       const r = getRoute();
 
@@ -557,6 +741,10 @@ input{ font-size: 1rem; padding: 14px 14px; }
       const prog = nick ? await getProgress(me.id) : { checkpoint: 0, updated_at: null };
 
       // ログイン/登録はいつでも見せる
+      if (r.type === "scan") { renderScan(nick, prog); return; }
+      if (r.type === "leaderboard") { await renderLeaderboard(nick, prog); return; }
+      if (r.type === "me") { renderMe(nick, prog); return; }
+
       if (r.type === "login") { renderLogin(); return; }
       if (r.type === "signup") { renderSignup(); return; }
 
@@ -576,5 +764,13 @@ input{ font-size: 1rem; padding: 14px 14px; }
     window.addEventListener("hashchange", route);
     route();
   </script>
+
+  <nav class="navbar" id="navbar">
+  <a class="navbtn" href="#/">🏠 Home</a>
+  <a class="navbtn" href="#/scan">📷 Scan</a>
+  <a class="navbtn" href="#/leaderboard">🏆 Rank</a>
+  <a class="navbtn" href="#/me">👤 Me</a>
+</nav>
+
 </body>
 </html>
