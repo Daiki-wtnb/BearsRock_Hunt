@@ -358,17 +358,13 @@
     };
 
 const getRoute = () => {
-    // ✅ 推測URLや変なURLはハズレへ
-  if (r.type === "unknown") {
-  location.hash = "#/c/999-TRAP";
-  return;
-}
-
   const h = location.hash;
 
-  // ✅ ランダム必須（#/c/1-f8K3 だけ通す）
+  // ✅ ランダム必須（#/c/1-f8K3 の形式のみOK）
   const m = h.match(/^#\/c\/(\d+)-[A-Za-z0-9]+$/);
-  if (m) return { type: "cp", n: parseInt(m[1], 10) };
+  if (m) {
+    return { type: "cp", n: parseInt(m[1], 10) };
+  }
 
   if (h === "#/login") return { type: "login" };
   if (h === "#/signup") return { type: "signup" };
@@ -377,7 +373,7 @@ const getRoute = () => {
   if (h === "#/me") return { type: "me" };
   if (h === "#/" || h === "" || h === "#") return { type: "home" };
 
-  // ✅ 不明なURLはハズレにする（後でrouteで飛ばす）
+  // ❌ それ以外は unknown（ここでは何もしない）
   return { type: "unknown" };
 };
 
@@ -909,6 +905,17 @@ const getRoute = () => {
       await ensureAnonLogin();
 
       const r = getRoute();
+      // route() の中
+if (r.type === "unknown") {
+  renderTrap("GUEST", { checkpoint: 0 });
+  return;
+}
+
+if (r.type === "cp" && r.n === 999) {
+  renderTrap("GUEST", { checkpoint: 0 });
+  return;
+}
+
       const me = await getMe();
       const nick = await getNickname(me.id);
       const prog = nick ? await getProgress(me.id) : { checkpoint: 0, updated_at: null };
