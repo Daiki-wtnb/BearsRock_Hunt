@@ -358,17 +358,24 @@
     };
 
     const getRoute = () => {
-      const h = location.hash;
-      const cpMatch = h.match(/^#\/c\/(\d+)$/);
-      if (cpMatch) return { type: "cp", n: parseInt(cpMatch[1], 10) };
-      if (h === "#/login") return { type: "login" };
-      if (h === "#/signup") return { type: "signup" };
-      if (h === "#/scan") return { type: "scan" };
-      if (h === "#/leaderboard") return { type: "leaderboard" };
-      if (h === "#/me") return { type: "me" };
-      if (h === "#/" || h === "" || h === "#") return { type: "home" };
-      return { type: "login" };
-    };
+  const h = location.hash;
+
+  // #/c/1-f8K3 も #/c/1 もOK
+  const m = h.match(/^#\/c\/(\d+)(?:-[A-Za-z0-9]+)?$/);
+  if (m) {
+    return { type: "cp", n: parseInt(m[1], 10) };
+  }
+
+  if (h === "#/login") return { type: "login" };
+  if (h === "#/signup") return { type: "signup" };
+  if (h === "#/scan") return { type: "scan" };
+  if (h === "#/leaderboard") return { type: "leaderboard" };
+  if (h === "#/me") return { type: "me" };
+  if (h === "#/" || h === "" || h === "#") return { type: "home" };
+
+  return { type: "login" };
+};
+
 
     function setNavActive() {
       const links = document.querySelectorAll(".nav-item");
