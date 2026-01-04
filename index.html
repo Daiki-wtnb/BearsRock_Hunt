@@ -357,14 +357,18 @@
       return Math.round((v / max) * 100);
     };
 
-    const getRoute = () => {
+const getRoute = () => {
+    // ✅ 推測URLや変なURLはハズレへ
+  if (r.type === "unknown") {
+    location.hash = "#/c/999";
+    return;
+  }
+
   const h = location.hash;
 
-  // #/c/1-f8K3 も #/c/1 もOK
-  const m = h.match(/^#\/c\/(\d+)(?:-[A-Za-z0-9]+)?$/);
-  if (m) {
-    return { type: "cp", n: parseInt(m[1], 10) };
-  }
+  // ✅ ランダム必須（#/c/1-f8K3 だけ通す）
+  const m = h.match(/^#\/c\/(\d+)-[A-Za-z0-9]+$/);
+  if (m) return { type: "cp", n: parseInt(m[1], 10) };
 
   if (h === "#/login") return { type: "login" };
   if (h === "#/signup") return { type: "signup" };
@@ -373,8 +377,10 @@
   if (h === "#/me") return { type: "me" };
   if (h === "#/" || h === "" || h === "#") return { type: "home" };
 
-  return { type: "login" };
+  // ✅ 不明なURLはハズレにする（後でrouteで飛ばす）
+  return { type: "unknown" };
 };
+
 
 
     function setNavActive() {
