@@ -17,7 +17,7 @@
     --error:#FF3B30;
     --shadow: 0 2px 12px rgba(0,0,0,0.08);
   }
-  
+
   @media (prefers-color-scheme: dark) {
     :root{
       --primary:#0A84FF;
@@ -32,7 +32,7 @@
       --shadow: 0 2px 12px rgba(0,0,0,0.3);
     }
   }
-  
+
   *{ box-sizing:border-box; margin:0; padding:0; }
   html,body{ height:100%; }
   body{
@@ -55,7 +55,7 @@
     justify-content: space-between;
     padding: 12px 0 20px;
   }
-  
+
   .header h1{
     font-size: 34px;
     font-weight: 700;
@@ -158,10 +158,7 @@
     box-shadow: 0 0 0 4px rgba(0,122,255,0.1);
   }
 
-  .input-group{
-    margin-bottom: 16px;
-  }
-
+  .input-group{ margin-bottom: 16px; }
   .input-label{
     display: block;
     font-size: 15px;
@@ -189,20 +186,9 @@
     transform: translateY(-1px);
   }
 
-  button:active:not(:disabled){
-    transform: translateY(0);
-  }
+  button:disabled{ opacity: 0.4; cursor: not-allowed; }
 
-  button:disabled{
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
-
-  .btn-secondary{
-    background: var(--bg);
-    color: var(--text);
-    margin-top: 12px;
-  }
+  .btn-secondary{ background: var(--bg); color: var(--text); margin-top: 12px; }
 
   .alert{
     padding: 14px 16px;
@@ -225,26 +211,10 @@
     border: 1px solid rgba(52,199,89,0.2);
   }
 
-  .link{
-    color: var(--primary);
-    text-decoration: none;
-    font-weight: 600;
-  }
-
-  .text-center{
-    text-align: center;
-  }
-
-  .text-muted{
-    color: var(--text-secondary);
-    font-size: 15px;
-  }
-
-  .divider{
-    height: 1px;
-    background: var(--border);
-    margin: 20px 0;
-  }
+  .link{ color: var(--primary); text-decoration: none; font-weight: 600; }
+  .text-center{ text-align: center; }
+  .text-muted{ color: var(--text-secondary); font-size: 15px; }
+  .divider{ height: 1px; background: var(--border); margin: 20px 0; }
 
   .list-item{
     display: flex;
@@ -265,12 +235,10 @@
     font-size: 20px;
     font-weight: 700;
     color: var(--text-secondary);
-    min-width: 40px;
+    min-width: 48px;
   }
 
-  .rank-number.top{
-    color: var(--primary);
-  }
+  .rank-number.top{ color: var(--primary); }
 
   video{
     width: 100%;
@@ -279,21 +247,12 @@
     margin: 16px 0;
   }
 
-  .button-group{
-    display: flex;
-    gap: 12px;
-    margin: 12px 0;
-  }
-
-  .button-group button{
-    flex: 1;
-  }
+  .button-group{ display: flex; gap: 12px; margin: 12px 0; }
+  .button-group button{ flex: 1; }
 
   .navbar{
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
+    bottom: 0; left: 0; right: 0;
     background: var(--card);
     border-top: 1px solid var(--border);
     display: flex;
@@ -318,13 +277,8 @@
     transition: all 0.2s;
   }
 
-  .nav-item.active{
-    color: var(--primary);
-  }
-
-  .nav-icon{
-    font-size: 24px;
-  }
+  .nav-item.active{ color: var(--primary); }
+  .nav-icon{ font-size: 24px; }
 
   .hint-box{
     background: var(--bg);
@@ -335,14 +289,12 @@
   }
 
   @keyframes shake{
-    0%, 100%{ transform: translateX(0); }
+    0%,100%{ transform: translateX(0); }
     25%{ transform: translateX(-8px); }
     75%{ transform: translateX(8px); }
   }
 
-  .shake{
-    animation: shake 0.3s ease-in-out;
-  }
+  .shake{ animation: shake 0.3s ease-in-out; }
 
   .checkpoint-card{
     background: linear-gradient(135deg, var(--primary), var(--primary-light));
@@ -365,6 +317,21 @@
   <div class="container">
     <div id="app"></div>
   </div>
+
+  <nav class="navbar">
+    <a class="nav-item" href="#/">
+      <div class="nav-icon">🏠</div><div>ホーム</div>
+    </a>
+    <a class="nav-item" href="#/scan">
+      <div class="nav-icon">📷</div><div>スキャン</div>
+    </a>
+    <a class="nav-item" href="#/leaderboard">
+      <div class="nav-icon">🏆</div><div>ランキング</div>
+    </a>
+    <a class="nav-item" href="#/me">
+      <div class="nav-icon">👤</div><div>マイページ</div>
+    </a>
+  </nav>
 
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -407,7 +374,7 @@
       const links = document.querySelectorAll(".nav-item");
       links.forEach(a => a.classList.remove("active"));
       const h = location.hash || "#/";
-      const target = h.startsWith("#/c/") ? "#/" : ["#/scan","#/leaderboard","#/me","#/"].includes(h) ? h : "#/login";
+      const target = h.startsWith("#/c/") ? "#/" : (["#/scan","#/leaderboard","#/me","#/"].includes(h) ? h : "#/login");
       links.forEach(a => {
         if (a.getAttribute("href") === target) a.classList.add("active");
       });
@@ -427,22 +394,22 @@
     }
 
     async function getNickname(user_id) {
-      const { data, error } = await sb.from("players").select("nickname").eq("user_id", user_id).maybeSingle();
+      const { data, error } = await sb
+        .from("players").select("nickname").eq("user_id", user_id).maybeSingle();
       if (error) throw error;
       return data?.nickname ?? null;
     }
 
     async function getProgress(user_id) {
-      const { data, error } = await sb.from("progress").select("checkpoint, updated_at").eq("user_id", user_id).maybeSingle();
+      const { data, error } = await sb
+        .from("progress").select("checkpoint, updated_at").eq("user_id", user_id).maybeSingle();
       if (error) throw error;
       return data ?? { checkpoint: 0, updated_at: null };
     }
 
     async function advanceIfAllowed(user_id, targetCheckpoint) {
       const current = await getProgress(user_id);
-      if (targetCheckpoint !== current.checkpoint + 1) {
-        return { ok: false, current: current.checkpoint };
-      }
+      if (targetCheckpoint !== current.checkpoint + 1) return { ok: false, current: current.checkpoint };
       const { error } = await sb.from("progress").update({ checkpoint: targetCheckpoint }).eq("user_id", user_id);
       if (error) throw error;
       return { ok: true, current: targetCheckpoint };
@@ -450,7 +417,7 @@
 
     function hintText(n) {
       const hints = {
-        1: "毎朝、靴が集まる場所の"上"を見ろ。",
+        1: "毎朝、靴が集まる場所の“上”を見ろ。",   // ✅ここ修正
         2: "洗濯の音がする場所。そこに次がある。",
         3: "みんなが集まる掲示板の近くを探せ。",
         4: "食堂へ。クリア画面を見せて景品ゲット！"
@@ -484,22 +451,12 @@
             </div>
 
             <p class="card-subtitle">QRコードをスキャンしてチェックポイントを進めましょう</p>
-            
-            <button onclick="location.hash='#/scan'">📷 QRをスキャン</button>
+            <button type="button" onclick="location.hash='#/scan'">📷 QRをスキャン</button>
           </div>
 
           <div class="card">
             <div class="card-title">ようこそ、${nickname}さん</div>
             <p class="text-muted">次のチェックポイントを探してください。ヒントはマイページで確認できます。</p>
-          </div>
-
-          <div class="card">
-            <p class="text-muted" style="font-size:13px;">テスト用リンク：
-              <a href="#/c/1" class="link">CP1</a> · 
-              <a href="#/c/2" class="link">CP2</a> · 
-              <a href="#/c/3" class="link">CP3</a> · 
-              <a href="#/c/4" class="link">CP4</a>
-            </p>
           </div>
         </div>
       `));
@@ -509,10 +466,7 @@
       app.innerHTML = "";
       const node = el(`
         <div>
-          <div class="header">
-            <h1>ログイン</h1>
-          </div>
-
+          <div class="header"><h1>ログイン</h1></div>
           <div class="card">
             <div class="card-title">おかえりなさい</div>
             <p class="card-subtitle">ニックネームとPINコードを入力してください</p>
@@ -527,12 +481,10 @@
               <input id="pin" type="password" inputmode="numeric" maxlength="4" placeholder="4桁の数字" />
             </div>
 
-            <button id="btn">ログイン</button>
-
+            <button id="btn" type="button">ログイン</button>
             <div id="msg"></div>
 
             <div class="divider"></div>
-
             <p class="text-center text-muted">
               アカウントをお持ちでない方は<br>
               <a href="#/signup" class="link">新規登録</a>
@@ -544,38 +496,26 @@
       node.querySelector("#btn").onclick = async () => {
         const btn = node.querySelector("#btn");
         const nick = node.querySelector("#nick").value.trim();
-        const pin = node.querySelector("#pin").value.trim();
-        const msg = node.querySelector("#msg");
-
+        const pin  = node.querySelector("#pin").value.trim();
+        const msg  = node.querySelector("#msg");
         msg.innerHTML = "";
 
-        if (!nick) {
-          msg.innerHTML = '<div class="alert alert-error">ニックネームを入力してください</div>';
-          node.classList.add("shake");
-          setTimeout(() => node.classList.remove("shake"), 300);
-          return;
-        }
-        if (!/^[0-9]{4}$/.test(pin)) {
-          msg.innerHTML = '<div class="alert alert-error">PINコードは4桁の数字で入力してください</div>';
-          node.classList.add("shake");
-          setTimeout(() => node.classList.remove("shake"), 300);
-          return;
-        }
+        if (!nick) { msg.innerHTML = '<div class="alert alert-error">ニックネームを入力してください</div>'; node.classList.add("shake"); setTimeout(()=>node.classList.remove("shake"),300); return; }
+        if (!/^[0-9]{4}$/.test(pin)) { msg.innerHTML = '<div class="alert alert-error">PINコードは4桁の数字で入力してください</div>'; node.classList.add("shake"); setTimeout(()=>node.classList.remove("shake"),300); return; }
 
         btn.disabled = true;
         btn.textContent = "ログイン中...";
 
         try {
           await ensureAnonLogin();
-          const { data, error } = await sb.rpc("claim_player", { nick, pin });
+          const { error } = await sb.rpc("claim_player", { nick, pin });
           if (error) throw error;
-
           msg.innerHTML = '<div class="alert alert-success">✓ ログイン成功</div>';
-          setTimeout(() => location.hash = "#/", 500);
+          setTimeout(() => location.hash = "#/", 400);
         } catch (e) {
           msg.innerHTML = `<div class="alert alert-error">ログインに失敗しました<br>${e?.message ?? e}</div>`;
           node.classList.add("shake");
-          setTimeout(() => node.classList.remove("shake"), 300);
+          setTimeout(()=>node.classList.remove("shake"),300);
         } finally {
           btn.disabled = false;
           btn.textContent = "ログイン";
@@ -589,13 +529,10 @@
       app.innerHTML = "";
       const node = el(`
         <div>
-          <div class="header">
-            <h1>新規登録</h1>
-          </div>
-
+          <div class="header"><h1>新規登録</h1></div>
           <div class="card">
             <div class="card-title">アカウント作成</div>
-            <p class="card-subtitle">ニックネームとPINコードを設定してください。PINコードは忘れないようご注意ください。</p>
+            <p class="card-subtitle">ニックネームとPINコードを設定してください。PINは忘れないで。</p>
 
             <div class="input-group">
               <label class="input-label">ニックネーム</label>
@@ -607,12 +544,10 @@
               <input id="pin" type="password" inputmode="numeric" maxlength="4" placeholder="4桁の数字" />
             </div>
 
-            <button id="btn">登録して開始</button>
-
+            <button id="btn" type="button">登録して開始</button>
             <div id="msg"></div>
 
             <div class="divider"></div>
-
             <p class="text-center text-muted">
               すでにアカウントをお持ちの方は<br>
               <a href="#/login" class="link">ログイン</a>
@@ -623,36 +558,26 @@
 
       node.querySelector("#btn").onclick = async () => {
         const nick = node.querySelector("#nick").value.trim();
-        const pin = node.querySelector("#pin").value.trim();
-        const msg = node.querySelector("#msg");
-        const btn = node.querySelector("#btn");
-
+        const pin  = node.querySelector("#pin").value.trim();
+        const msg  = node.querySelector("#msg");
+        const btn  = node.querySelector("#btn");
         msg.innerHTML = "";
 
-        if (!nick) {
-          msg.innerHTML = '<div class="alert alert-error">ニックネームを入力してください</div>';
-          node.classList.add("shake");
-          setTimeout(() => node.classList.remove("shake"), 300);
-          return;
-        }
-        if (!/^[0-9]{4}$/.test(pin)) {
-          msg.innerHTML = '<div class="alert alert-error">PINコードは4桁の数字で入力してください</div>';
-          node.classList.add("shake");
-          setTimeout(() => node.classList.remove("shake"), 300);
-          return;
-        }
+        if (!nick) { msg.innerHTML = '<div class="alert alert-error">ニックネームを入力してください</div>'; node.classList.add("shake"); setTimeout(()=>node.classList.remove("shake"),300); return; }
+        if (!/^[0-9]{4}$/.test(pin)) { msg.innerHTML = '<div class="alert alert-error">PINコードは4桁の数字で入力してください</div>'; node.classList.add("shake"); setTimeout(()=>node.classList.remove("shake"),300); return; }
 
         btn.disabled = true;
         btn.textContent = "登録中...";
 
         try {
-          await sb.rpc("register_player", { nick, pin });
+          const { error } = await sb.rpc("register_player", { nick, pin });
+          if (error) throw error;
           msg.innerHTML = '<div class="alert alert-success">✓ 登録完了</div>';
-          setTimeout(() => location.hash = "#/", 500);
+          setTimeout(() => location.hash = "#/", 400);
         } catch (e) {
-          msg.innerHTML = '<div class="alert alert-error">登録に失敗しました。同じニックネームが既に存在する可能性があります。</div>';
+          msg.innerHTML = `<div class="alert alert-error">登録に失敗しました<br>${e?.message ?? "同じニックネームが既に存在する可能性があります"}</div>`;
           node.classList.add("shake");
-          setTimeout(() => node.classList.remove("shake"), 300);
+          setTimeout(()=>node.classList.remove("shake"),300);
         } finally {
           btn.disabled = false;
           btn.textContent = "登録して開始";
@@ -680,28 +605,22 @@
 
           <div class="card">
             ${locked ? `
-              <div class="alert alert-error">
-                🔒 このチェックポイントはロックされています<br>
-                先にチェックポイント${target - 1}をクリアしてください
-              </div>
+              <div class="alert alert-error">🔒 ロック中：先にCP${target - 1}をクリアしてね</div>
             ` : `
               <div class="card-title">チェックポイント到達</div>
-              <p class="card-subtitle">このQRコードに到達した方のみ、進捗を更新できます</p>
-              <button id="claim" ${locked ? "disabled" : ""}>✓ 到達を確認</button>
+              <p class="card-subtitle">到達した人だけ進捗を更新できます</p>
+              <button id="claim" type="button">✓ 到達を確認</button>
             `}
 
             <div id="msg"></div>
 
             <div id="hint" style="display:none;">
-              <div class="alert alert-success">
-                <strong>クリア！</strong><br>
-                次のヒントが解放されました
-              </div>
+              <div class="alert alert-success"><strong>クリア！</strong><br>次のヒントが解放されました</div>
               <div class="hint-box">
                 <strong>💡 ヒント ${target}</strong><br>
                 ${hintText(target)}
               </div>
-              <button class="btn-secondary" onclick="location.hash='#/'">ホームに戻る</button>
+              <button class="btn-secondary" type="button" onclick="location.hash='#/'">ホームに戻る</button>
             </div>
           </div>
         </div>
@@ -721,9 +640,9 @@
             const res = await advanceIfAllowed(me.id, target);
 
             if (!res.ok) {
-              msg.innerHTML = `<div class="alert alert-error">順番が違います。現在の進捗はCP${res.current}です</div>`;
+              msg.innerHTML = `<div class="alert alert-error">順番が違います。現在はCP${res.current}です</div>`;
               node.classList.add("shake");
-              setTimeout(() => node.classList.remove("shake"), 300);
+              setTimeout(()=>node.classList.remove("shake"),300);
               btn.disabled = false;
               btn.textContent = "✓ 到達を確認";
               return;
@@ -732,9 +651,9 @@
             node.querySelector("#hint").style.display = "block";
             btn.style.display = "none";
           } catch (e) {
-            msg.innerHTML = '<div class="alert alert-error">エラーが発生しました。もう一度お試しください</div>';
+            msg.innerHTML = `<div class="alert alert-error">エラー：${e?.message ?? e}</div>`;
             node.classList.add("shake");
-            setTimeout(() => node.classList.remove("shake"), 300);
+            setTimeout(()=>node.classList.remove("shake"),300);
             btn.disabled = false;
             btn.textContent = "✓ 到達を確認";
           }
@@ -744,18 +663,15 @@
       app.appendChild(node);
     }
 
-    function renderTrap(nickname, prog) {
+    function renderTrap() {
       app.innerHTML = "";
       app.appendChild(el(`
         <div>
-          <div class="header">
-            <h1>😈 ハズレ</h1>
-          </div>
-
+          <div class="header"><h1>😈 ハズレ</h1></div>
           <div class="card">
             <div class="card-title">残念！</div>
             <p class="card-subtitle">ここには何もありません。でも、あなたの好奇心は素晴らしい！</p>
-            <button onclick="location.hash='#/'">ホームに戻る</button>
+            <button type="button" onclick="location.hash='#/'">ホームに戻る</button>
           </div>
         </div>
       `));
@@ -777,8 +693,8 @@
             <video id="v" playsinline></video>
 
             <div class="button-group">
-              <button id="start">カメラ起動</button>
-              <button id="stop" disabled>停止</button>
+              <button id="start" type="button">カメラ起動</button>
+              <button id="stop" type="button" disabled>停止</button>
             </div>
 
             <div class="divider"></div>
@@ -787,7 +703,7 @@
               <label class="input-label">または直接入力</label>
               <input id="manual" placeholder="QRコードのURLを貼り付け" />
             </div>
-            <button id="go" class="btn-secondary">開く</button>
+            <button id="go" class="btn-secondary" type="button">開く</button>
 
             <div id="msg"></div>
           </div>
@@ -813,14 +729,8 @@
       };
 
       const openResult = (text) => {
-        if (text.includes("#/c/") || text.includes("#/")) {
-          location.href = text;
-          return;
-        }
-        if (text.startsWith("#/")) {
-          location.hash = text;
-          return;
-        }
+        if (text.startsWith("#/")) { location.hash = text; return; }
+        if (text.includes("#/")) { location.href = text; return; }
         msg.innerHTML = `<div class="alert alert-error">有効なQRコードではありません</div>`;
       };
 
@@ -834,26 +744,26 @@
           stopBtn.disabled = false;
 
           if (!("BarcodeDetector" in window)) {
-            msg.innerHTML = '<div class="alert alert-error">お使いの端末では自動スキャンに対応していません。URLを直接入力してください。</div>';
+            msg.innerHTML = `<div class="alert alert-error">この端末は自動スキャン非対応。URL入力で進めてね。</div>`;
             return;
           }
 
           const det = new BarcodeDetector({ formats: ["qr_code"] });
 
           const tick = async () => {
-            try {
+            try{
               const barcodes = await det.detect(v);
-              if (barcodes && barcodes[0]?.rawValue) {
+              if (barcodes?.[0]?.rawValue) {
                 stopCamera();
                 openResult(barcodes[0].rawValue);
                 return;
               }
-            } catch (e) {}
+            } catch {}
             raf = requestAnimationFrame(tick);
           };
           tick();
         } catch (e) {
-          msg.innerHTML = `<div class="alert alert-error">カメラの起動に失敗しました</div>`;
+          msg.innerHTML = `<div class="alert alert-error">カメラ起動に失敗：${e?.message ?? e}</div>`;
           stopCamera();
         }
       };
@@ -862,164 +772,136 @@
 
       node.querySelector("#go").onclick = () => {
         const text = node.querySelector("#manual").value.trim();
-        if (!text) {
-          msg.innerHTML = '<div class="alert alert-error">URLを入力してください</div>';
-          return;
-        }
+        if (!text) { msg.innerHTML = `<div class="alert alert-error">URLを入力してください</div>`; return; }
         openResult(text);
       };
 
-    app.appendChild(node);
-}
-
-function renderMe(nickname, prog) {
-  app.innerHTML = "";
-
-  let hintsHtml = "";
-  for (let i = 1; i <= prog.checkpoint; i++) {
-    hintsHtml += `
-      <div class="list-item">
-        <div>
-          <strong>チェックポイント ${i}</strong>
-          <div class="text-muted" style="font-size:14px;margin-top:4px;">${hintText(i)}</div>
-        </div>
-        <div style="font-size:20px;">✅</div>
-      </div>
-    `;
-  }
-  if (!hintsHtml) {
-    hintsHtml = `<p class="text-muted">まだヒントはありません。最初のチェックポイントを見つけましょう！</p>`;
-  }
-
-  app.appendChild(el(`
-    <div>
-      <div class="header">
-        <h1>👤 マイページ</h1>
-      </div>
-
-      <div class="card">
-        <div class="card-title">${nickname}</div>
-        <div class="stats">
-          <div class="stat-item">
-            <div class="stat-value">${prog.checkpoint}</div>
-            <div class="stat-label">クリア済み</div>
-          </div>
-          <div class="stat-item">
-            <div class="stat-value">${progressPercent(prog.checkpoint)}%</div>
-            <div class="stat-label">達成率</div>
-          </div>
-        </div>
-        <div class="progress-container">
-          <div class="progress-bar" style="width:${progressPercent(prog.checkpoint)}%"></div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">解放済みヒント</div>
-        <div style="margin-top:16px;">${hintsHtml}</div>
-      </div>
-    </div>
-  `));
-}
-
-async function renderLeaderboard(nickname, prog) {
-  app.innerHTML = "";
-  app.appendChild(el(`
-    <div>
-      <div class="header">
-        <h1>🏆 ランキング</h1>
-      </div>
-
-      <div class="card">
-        <div class="card-title">進捗ランキング</div>
-        <p class="card-subtitle">進捗が高い順。同率の場合は到達が早い順</p>
-        <div id="list"></div>
-      </div>
-    </div>
-  `));
-
-  const list = document.getElementById("list");
-  list.innerHTML = `<p class="text-muted text-center">読み込み中...</p>`;
-
-  try {
-    const { data, error } = await sb.rpc("get_leaderboard");
-    if (error) throw error;
-
-    if (!data?.length) {
-      list.innerHTML = `<p class="text-muted text-center">まだ誰もいません</p>`;
-      return;
+      app.appendChild(node);
     }
 
-    const rows = data.map((r, idx) => {
-      const me = (r.nickname === nickname);
-      const rankClass = idx < 3 ? "top" : "";
-      return `
-        <div class="list-item ${me ? "active" : ""}">
-          <div style="display:flex;align-items:center;gap:12px;flex:1;">
-            <div class="rank-number ${rankClass}">#${idx + 1}</div>
+    function renderMe(nickname, prog) {
+      app.innerHTML = "";
+
+      let hintsHtml = "";
+      for (let i = 1; i <= prog.checkpoint; i++) {
+        hintsHtml += `
+          <div class="list-item">
             <div>
-              <strong>${r.nickname}</strong>
-              ${me ? '<span class="badge" style="margin-left:8px;font-size:11px;">あなた</span>' : ''}
+              <strong>チェックポイント ${i}</strong>
+              <div class="text-muted" style="font-size:14px;margin-top:4px;">${hintText(i)}</div>
+            </div>
+            <div style="font-size:20px;">✅</div>
+          </div>
+        `;
+      }
+      if (!hintsHtml) hintsHtml = `<p class="text-muted">まだヒントはありません。</p>`;
+
+      app.appendChild(el(`
+        <div>
+          <div class="header"><h1>👤 マイページ</h1></div>
+
+          <div class="card">
+            <div class="card-title">${nickname}</div>
+            <div class="stats">
+              <div class="stat-item">
+                <div class="stat-value">${prog.checkpoint}</div>
+                <div class="stat-label">クリア済み</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">${progressPercent(prog.checkpoint)}%</div>
+                <div class="stat-label">達成率</div>
+              </div>
+            </div>
+            <div class="progress-container">
+              <div class="progress-bar" style="width:${progressPercent(prog.checkpoint)}%"></div>
             </div>
           </div>
-          <div style="font-weight:700;color:var(--primary);">CP ${r.checkpoint}</div>
+
+          <div class="card">
+            <div class="card-title">解放済みヒント</div>
+            <div style="margin-top:16px;">${hintsHtml}</div>
+          </div>
         </div>
-      `;
-    }).join("");
+      `));
+    }
 
-    list.innerHTML = rows;
-  } catch (e) {
-    list.innerHTML = `<div class="alert alert-error">データの取得に失敗しました</div>`;
-  }
-}
+    async function renderLeaderboard(nickname) {
+      app.innerHTML = "";
+      app.appendChild(el(`
+        <div>
+          <div class="header"><h1>🏆 ランキング</h1></div>
+          <div class="card">
+            <div class="card-title">進捗ランキング</div>
+            <p class="card-subtitle">進捗が高い順。同率の場合は到達が早い順</p>
+            <div id="list"></div>
+          </div>
+        </div>
+      `));
 
-async function route() {
-  setNavActive();
-  await ensureAnonLogin();
-  const r = getRoute();
+      const list = document.getElementById("list");
+      list.innerHTML = `<p class="text-muted text-center">読み込み中...</p>`;
 
-  const me = await getMe();
-  const nick = await getNickname(me.id);
-  const prog = nick ? await getProgress(me.id) : { checkpoint: 0, updated_at: null };
+      try {
+        const { data, error } = await sb.rpc("get_leaderboard");
+        if (error) throw error;
 
-  if (r.type === "scan") { renderScan(nick, prog); return; }
-  if (r.type === "leaderboard") { await renderLeaderboard(nick, prog); return; }
-  if (r.type === "me") { renderMe(nick, prog); return; }
-  if (r.type === "login") { renderLogin(); return; }
-  if (r.type === "signup") { renderSignup(); return; }
+        if (!data?.length) {
+          list.innerHTML = `<p class="text-muted text-center">まだ誰もいません</p>`;
+          return;
+        }
 
-  if (!nick) { location.hash = "#/login"; return; }
+        list.innerHTML = data.map((r, idx) => {
+          const me = (r.nickname === nickname);
+          const rankClass = idx < 3 ? "top" : "";
+          return `
+            <div class="list-item ${me ? "active" : ""}">
+              <div style="display:flex;align-items:center;gap:12px;flex:1;">
+                <div class="rank-number ${rankClass}">#${idx + 1}</div>
+                <div><strong>${r.nickname}</strong></div>
+              </div>
+              <div style="font-weight:700;color:var(--primary);">CP ${r.checkpoint}</div>
+            </div>
+          `;
+        }).join("");
+      } catch (e) {
+        list.innerHTML = `<div class="alert alert-error">取得失敗：${e?.message ?? e}</div>`;
+      }
+    }
 
-  if (r.type === "home") { renderHome(nick, prog); return; }
-  if (r.type === "cp") {
-    if (r.n === 999) { renderTrap(nick, prog); return; }
-    renderCheckpoint(nick, prog, r.n);
-    return;
-  }
+    async function route() {
+      setNavActive();
+      await ensureAnonLogin();
 
-  location.hash = "#/login";
-}
+      const r = getRoute();
+      const me = await getMe();
+      const nick = await getNickname(me.id);
+      const prog = nick ? await getProgress(me.id) : { checkpoint: 0, updated_at: null };
 
-window.addEventListener("hashchange", route);
-route();
-</script>
-  <nav class="navbar">
-    <a class="nav-item" href="#/">
-      <div class="nav-icon">🏠</div>
-      <div>ホーム</div>
-    </a>
-    <a class="nav-item" href="#/scan">
-      <div class="nav-icon">📷</div>
-      <div>スキャン</div>
-    </a>
-    <a class="nav-item" href="#/leaderboard">
-      <div class="nav-icon">🏆</div>
-      <div>ランキング</div>
-    </a>
-    <a class="nav-item" href="#/me">
-      <div class="nav-icon">👤</div>
-      <div>マイページ</div>
-    </a>
-  </nav>
+      // ✅ログイン前に開かせない（ここが大事）
+      if (!nick && (r.type === "scan" || r.type === "leaderboard" || r.type === "me" || r.type === "home" || r.type === "cp")) {
+        location.hash = "#/login";
+        return;
+      }
+
+      if (r.type === "login") { renderLogin(); return; }
+      if (r.type === "signup") { renderSignup(); return; }
+
+      if (r.type === "home") { renderHome(nick, prog); return; }
+      if (r.type === "scan") { renderScan(nick, prog); return; }
+      if (r.type === "me") { renderMe(nick, prog); return; }
+      if (r.type === "leaderboard") { await renderLeaderboard(nick); return; }
+
+      if (r.type === "cp") {
+        if (r.n === 999) { renderTrap(); return; }
+        renderCheckpoint(nick, prog, r.n);
+        return;
+      }
+
+      location.hash = "#/login";
+    }
+
+    window.addEventListener("hashchange", route);
+    route();
+  </script>
 </body>
 </html>
