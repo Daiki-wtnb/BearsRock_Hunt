@@ -310,6 +310,51 @@
     font-weight: 800;
     margin-bottom: 8px;
   }
+    /* --- Trap / Game feel --- */
+.trapCard{
+  border: 1px solid rgba(255,59,48,.25);
+  background: radial-gradient(120% 120% at 20% 0%, rgba(255,69,58,.18), transparent 55%),
+              radial-gradient(120% 120% at 90% 20%, rgba(255,159,10,.14), transparent 55%),
+              var(--card);
+  position: relative;
+  overflow: hidden;
+}
+.trapSkull{
+  font-size: 44px;
+  animation: pulse 1.3s ease-in-out infinite;
+}
+@keyframes pulse{
+  0%,100%{ transform: scale(1); opacity: .95; }
+  50%{ transform: scale(1.06); opacity: 1; }
+}
+.glitch{
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  position: relative;
+  display:inline-block;
+}
+.glitch::before, .glitch::after{
+  content: attr(data-text);
+  position:absolute; left:0; top:0;
+  opacity:.65;
+}
+.glitch::before{ transform: translate(2px,0); color: rgba(255,69,58,.9); }
+.glitch::after{ transform: translate(-2px,0); color: rgba(10,132,255,.9); }
+.flicker{ animation: flicker 1.6s infinite; }
+@keyframes flicker{
+  0%,100%{ opacity:1; }
+  45%{ opacity:.9; }
+  50%{ opacity:.5; }
+  55%{ opacity:.95; }
+}
+.smallHint{
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-top: 10px;
+  line-height: 1.5;
+}
+
   </style>
 </head>
 
@@ -339,6 +384,14 @@
     const SUPABASE_URL = "https://ahynlwtcdrtkzykcccgb.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFoeW5sd3RjZHJ0a3p5a2NjY2diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc0MTA0MDQsImV4cCI6MjA4Mjk4NjQwNH0.HttRXUS-Qy6VA0t4UE8MIC58tgncg-2bucYfLr14LSA";
     const MAX_CHECKPOINT = 4;
+    // ✅ この4つだけが「正解QR」
+const CP_KEYS = {
+  1: "f8K3",
+  2: "Qm9A",
+  3: "Z7pL",
+  4: "Kx2R",
+};
+const TRAP_KEY = "TRAP";
 
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: { persistSession: true, autoRefreshToken: true }
@@ -360,10 +413,10 @@
 const getRoute = () => {
   const h = location.hash;
 
-  // ✅ ランダム必須（#/c/1-f8K3 の形式のみOK）
-  const m = h.match(/^#\/c\/(\d+)-[A-Za-z0-9]+$/);
+  // ✅ #/c/1-f8K3 みたいに「番号」と「キー」を両方取る
+  const m = h.match(/^#\/c\/(\d+)-([A-Za-z0-9]+)$/);
   if (m) {
-    return { type: "cp", n: parseInt(m[1], 10) };
+    return { type: "cp", n: parseInt(m[1], 10), key: m[2] };
   }
 
   if (h === "#/login") return { type: "login" };
@@ -373,9 +426,9 @@ const getRoute = () => {
   if (h === "#/me") return { type: "me" };
   if (h === "#/" || h === "" || h === "#") return { type: "home" };
 
-  // ❌ それ以外は unknown（ここでは何もしない）
   return { type: "unknown" };
 };
+
 
 
 
@@ -672,19 +725,48 @@ const getRoute = () => {
       app.appendChild(node);
     }
 
-    function renderTrap() {
-      app.innerHTML = "";
-      app.appendChild(el(`
-        <div>
-          <div class="header"><h1>😈 ハズレ</h1></div>
-          <div class="card">
-            <div class="card-title">残念！</div>
-            <p class="card-subtitle">ここには何もありません。でも、あなたの好奇心は素晴らしい！</p>
-            <button type="button" onclick="location.hash='#/'">ホームに戻る</button>
+    function renderTrap(nickname, prog, reason = "") {
+  app.innerHTML = "";
+
+  const lines = [
+    "ここには何もない。",
+    "順番を飛ばしても、進捗は進まない。",
+    "推測した？その情熱、正規ルートに使ってくれ。",
+    "寮は広い。ヒントは近い。",
+  ];
+  const msg = lines[Math.floor(Math.random() * lines.length)];
+
+  app.appendChild(el(`
+    <div>
+      <div class="header">
+        <h1 class="flicker">😈 ハズレ</h1>
+      </div>
+
+      <div class="card trapCard">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="trapSkull">💀</div>
+          <div>
+            <div class="glitch" data-text="TRAP">TRAP</div>
+            <div class="text-muted" style="margin-top:6px;">${msg}</div>
           </div>
         </div>
-      `));
-    }
+
+        <div class="divider"></div>
+
+        <div class="smallHint">
+          <div>✅ 正解QRは「4つのURLだけ」です。</div>
+          <div>🔒 推測URLは全部ハズレになります。</div>
+          ${reason ? `<div style="opacity:.7;margin-top:6px;">debug: ${reason}</div>` : ``}
+        </div>
+
+        <div style="margin-top:16px;">
+          <button type="button" onclick="location.hash='#/'">ホームに戻る</button>
+        </div>
+      </div>
+    </div>
+  `));
+}
+
 
     function renderScan(nickname, prog) {
   app.innerHTML = "";
@@ -905,6 +987,33 @@ const getRoute = () => {
       await ensureAnonLogin();
 
       const r = getRoute();
+      // ✅ 不明URLはハズレ
+if (r.type === "unknown") {
+  renderTrap("GUEST", { checkpoint: 0 }, "UNKNOWN");
+  return;
+}
+
+// ✅ CP URLは「この4つだけ許可」
+// 例：#/c/1-f8K3 はOK、#/c/1-aaaa はハズレ
+if (r.type === "cp") {
+  // trapは 999-TRAP だけ許可
+  if (r.n === 999) {
+    if (r.key === TRAP_KEY) {
+      renderTrap("GUEST", { checkpoint: 0 }, "TRAP");
+      return;
+    } else {
+      renderTrap("GUEST", { checkpoint: 0 }, "TRAP_KEY_MISMATCH");
+      return;
+    }
+  }
+
+  // 正解CPは 1..4 で、キーが一致した時だけ通す
+  if (!CP_KEYS[r.n] || r.key !== CP_KEYS[r.n]) {
+    renderTrap("GUEST", { checkpoint: 0 }, "KEY_MISMATCH");
+    return;
+  }
+}
+
       // route() の中
 if (r.type === "unknown") {
   renderTrap("GUEST", { checkpoint: 0 });
