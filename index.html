@@ -6,227 +6,377 @@
   <title>Dorm QR Hunt</title>
   <style>
   :root{
-    --bg1:#0b1020;
-    --bg2:#120a2a;
-    --card: rgba(255,255,255,.08);
-    --line: rgba(255,255,255,.18);
-    --text: rgba(255,255,255,.92);
-    --muted: rgba(255,255,255,.65);
-    --bad:#ff5a7a;
-    --good:#45f08a;
-    --accent:#7aa7ff;
+    --primary:#007AFF;
+    --primary-light:#5AC8FA;
+    --bg:#F2F2F7;
+    --card:#FFFFFF;
+    --border:#E5E5EA;
+    --text:#000000;
+    --text-secondary:#8E8E93;
+    --success:#34C759;
+    --error:#FF3B30;
+    --shadow: 0 2px 12px rgba(0,0,0,0.08);
   }
-  *{ box-sizing:border-box; }
+  
+  @media (prefers-color-scheme: dark) {
+    :root{
+      --primary:#0A84FF;
+      --primary-light:#64D2FF;
+      --bg:#000000;
+      --card:#1C1C1E;
+      --border:#38383A;
+      --text:#FFFFFF;
+      --text-secondary:#8E8E93;
+      --success:#32D74B;
+      --error:#FF453A;
+      --shadow: 0 2px 12px rgba(0,0,0,0.3);
+    }
+  }
+  
+  *{ box-sizing:border-box; margin:0; padding:0; }
   html,body{ height:100%; }
   body{
-    margin:0;
-    color:var(--text);
-    font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, "Hiragino Sans", "Noto Sans JP", sans-serif;
-    background:
-      radial-gradient(1200px 800px at 20% 10%, rgba(122,167,255,.20), transparent 60%),
-      radial-gradient(900px 700px at 90% 20%, rgba(255,90,122,.18), transparent 60%),
-      radial-gradient(900px 700px at 40% 90%, rgba(69,240,138,.14), transparent 60%),
-      linear-gradient(180deg, var(--bg1), var(--bg2));
-    padding: 22px;
-  }
-  body:before{
-    content:"";
-    position:fixed; inset:0;
-    pointer-events:none;
-    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)' opacity='.12'/%3E%3C/svg%3E");
-    mix-blend-mode: overlay;
-    opacity:.5;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Hiragino Sans", "Noto Sans JP", sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
   }
 
-  .shell{ max-width: 860px; margin: 0 auto; }
-  .topbar{
-    display:flex; align-items:center; justify-content:space-between;
-    margin-bottom: 14px;
-    gap: 10px;
+  .container{
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 16px;
+    padding-bottom: calc(80px + env(safe-area-inset-bottom));
   }
-  .brand{
-    font-weight:800;
-    letter-spacing:.02em;
-    font-size: 1.05rem;
-    opacity:.95;
+
+  .header{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 0 20px;
   }
-  .tag{
-    display:inline-flex; gap:8px; align-items:center;
-    padding:8px 12px;
-    border:1px solid var(--line);
-    border-radius:999px;
-    background: rgba(0,0,0,.18);
-    backdrop-filter: blur(10px);
-    color: var(--muted);
-    font-size:.9rem;
+  
+  .header h1{
+    font-size: 34px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  .badge{
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    box-shadow: var(--shadow);
   }
 
   .card{
-    border:1px solid var(--line);
-    background: linear-gradient(180deg, var(--card), rgba(0,0,0,.18));
-    border-radius: 20px;
-    padding: 18px;
-    backdrop-filter: blur(14px);
-    box-shadow: 0 18px 60px rgba(0,0,0,.35);
+    background: var(--card);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border);
   }
-  h1{ margin: 0 0 10px; font-size: 1.45rem; }
-  h2{ margin: 10px 0 6px; font-size: 1.2rem; }
-  p{ margin: 8px 0; color: var(--muted); }
 
-  .row{ display:grid; gap: 12px; }
-  .pillset{ display:flex; gap:10px; flex-wrap: wrap; }
+  .card-title{
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+
+  .card-subtitle{
+    font-size: 15px;
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  .stats{
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+
+  .stat-item{
+    flex: 1;
+    background: var(--bg);
+    padding: 16px;
+    border-radius: 12px;
+    text-align: center;
+  }
+
+  .stat-value{
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 4px;
+  }
+
+  .stat-label{
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .progress-container{
+    background: var(--bg);
+    border-radius: 12px;
+    height: 8px;
+    overflow: hidden;
+    margin: 16px 0;
+  }
+
+  .progress-bar{
+    height: 100%;
+    background: linear-gradient(90deg, var(--primary), var(--primary-light));
+    border-radius: 12px;
+    transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  }
 
   input{
-    width:100%;
-    padding: 13px 14px;
-    border-radius: 14px;
-    border:1px solid var(--line);
-    background: rgba(0,0,0,.20);
+    width: 100%;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--card);
     color: var(--text);
-    outline:none;
+    font-size: 17px;
+    outline: none;
+    transition: all 0.2s;
   }
+
   input:focus{
-    border-color: rgba(122,167,255,.65);
-    box-shadow: 0 0 0 4px rgba(122,167,255,.15);
+    border-color: var(--primary);
+    box-shadow: 0 0 0 4px rgba(0,122,255,0.1);
+  }
+
+  .input-group{
+    margin-bottom: 16px;
+  }
+
+  .input-label{
+    display: block;
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--text);
   }
 
   button{
-    width:100%;
-    padding: 13px 14px;
-    border-radius: 14px;
-    border:1px solid rgba(122,167,255,.65);
-    background: linear-gradient(180deg, rgba(122,167,255,.35), rgba(122,167,255,.10));
-    color: var(--text);
-    font-weight: 800;
-    letter-spacing:.02em;
-    cursor:pointer;
-    transition: transform .06s ease, filter .15s ease, opacity .15s ease;
-  }
-  button:hover{ filter: brightness(1.12); }
-  button:active{ transform: translateY(1px) scale(.99); }
-  button:disabled{
-    opacity:.45;
-    cursor:not-allowed;
-    border-color: var(--line);
-    background: rgba(0,0,0,.12);
-  }
-
-  a{ color: var(--text); }
-  .linkbtn{
-    display:inline-flex;
-    padding:10px 12px;
+    width: 100%;
+    padding: 16px;
+    border: none;
     border-radius: 12px;
-    border:1px solid var(--line);
+    background: var(--primary);
+    color: white;
+    font-size: 17px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: var(--shadow);
+  }
+
+  button:hover:not(:disabled){
+    opacity: 0.9;
+    transform: translateY(-1px);
+  }
+
+  button:active:not(:disabled){
+    transform: translateY(0);
+  }
+
+  button:disabled{
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .btn-secondary{
+    background: var(--bg);
     color: var(--text);
-    text-decoration:none;
-    background: rgba(0,0,0,.16);
+    margin-top: 12px;
   }
 
-  .msg-bad{ color: var(--bad); font-weight:700; }
-  .msg-good{ color: var(--good); font-weight:800; }
-
-  .progressWrap{
-    border:1px solid var(--line);
-    background: rgba(0,0,0,.18);
-    border-radius: 999px;
-    padding: 6px;
-  }
-  .bar{
-    height: 10px;
-    border-radius: 999px;
-    width: 0%;
-    background: linear-gradient(90deg, rgba(69,240,138,.85), rgba(122,167,255,.85));
-    transition: width .35s ease;
+  .alert{
+    padding: 14px 16px;
+    border-radius: 12px;
+    margin: 12px 0;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 1.4;
   }
 
-  .shake{ animation: shake .25s linear 0s 2; }
+  .alert-error{
+    background: rgba(255,59,48,0.1);
+    color: var(--error);
+    border: 1px solid rgba(255,59,48,0.2);
+  }
+
+  .alert-success{
+    background: rgba(52,199,89,0.1);
+    color: var(--success);
+    border: 1px solid rgba(52,199,89,0.2);
+  }
+
+  .link{
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .text-center{
+    text-align: center;
+  }
+
+  .text-muted{
+    color: var(--text-secondary);
+    font-size: 15px;
+  }
+
+  .divider{
+    height: 1px;
+    background: var(--border);
+    margin: 20px 0;
+  }
+
+  .list-item{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    background: var(--bg);
+    border-radius: 12px;
+    margin-bottom: 8px;
+  }
+
+  .list-item.active{
+    background: rgba(0,122,255,0.1);
+    border: 1px solid rgba(0,122,255,0.2);
+  }
+
+  .rank-number{
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    min-width: 40px;
+  }
+
+  .rank-number.top{
+    color: var(--primary);
+  }
+
+  video{
+    width: 100%;
+    border-radius: 16px;
+    background: var(--bg);
+    margin: 16px 0;
+  }
+
+  .button-group{
+    display: flex;
+    gap: 12px;
+    margin: 12px 0;
+  }
+
+  .button-group button{
+    flex: 1;
+  }
+
+  .navbar{
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    display: flex;
+    padding: 8px;
+    padding-bottom: calc(8px + env(safe-area-inset-bottom));
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.08);
+    z-index: 1000;
+  }
+
+  .nav-item{
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px;
+    text-decoration: none;
+    color: var(--text-secondary);
+    font-size: 10px;
+    font-weight: 600;
+    border-radius: 8px;
+    transition: all 0.2s;
+  }
+
+  .nav-item.active{
+    color: var(--primary);
+  }
+
+  .nav-icon{
+    font-size: 24px;
+  }
+
+  .hint-box{
+    background: var(--bg);
+    padding: 16px;
+    border-radius: 12px;
+    margin: 12px 0;
+    border-left: 4px solid var(--primary);
+  }
+
   @keyframes shake{
-    0%{ transform: translateX(0); }
-    25%{ transform: translateX(-4px); }
-    50%{ transform: translateX(4px); }
-    75%{ transform: translateX(-3px); }
-    100%{ transform: translateX(0); }
+    0%, 100%{ transform: translateX(0); }
+    25%{ transform: translateX(-8px); }
+    75%{ transform: translateX(8px); }
   }
 
-    /* mobile polish */
-body{ padding: 16px; padding-bottom: calc(86px + env(safe-area-inset-bottom)); }
-.shell{ max-width: 920px; }
-.card{ padding: 16px; border-radius: 22px; }
-h1{ font-size: 1.25rem; }
-button{ font-size: 1rem; padding: 14px 14px; }
-input{ font-size: 1rem; padding: 14px 14px; }
+  .shake{
+    animation: shake 0.3s ease-in-out;
+  }
 
-.navbar{
-  position: fixed;
-  left: 16px; right: 16px;
-  bottom: calc(12px + env(safe-area-inset-bottom));
-  display:flex;
-  gap:10px;
-  padding:10px;
-  border-radius: 18px;
-  border: 1px solid var(--line);
-  background: rgba(0,0,0,.25);
-  backdrop-filter: blur(14px);
-  box-shadow: 0 18px 60px rgba(0,0,0,.35);
-  z-index: 999;
-}
-.navbtn{
-  flex:1;
-  border:1px solid rgba(255,255,255,.12);
-  border-radius: 14px;
-  padding: 10px 10px;
-  text-decoration:none;
-  background: rgba(255,255,255,.06);
-  color: var(--text);
-  font-weight: 800;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-}
-.navbtn.active{
-  border-color: rgba(122,167,255,.65);
-  background: linear-gradient(180deg, rgba(122,167,255,.25), rgba(122,167,255,.08));
-}
+  .checkpoint-card{
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: white;
+    padding: 24px;
+    border-radius: 16px;
+    margin: 16px 0;
+    text-align: center;
+  }
 
+  .checkpoint-number{
+    font-size: 48px;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
   </style>
 </head>
 
 <body>
-  <div class="shell">
-    <div class="topbar">
-      <div class="brand">🏁 BEARSROCK HUNT</div>
-      <div class="tag">QRスキャンで進行</div>
-    </div>
-
-    <div class="card">
-      <h1>寮内QRハント</h1>
-      <div id="app"></div>
-    </div>
+  <div class="container">
+    <div id="app"></div>
   </div>
 
   <script type="module">
     import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-    // =========================
-    // 設定
-    // =========================
     const SUPABASE_URL = "https://ahynlwtcdrtkzykcccgb.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFoeW5sd3RjZHJ0a3p5a2NjY2diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc0MTA0MDQsImV4cCI6MjA4Mjk4NjQwNH0.HttRXUS-Qy6VA0t4UE8MIC58tgncg-2bucYfLr14LSA";
-
-    // 進捗バーの最大（checkpointの数に合わせて変更）
     const MAX_CHECKPOINT = 4;
 
-    // =========================
-    // Supabase 接続
-    // =========================
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: { persistSession: true, autoRefreshToken: true }
     });
 
-    // =========================
-    // DOMユーティリティ
-    // =========================
     const app = document.getElementById("app");
 
     const el = (html) => {
@@ -240,48 +390,32 @@ input{ font-size: 1rem; padding: 14px 14px; }
       return Math.round((v / max) * 100);
     };
 
-    // =========================
-    // ルート（ページ分け）
-    // =========================
-    const getCheckpointFromHash = () => {
-      const m = location.hash.match(/^#\/c\/(\d+)$/);
-      return m ? parseInt(m[1], 10) : null;
+    const getRoute = () => {
+      const h = location.hash;
+      const cpMatch = h.match(/^#\/c\/(\d+)$/);
+      if (cpMatch) return { type: "cp", n: parseInt(cpMatch[1], 10) };
+      if (h === "#/login") return { type: "login" };
+      if (h === "#/signup") return { type: "signup" };
+      if (h === "#/scan") return { type: "scan" };
+      if (h === "#/leaderboard") return { type: "leaderboard" };
+      if (h === "#/me") return { type: "me" };
+      if (h === "#/" || h === "" || h === "#") return { type: "home" };
+      return { type: "login" };
     };
 
-    const getRoute = () => {
-  if (location.hash.startsWith("#/c/")) return { type: "cp", n: getCheckpointFromHash() };
-  if (location.hash === "#/login") return { type: "login" };
-  if (location.hash === "#/signup") return { type: "signup" };
-
-  if (location.hash === "#/scan") return { type: "scan" };
-  if (location.hash === "#/leaderboard") return { type: "leaderboard" };
-  if (location.hash === "#/me") return { type: "me" };
-
-  if (location.hash === "#/" || location.hash === "" || location.hash === "#") return { type: "home" };
-  return { type: "login" };
-};
-
     function setNavActive() {
-  const links = document.querySelectorAll("#navbar .navbtn");
-  links.forEach(a => a.classList.remove("active"));
-  const h = location.hash || "#/";
-  const target =
-    h.startsWith("#/c/") ? "#/" :
-    ["#/scan","#/leaderboard","#/me","#/"].includes(h) ? h :
-    "#/login";
-  links.forEach(a => {
-    if (a.getAttribute("href") === target) a.classList.add("active");
-  });
-}
+      const links = document.querySelectorAll(".nav-item");
+      links.forEach(a => a.classList.remove("active"));
+      const h = location.hash || "#/";
+      const target = h.startsWith("#/c/") ? "#/" : ["#/scan","#/leaderboard","#/me","#/"].includes(h) ? h : "#/login";
+      links.forEach(a => {
+        if (a.getAttribute("href") === target) a.classList.add("active");
+      });
+    }
 
-
-    // =========================
-    // 認証（匿名）
-    // =========================
     async function ensureAnonLogin() {
       const { data: { session } } = await sb.auth.getSession();
       if (session) return session;
-
       const { data, error } = await sb.auth.signInAnonymously();
       if (error) throw error;
       return data.session;
@@ -292,189 +426,236 @@ input{ font-size: 1rem; padding: 14px 14px; }
       return user;
     }
 
-    // =========================
-    // DB操作
-    // =========================
     async function getNickname(user_id) {
-      const { data, error } = await sb
-        .from("players")
-        .select("nickname")
-        .eq("user_id", user_id)
-        .maybeSingle();
+      const { data, error } = await sb.from("players").select("nickname").eq("user_id", user_id).maybeSingle();
       if (error) throw error;
       return data?.nickname ?? null;
     }
 
     async function getProgress(user_id) {
-      const { data, error } = await sb
-        .from("progress")
-        .select("checkpoint, updated_at")
-        .eq("user_id", user_id)
-        .maybeSingle();
+      const { data, error } = await sb.from("progress").select("checkpoint, updated_at").eq("user_id", user_id).maybeSingle();
       if (error) throw error;
       return data ?? { checkpoint: 0, updated_at: null };
     }
 
-    // 方式1：current+1 の時だけ進める
     async function advanceIfAllowed(user_id, targetCheckpoint) {
       const current = await getProgress(user_id);
-
       if (targetCheckpoint !== current.checkpoint + 1) {
         return { ok: false, current: current.checkpoint };
       }
-
-      const { error } = await sb
-        .from("progress")
-        .update({ checkpoint: targetCheckpoint })
-        .eq("user_id", user_id);
-
+      const { error } = await sb.from("progress").update({ checkpoint: targetCheckpoint }).eq("user_id", user_id);
       if (error) throw error;
       return { ok: true, current: targetCheckpoint };
     }
 
-    // =========================
-    // 文章（ここだけ好きに変える）
-    // =========================
     function hintText(n) {
       const hints = {
-        1: "ヒント1：毎朝、靴が集まる場所の“上”を見ろ。",
-        2: "ヒント2：洗濯の音がする場所。そこに次がある。",
-        3: "ヒント3：みんなが集まる掲示板の近くを探せ。",
-        4: "最終：食堂へ。クリア画面を見せて景品ゲット！"
+        1: "毎朝、靴が集まる場所の"上"を見ろ。",
+        2: "洗濯の音がする場所。そこに次がある。",
+        3: "みんなが集まる掲示板の近くを探せ。",
+        4: "食堂へ。クリア画面を見せて景品ゲット！"
       };
-      return hints[n] ?? "（このチェックポイントの文を追加してね）";
+      return hints[n] ?? "ヒントなし";
     }
 
-    // =========================
-    // 画面（UI）
-    // =========================
     function renderHome(nickname, prog) {
       app.innerHTML = "";
       app.appendChild(el(`
-        <div class="row">
-          <div class="pillset">
-            <span class="tag">👤 ${nickname}</span>
-            <span class="tag">📍 進捗 ${prog.checkpoint}</span>
+        <div>
+          <div class="header">
+            <h1>🏁 QRハント</h1>
+            <div class="badge">📍 CP ${prog.checkpoint}/${MAX_CHECKPOINT}</div>
           </div>
 
-          <div class="progressWrap" aria-label="progress">
-            <div class="bar" style="width:${progressPercent(prog.checkpoint)}%"></div>
+          <div class="card">
+            <div class="stats">
+              <div class="stat-item">
+                <div class="stat-value">${prog.checkpoint}</div>
+                <div class="stat-label">クリア済み</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">${MAX_CHECKPOINT - prog.checkpoint}</div>
+                <div class="stat-label">残り</div>
+              </div>
+            </div>
+
+            <div class="progress-container">
+              <div class="progress-bar" style="width:${progressPercent(prog.checkpoint)}%"></div>
+            </div>
+
+            <p class="card-subtitle">QRコードをスキャンしてチェックポイントを進めましょう</p>
+            
+            <button onclick="location.hash='#/scan'">📷 QRをスキャン</button>
           </div>
 
-          <p>QRをスキャンして進んでください。</p>
+          <div class="card">
+            <div class="card-title">ようこそ、${nickname}さん</div>
+            <p class="text-muted">次のチェックポイントを探してください。ヒントはマイページで確認できます。</p>
+          </div>
 
-          <p class="muted">
-            テスト用リンク（本番はQRに入れる）：<br>
-            <a href="#/c/1">CP1</a> /
-            <a href="#/c/2">CP2</a> /
-            <a href="#/c/3">CP3</a> /
-            <a href="#/c/4">CP4</a> /
-            <a href="#/c/999">TRAP</a>
-          </p>
+          <div class="card">
+            <p class="text-muted" style="font-size:13px;">テスト用リンク：
+              <a href="#/c/1" class="link">CP1</a> · 
+              <a href="#/c/2" class="link">CP2</a> · 
+              <a href="#/c/3" class="link">CP3</a> · 
+              <a href="#/c/4" class="link">CP4</a>
+            </p>
+          </div>
         </div>
       `));
     }
 
     function renderLogin() {
       app.innerHTML = "";
-
       const node = el(`
-        <div class="row">
-          <h2>ログイン</h2>
-          <p class="muted">ニックネームとPIN（4桁）で続きから再開します。</p>
+        <div>
+          <div class="header">
+            <h1>ログイン</h1>
+          </div>
 
-          <input id="nick" maxlength="20" placeholder="ニックネーム" />
-          <input id="pin" inputmode="numeric" maxlength="4" placeholder="PIN（4桁）" />
-          <button id="btn">ログイン</button>
+          <div class="card">
+            <div class="card-title">おかえりなさい</div>
+            <p class="card-subtitle">ニックネームとPINコードを入力してください</p>
 
-          <p id="msg" class="msg-bad"></p>
+            <div class="input-group">
+              <label class="input-label">ニックネーム</label>
+              <input id="nick" maxlength="20" placeholder="ニックネームを入力" />
+            </div>
 
-          <p class="muted">
-            はじめての方は <a class="linkbtn" href="#/signup">新規登録はこちら</a>
-          </p>
+            <div class="input-group">
+              <label class="input-label">PINコード</label>
+              <input id="pin" type="password" inputmode="numeric" maxlength="4" placeholder="4桁の数字" />
+            </div>
+
+            <button id="btn">ログイン</button>
+
+            <div id="msg"></div>
+
+            <div class="divider"></div>
+
+            <p class="text-center text-muted">
+              アカウントをお持ちでない方は<br>
+              <a href="#/signup" class="link">新規登録</a>
+            </p>
+          </div>
         </div>
       `);
 
       node.querySelector("#btn").onclick = async () => {
-  const btn = node.querySelector("#btn");
-  const nick = node.querySelector("#nick").value.trim();
-  const pin  = node.querySelector("#pin").value.trim();
-  const msg  = node.querySelector("#msg");
+        const btn = node.querySelector("#btn");
+        const nick = node.querySelector("#nick").value.trim();
+        const pin = node.querySelector("#pin").value.trim();
+        const msg = node.querySelector("#msg");
 
-  msg.textContent = "";
-  msg.className = "msg-bad";
+        msg.innerHTML = "";
 
-  // 入力チェック
-  if (!nick) { msg.textContent = "ニックネームを入れて"; return; }
-  if (!/^[0-9]{4}$/.test(pin)) { msg.textContent = "PINは4桁の数字にして"; return; }
+        if (!nick) {
+          msg.innerHTML = '<div class="alert alert-error">ニックネームを入力してください</div>';
+          node.classList.add("shake");
+          setTimeout(() => node.classList.remove("shake"), 300);
+          return;
+        }
+        if (!/^[0-9]{4}$/.test(pin)) {
+          msg.innerHTML = '<div class="alert alert-error">PINコードは4桁の数字で入力してください</div>';
+          node.classList.add("shake");
+          setTimeout(() => node.classList.remove("shake"), 300);
+          return;
+        }
 
-  // ローディング表示
-  btn.disabled = true;
-  const oldText = btn.textContent;
-  btn.textContent = "ログイン中...";
+        btn.disabled = true;
+        btn.textContent = "ログイン中...";
 
-  try {
-    // セッションがないとRPCが死ぬので念のため
-    await ensureAnonLogin();
+        try {
+          await ensureAnonLogin();
+          const { data, error } = await sb.rpc("claim_player", { nick, pin });
+          if (error) throw error;
 
-    const { data, error } = await sb.rpc("claim_player", { nick, pin });
-
-    if (error) throw error;
-
-    // ここに来たら成功
-    msg.className = "msg-good";
-    msg.textContent = "OK! 続きに戻ります…";
-    location.hash = "#/"; // 画面遷移
-  } catch (e) {
-    // これで「何が原因か」が表示される
-    msg.textContent = `ログイン失敗: ${e?.message ?? e}`;
-  } finally {
-    btn.disabled = false;
-    btn.textContent = oldText;
-  }
-};
-
+          msg.innerHTML = '<div class="alert alert-success">✓ ログイン成功</div>';
+          setTimeout(() => location.hash = "#/", 500);
+        } catch (e) {
+          msg.innerHTML = `<div class="alert alert-error">ログインに失敗しました<br>${e?.message ?? e}</div>`;
+          node.classList.add("shake");
+          setTimeout(() => node.classList.remove("shake"), 300);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "ログイン";
+        }
+      };
 
       app.appendChild(node);
     }
 
     function renderSignup() {
       app.innerHTML = "";
-
       const node = el(`
-        <div class="row">
-          <h2>新規登録</h2>
-          <p class="muted">ニックネームとPIN（4桁）を設定します。PINは忘れると復帰できません。</p>
+        <div>
+          <div class="header">
+            <h1>新規登録</h1>
+          </div>
 
-          <input id="nick" maxlength="20" placeholder="ニックネーム" />
-          <input id="pin" inputmode="numeric" maxlength="4" placeholder="PIN（4桁）" />
-          <button id="btn">登録して開始</button>
+          <div class="card">
+            <div class="card-title">アカウント作成</div>
+            <p class="card-subtitle">ニックネームとPINコードを設定してください。PINコードは忘れないようご注意ください。</p>
 
-          <p id="msg" class="msg-bad"></p>
+            <div class="input-group">
+              <label class="input-label">ニックネーム</label>
+              <input id="nick" maxlength="20" placeholder="ニックネームを入力" />
+            </div>
 
-          <p class="muted">
-            すでに登録済みなら <a class="linkbtn" href="#/login">ログインはこちら</a>
-          </p>
+            <div class="input-group">
+              <label class="input-label">PINコード（4桁）</label>
+              <input id="pin" type="password" inputmode="numeric" maxlength="4" placeholder="4桁の数字" />
+            </div>
+
+            <button id="btn">登録して開始</button>
+
+            <div id="msg"></div>
+
+            <div class="divider"></div>
+
+            <p class="text-center text-muted">
+              すでにアカウントをお持ちの方は<br>
+              <a href="#/login" class="link">ログイン</a>
+            </p>
+          </div>
         </div>
       `);
 
       node.querySelector("#btn").onclick = async () => {
         const nick = node.querySelector("#nick").value.trim();
-        const pin  = node.querySelector("#pin").value.trim();
-        const msg  = node.querySelector("#msg");
-        msg.textContent = "";
+        const pin = node.querySelector("#pin").value.trim();
+        const msg = node.querySelector("#msg");
+        const btn = node.querySelector("#btn");
 
-        if (!nick) { msg.textContent = "ニックネームを入れて"; node.classList.add("shake"); setTimeout(()=>node.classList.remove("shake"),400); return; }
-        if (!/^[0-9]{4}$/.test(pin)) { msg.textContent = "PINは4桁の数字にして"; node.classList.add("shake"); setTimeout(()=>node.classList.remove("shake"),400); return; }
+        msg.innerHTML = "";
+
+        if (!nick) {
+          msg.innerHTML = '<div class="alert alert-error">ニックネームを入力してください</div>';
+          node.classList.add("shake");
+          setTimeout(() => node.classList.remove("shake"), 300);
+          return;
+        }
+        if (!/^[0-9]{4}$/.test(pin)) {
+          msg.innerHTML = '<div class="alert alert-error">PINコードは4桁の数字で入力してください</div>';
+          node.classList.add("shake");
+          setTimeout(() => node.classList.remove("shake"), 300);
+          return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = "登録中...";
 
         try {
-          // ✅ Supabaseに作った関数（SQL）を呼ぶ：新規登録
           await sb.rpc("register_player", { nick, pin });
-          location.hash = "#/";
+          msg.innerHTML = '<div class="alert alert-success">✓ 登録完了</div>';
+          setTimeout(() => location.hash = "#/", 500);
         } catch (e) {
-          msg.textContent = "登録できませんでした（同じニックネームが既にあるかも）";
+          msg.innerHTML = '<div class="alert alert-error">登録に失敗しました。同じニックネームが既に存在する可能性があります。</div>';
           node.classList.add("shake");
-          setTimeout(()=>node.classList.remove("shake"),400);
+          setTimeout(() => node.classList.remove("shake"), 300);
+        } finally {
+          btn.disabled = false;
+          btn.textContent = "登録して開始";
         }
       };
 
@@ -483,67 +664,82 @@ input{ font-size: 1rem; padding: 14px 14px; }
 
     function renderCheckpoint(nickname, prog, target) {
       app.innerHTML = "";
-
       const locked = prog.checkpoint < target - 1;
 
       const node = el(`
-        <div class="row">
-          <div class="pillset">
-            <span class="tag">👤 ${nickname}</span>
-            <span class="tag">📍 進捗 ${prog.checkpoint}</span>
+        <div>
+          <div class="header">
+            <h1>チェックポイント</h1>
+            <div class="badge">📍 CP ${prog.checkpoint}/${MAX_CHECKPOINT}</div>
           </div>
 
-          <div class="progressWrap" aria-label="progress">
-            <div class="bar" style="width:${progressPercent(prog.checkpoint)}%"></div>
+          <div class="checkpoint-card">
+            <div class="checkpoint-number">${target}</div>
+            <div>CHECKPOINT ${target}</div>
           </div>
 
-          <h2>Checkpoint ${target}</h2>
+          <div class="card">
+            ${locked ? `
+              <div class="alert alert-error">
+                🔒 このチェックポイントはロックされています<br>
+                先にチェックポイント${target - 1}をクリアしてください
+              </div>
+            ` : `
+              <div class="card-title">チェックポイント到達</div>
+              <p class="card-subtitle">このQRコードに到達した方のみ、進捗を更新できます</p>
+              <button id="claim" ${locked ? "disabled" : ""}>✓ 到達を確認</button>
+            `}
 
-          ${locked
-            ? `<p class="msg-bad">🔒 ロック中：先に checkpoint ${target - 1} をクリアしてね。</p>`
-            : `<p class="muted">このQRに到達した人だけ、進捗を更新できます。</p>`
-          }
+            <div id="msg"></div>
 
-          <button id="claim" ${locked ? "disabled" : ""}>ここに到達した（次へ進む）</button>
-          <p id="msg"></p>
-
-          <div id="hint" style="display:none;">
-            <p class="msg-good">OK！</p>
-            <p>${hintText(target)}</p>
-            <p><a class="linkbtn" href="#/">ホームへ</a></p>
+            <div id="hint" style="display:none;">
+              <div class="alert alert-success">
+                <strong>クリア！</strong><br>
+                次のヒントが解放されました
+              </div>
+              <div class="hint-box">
+                <strong>💡 ヒント ${target}</strong><br>
+                ${hintText(target)}
+              </div>
+              <button class="btn-secondary" onclick="location.hash='#/'">ホームに戻る</button>
+            </div>
           </div>
-
-          <p class="muted">ハズレQR： <a href="#/c/999">#/c/999</a></p>
         </div>
       `);
 
-      node.querySelector("#claim").onclick = async () => {
-        const msg = node.querySelector("#msg");
-        msg.textContent = "";
-        msg.className = "";
+      if (!locked) {
+        node.querySelector("#claim").onclick = async () => {
+          const btn = node.querySelector("#claim");
+          const msg = node.querySelector("#msg");
+          msg.innerHTML = "";
 
-        try {
-          const me = await getMe();
-          const res = await advanceIfAllowed(me.id, target);
+          btn.disabled = true;
+          btn.textContent = "確認中...";
 
-          if (!res.ok) {
-            msg.className = "msg-bad";
-            msg.textContent = `順番が違います。あなたの現在進捗は ${res.current} です。`;
+          try {
+            const me = await getMe();
+            const res = await advanceIfAllowed(me.id, target);
+
+            if (!res.ok) {
+              msg.innerHTML = `<div class="alert alert-error">順番が違います。現在の進捗はCP${res.current}です</div>`;
+              node.classList.add("shake");
+              setTimeout(() => node.classList.remove("shake"), 300);
+              btn.disabled = false;
+              btn.textContent = "✓ 到達を確認";
+              return;
+            }
+
+            node.querySelector("#hint").style.display = "block";
+            btn.style.display = "none";
+          } catch (e) {
+            msg.innerHTML = '<div class="alert alert-error">エラーが発生しました。もう一度お試しください</div>';
             node.classList.add("shake");
-            setTimeout(()=>node.classList.remove("shake"),400);
-            return;
+            setTimeout(() => node.classList.remove("shake"), 300);
+            btn.disabled = false;
+            btn.textContent = "✓ 到達を確認";
           }
-
-          msg.className = "msg-good";
-          msg.textContent = "進捗を更新しました！";
-          node.querySelector("#hint").style.display = "block";
-        } catch (e) {
-          msg.className = "msg-bad";
-          msg.textContent = "エラーが起きました。もう一回押してみて。";
-          node.classList.add("shake");
-          setTimeout(()=>node.classList.remove("shake"),400);
-        }
-      };
+        };
+      }
 
       app.appendChild(node);
     }
@@ -551,226 +747,279 @@ input{ font-size: 1rem; padding: 14px 14px; }
     function renderTrap(nickname, prog) {
       app.innerHTML = "";
       app.appendChild(el(`
-        <div class="row">
-          <div class="pillset">
-            <span class="tag">👤 ${nickname}</span>
-            <span class="tag">📍 進捗 ${prog.checkpoint}</span>
+        <div>
+          <div class="header">
+            <h1>😈 ハズレ</h1>
           </div>
 
-          <h2>😈 ハズレ！</h2>
-          <p>残念。ここには何もない。だが君の好奇心は評価する。</p>
-          <p><a class="linkbtn" href="#/">ホームへ戻る</a></p>
+          <div class="card">
+            <div class="card-title">残念！</div>
+            <p class="card-subtitle">ここには何もありません。でも、あなたの好奇心は素晴らしい！</p>
+            <button onclick="location.hash='#/'">ホームに戻る</button>
+          </div>
         </div>
       `));
     }
-function renderScan(nickname, prog){
-  app.innerHTML = "";
 
-  const node = el(`
-    <div class="row">
-      <div class="pillset">
-        <span class="tag">👤 ${nickname}</span>
-        <span class="tag">📍 進捗 ${prog.checkpoint}</span>
-      </div>
+    function renderScan(nickname, prog) {
+      app.innerHTML = "";
+      const node = el(`
+        <div>
+          <div class="header">
+            <h1>📷 スキャン</h1>
+            <div class="badge">📍 CP ${prog.checkpoint}/${MAX_CHECKPOINT}</div>
+          </div>
 
-      <h2>📷 スキャン</h2>
-      <p>QRをカメラで読み取ります。うまくいかない時は下の入力欄に貼り付け。</p>
+          <div class="card">
+            <div class="card-title">QRコードをスキャン</div>
+            <p class="card-subtitle">カメラでQRコードを読み取ります</p>
 
-      <video id="v" style="width:100%;border-radius:16px;border:1px solid var(--line);background:rgba(0,0,0,.25);" playsinline></video>
-      <button id="start" type="button">カメラ起動</button>
-      <button id="stop" type="button" disabled>停止</button>
+            <video id="v" playsinline></video>
 
-      <input id="manual" placeholder="QRのURLを貼り付け（例: https://.../#/c/2）" />
-      <button id="go" type="button">開く</button>
+            <div class="button-group">
+              <button id="start">カメラ起動</button>
+              <button id="stop" disabled>停止</button>
+            </div>
 
-      <p id="msg" class="msg-bad"></p>
-    </div>
-  `);
+            <div class="divider"></div>
 
-  const v = node.querySelector("#v");
-  const startBtn = node.querySelector("#start");
-  const stopBtn = node.querySelector("#stop");
-  const msg = node.querySelector("#msg");
+            <div class="input-group">
+              <label class="input-label">または直接入力</label>
+              <input id="manual" placeholder="QRコードのURLを貼り付け" />
+            </div>
+            <button id="go" class="btn-secondary">開く</button>
 
-  let stream = null;
-  let raf = null;
+            <div id="msg"></div>
+          </div>
+        </div>
+      `);
 
-  const stopCamera = () => {
-    if (raf) cancelAnimationFrame(raf);
-    raf = null;
-    if (stream) stream.getTracks().forEach(t => t.stop());
-    stream = null;
-    v.srcObject = null;
-    stopBtn.disabled = true;
-    startBtn.disabled = false;
-  };
+      const v = node.querySelector("#v");
+      const startBtn = node.querySelector("#start");
+      const stopBtn = node.querySelector("#stop");
+      const msg = node.querySelector("#msg");
 
-  const openResult = (text) => {
-    // QRの中身がURLならそのまま開く。#/c/ を含むならゲーム進行へ。
-    // 例: https://bearsrock-hunt.pages.dev/#/c/2
-    if (text.includes("#/c/") || text.includes("#/")) {
-      location.href = text; // URLごと飛ぶ（同一ドメインならhash遷移）
-      return;
-    }
-    // hashだけのケース: #/c/2
-    if (text.startsWith("#/")) {
-      location.hash = text;
-      return;
-    }
-    msg.textContent = "QRの内容がURLっぽくない： " + text;
-  };
+      let stream = null;
+      let raf = null;
 
-  startBtn.onclick = async () => {
-    msg.textContent = "";
-    try{
-      stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio:false });
-      v.srcObject = stream;
-      await v.play();
-      startBtn.disabled = true;
-      stopBtn.disabled = false;
+      const stopCamera = () => {
+        if (raf) cancelAnimationFrame(raf);
+        raf = null;
+        if (stream) stream.getTracks().forEach(t => t.stop());
+        stream = null;
+        v.srcObject = null;
+        stopBtn.disabled = true;
+        startBtn.disabled = false;
+      };
 
-      if (!("BarcodeDetector" in window)) {
-        msg.textContent = "この端末は自動スキャン非対応。下の入力欄に貼り付けてね。";
-        return;
-      }
+      const openResult = (text) => {
+        if (text.includes("#/c/") || text.includes("#/")) {
+          location.href = text;
+          return;
+        }
+        if (text.startsWith("#/")) {
+          location.hash = text;
+          return;
+        }
+        msg.innerHTML = `<div class="alert alert-error">有効なQRコードではありません</div>`;
+      };
 
-      const det = new BarcodeDetector({ formats: ["qr_code"] });
+      startBtn.onclick = async () => {
+        msg.innerHTML = "";
+        try {
+          stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
+          v.srcObject = stream;
+          await v.play();
+          startBtn.disabled = true;
+          stopBtn.disabled = false;
 
-      const tick = async () => {
-        try{
-          const barcodes = await det.detect(v);
-          if (barcodes && barcodes[0]?.rawValue) {
-            const text = barcodes[0].rawValue;
-            stopCamera();
-            openResult(text);
+          if (!("BarcodeDetector" in window)) {
+            msg.innerHTML = '<div class="alert alert-error">お使いの端末では自動スキャンに対応していません。URLを直接入力してください。</div>';
             return;
           }
-        } catch(e) {}
-        raf = requestAnimationFrame(tick);
+
+          const det = new BarcodeDetector({ formats: ["qr_code"] });
+
+          const tick = async () => {
+            try {
+              const barcodes = await det.detect(v);
+              if (barcodes && barcodes[0]?.rawValue) {
+                stopCamera();
+                openResult(barcodes[0].rawValue);
+                return;
+              }
+            } catch (e) {}
+            raf = requestAnimationFrame(tick);
+          };
+          tick();
+        } catch (e) {
+          msg.innerHTML = `<div class="alert alert-error">カメラの起動に失敗しました</div>`;
+          stopCamera();
+        }
       };
-      tick();
 
-    } catch(e){
-      msg.textContent = "カメラ起動に失敗: " + (e?.message ?? e);
-      stopCamera();
-    }
-  };
+      stopBtn.onclick = () => stopCamera();
 
-  stopBtn.onclick = () => stopCamera();
+      node.querySelector("#go").onclick = () => {
+        const text = node.querySelector("#manual").value.trim();
+        if (!text) {
+          msg.innerHTML = '<div class="alert alert-error">URLを入力してください</div>';
+          return;
+        }
+        openResult(text);
+      };
 
-  node.querySelector("#go").onclick = () => {
-    const text = node.querySelector("#manual").value.trim();
-    if (!text) { msg.textContent = "貼り付けてから押して"; return; }
-    openResult(text);
-  };
-
-  app.appendChild(node);
+    app.appendChild(node);
 }
 
-    function renderMe(nickname, prog){
+function renderMe(nickname, prog) {
   app.innerHTML = "";
 
   let hintsHtml = "";
-  for (let i=1; i<=prog.checkpoint; i++){
-    hintsHtml += `<div class="tag" style="border-radius:14px;">✅ CP${i}: ${hintText(i)}</div>`;
+  for (let i = 1; i <= prog.checkpoint; i++) {
+    hintsHtml += `
+      <div class="list-item">
+        <div>
+          <strong>チェックポイント ${i}</strong>
+          <div class="text-muted" style="font-size:14px;margin-top:4px;">${hintText(i)}</div>
+        </div>
+        <div style="font-size:20px;">✅</div>
+      </div>
+    `;
   }
-  if (!hintsHtml) hintsHtml = `<p class="muted">まだヒントはありません。まずはCP1へ。</p>`;
+  if (!hintsHtml) {
+    hintsHtml = `<p class="text-muted">まだヒントはありません。最初のチェックポイントを見つけましょう！</p>`;
+  }
 
   app.appendChild(el(`
-    <div class="row">
-      <h2>👤 マイページ</h2>
-
-      <div class="pillset">
-        <span class="tag">👤 ${nickname}</span>
-        <span class="tag">📍 進捗 ${prog.checkpoint}</span>
+    <div>
+      <div class="header">
+        <h1>👤 マイページ</h1>
       </div>
 
-      <div class="progressWrap"><div class="bar" style="width:${progressPercent(prog.checkpoint)}%"></div></div>
+      <div class="card">
+        <div class="card-title">${nickname}</div>
+        <div class="stats">
+          <div class="stat-item">
+            <div class="stat-value">${prog.checkpoint}</div>
+            <div class="stat-label">クリア済み</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">${progressPercent(prog.checkpoint)}%</div>
+            <div class="stat-label">達成率</div>
+          </div>
+        </div>
+        <div class="progress-container">
+          <div class="progress-bar" style="width:${progressPercent(prog.checkpoint)}%"></div>
+        </div>
+      </div>
 
-      <h2>📜 過去ヒント</h2>
-      <div class="row">${hintsHtml}</div>
-
-      <a class="linkbtn" href="#/">🏠 Home</a>
+      <div class="card">
+        <div class="card-title">解放済みヒント</div>
+        <div style="margin-top:16px;">${hintsHtml}</div>
+      </div>
     </div>
   `));
 }
 
-    async function renderLeaderboard(nickname, prog){
+async function renderLeaderboard(nickname, prog) {
   app.innerHTML = "";
   app.appendChild(el(`
-    <div class="row">
-      <h2>🏆 ランキング</h2>
-      <p class="muted">進捗が高い順。タイは到達が早い方が上。</p>
-      <div id="list" class="row"></div>
+    <div>
+      <div class="header">
+        <h1>🏆 ランキング</h1>
+      </div>
+
+      <div class="card">
+        <div class="card-title">進捗ランキング</div>
+        <p class="card-subtitle">進捗が高い順。同率の場合は到達が早い順</p>
+        <div id="list"></div>
+      </div>
     </div>
   `));
 
   const list = document.getElementById("list");
-  list.innerHTML = `<p class="muted">読み込み中...</p>`;
+  list.innerHTML = `<p class="text-muted text-center">読み込み中...</p>`;
 
-  try{
+  try {
     const { data, error } = await sb.rpc("get_leaderboard");
     if (error) throw error;
 
-    if (!data?.length) { list.innerHTML = `<p class="muted">まだ誰もいない</p>`; return; }
+    if (!data?.length) {
+      list.innerHTML = `<p class="text-muted text-center">まだ誰もいません</p>`;
+      return;
+    }
 
     const rows = data.map((r, idx) => {
       const me = (r.nickname === nickname);
+      const rankClass = idx < 3 ? "top" : "";
       return `
-        <div class="tag" style="border-radius:14px;${me ? "border-color: rgba(69,240,138,.7);" : ""}">
-          <b>#${idx+1}</b> ${r.nickname} — CP${r.checkpoint}
-        </div>`;
+        <div class="list-item ${me ? "active" : ""}">
+          <div style="display:flex;align-items:center;gap:12px;flex:1;">
+            <div class="rank-number ${rankClass}">#${idx + 1}</div>
+            <div>
+              <strong>${r.nickname}</strong>
+              ${me ? '<span class="badge" style="margin-left:8px;font-size:11px;">あなた</span>' : ''}
+            </div>
+          </div>
+          <div style="font-weight:700;color:var(--primary);">CP ${r.checkpoint}</div>
+        </div>
+      `;
     }).join("");
 
     list.innerHTML = rows;
-  } catch(e){
-    list.innerHTML = `<p class="msg-bad">取得失敗: ${e?.message ?? e}</p>`;
+  } catch (e) {
+    list.innerHTML = `<div class="alert alert-error">データの取得に失敗しました</div>`;
   }
 }
 
-    // =========================
-    // 司令塔：ここが1つだけあるのが重要
-    // =========================
-    async function route() {
-        setNavActive();
-      await ensureAnonLogin();
-      const r = getRoute();
+async function route() {
+  setNavActive();
+  await ensureAnonLogin();
+  const r = getRoute();
 
-      const me = await getMe();
-      const nick = await getNickname(me.id);
-      const prog = nick ? await getProgress(me.id) : { checkpoint: 0, updated_at: null };
+  const me = await getMe();
+  const nick = await getNickname(me.id);
+  const prog = nick ? await getProgress(me.id) : { checkpoint: 0, updated_at: null };
 
-      // ログイン/登録はいつでも見せる
-      if (r.type === "scan") { renderScan(nick, prog); return; }
-      if (r.type === "leaderboard") { await renderLeaderboard(nick, prog); return; }
-      if (r.type === "me") { renderMe(nick, prog); return; }
+  if (r.type === "scan") { renderScan(nick, prog); return; }
+  if (r.type === "leaderboard") { await renderLeaderboard(nick, prog); return; }
+  if (r.type === "me") { renderMe(nick, prog); return; }
+  if (r.type === "login") { renderLogin(); return; }
+  if (r.type === "signup") { renderSignup(); return; }
 
-      if (r.type === "login") { renderLogin(); return; }
-      if (r.type === "signup") { renderSignup(); return; }
+  if (!nick) { location.hash = "#/login"; return; }
 
-      // home/cp は登録必須
-      if (!nick) { location.hash = "#/login"; return; }
+  if (r.type === "home") { renderHome(nick, prog); return; }
+  if (r.type === "cp") {
+    if (r.n === 999) { renderTrap(nick, prog); return; }
+    renderCheckpoint(nick, prog, r.n);
+    return;
+  }
 
-      if (r.type === "home") { renderHome(nick, prog); return; }
-      if (r.type === "cp") {
-        if (r.n === 999) { renderTrap(nick, prog); return; }
-        renderCheckpoint(nick, prog, r.n);
-        return;
-      }
+  location.hash = "#/login";
+}
 
-      location.hash = "#/login";
-    }
-
-    window.addEventListener("hashchange", route);
-    route();
-  </script>
-
-  <nav class="navbar" id="navbar">
-  <a class="navbtn" href="#/">🏠 Home</a>
-  <a class="navbtn" href="#/scan">📷 Scan</a>
-  <a class="navbtn" href="#/leaderboard">🏆 Rank</a>
-  <a class="navbtn" href="#/me">👤 Me</a>
-</nav>
-
+window.addEventListener("hashchange", route);
+route();
+</script>
+  <nav class="navbar">
+    <a class="nav-item" href="#/">
+      <div class="nav-icon">🏠</div>
+      <div>ホーム</div>
+    </a>
+    <a class="nav-item" href="#/scan">
+      <div class="nav-icon">📷</div>
+      <div>スキャン</div>
+    </a>
+    <a class="nav-item" href="#/leaderboard">
+      <div class="nav-icon">🏆</div>
+      <div>ランキング</div>
+    </a>
+    <a class="nav-item" href="#/me">
+      <div class="nav-icon">👤</div>
+      <div>マイページ</div>
+    </a>
+  </nav>
 </body>
 </html>
