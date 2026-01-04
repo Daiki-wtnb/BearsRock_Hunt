@@ -147,6 +147,48 @@
     75%{ transform: translateX(-3px); }
     100%{ transform: translateX(0); }
   }
+
+    /* mobile polish */
+body{ padding: 16px; padding-bottom: calc(86px + env(safe-area-inset-bottom)); }
+.shell{ max-width: 920px; }
+.card{ padding: 16px; border-radius: 22px; }
+h1{ font-size: 1.25rem; }
+button{ font-size: 1rem; padding: 14px 14px; }
+input{ font-size: 1rem; padding: 14px 14px; }
+
+.navbar{
+  position: fixed;
+  left: 16px; right: 16px;
+  bottom: calc(12px + env(safe-area-inset-bottom));
+  display:flex;
+  gap:10px;
+  padding:10px;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  background: rgba(0,0,0,.25);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 18px 60px rgba(0,0,0,.35);
+  z-index: 999;
+}
+.navbtn{
+  flex:1;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius: 14px;
+  padding: 10px 10px;
+  text-decoration:none;
+  background: rgba(255,255,255,.06);
+  color: var(--text);
+  font-weight: 800;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+}
+.navbtn.active{
+  border-color: rgba(122,167,255,.65);
+  background: linear-gradient(180deg, rgba(122,167,255,.25), rgba(122,167,255,.08));
+}
+
   </style>
 </head>
 
