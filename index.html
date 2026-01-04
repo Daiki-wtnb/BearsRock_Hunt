@@ -680,8 +680,9 @@
     function renderScan(nickname, prog) {
   app.innerHTML = "";
 
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
-                (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1); // iPadOS対策
+  const isIOS =
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1); // iPadOS対策
 
   const node = el(`
     <div>
@@ -695,125 +696,107 @@
 
         ${
           isIOS
-          ? `
-            <div class="alert alert-success">
-              iPhoneの方は、標準カメラでQRコードを読み取ってください
-            </div>
-            <p class="card-subtitle">
-              iPhoneのブラウザはQR自動読み取りが不安定なため、標準カメラから開くのが一番確実です。
-            </p>
-          `
-          : `
-            <p class="card-subtitle">カメラでQRコードを読み取ります</p>
-            <video id="v" playsinline></video>
+            ? `
+              <div class="alert alert-success">
+                iPhoneの方は、標準カメラでQRコードを読み取ってください
+              </div>
+              <p class="card-subtitle">
+                QRコードを読み取るとSafariでページが開きます。<br>
+                開いた画面で「到達確認」を押してください。
+              </p>
+            `
+            : `
+              <p class="card-subtitle">カメラでQRコードを読み取ります</p>
+              <video id="v" playsinline></video>
 
-            <div class="button-group">
-              <button id="start" type="button">カメラ起動</button>
-              <button id="stop" type="button" disabled>停止</button>
-            </div>
+              <div class="button-group">
+                <button id="start" type="button">カメラ起動</button>
+                <button id="stop" type="button" disabled>停止</button>
+              </div>
 
-            <div id="camMsg"></div>
-            <div class="divider"></div>
-          `
+              <div id="msg"></div>
+            `
         }
-
-        <div class="input-group">
-          <label class="input-label">URLを直接入力（うまくいかない時）</label>
-          <input id="manual" placeholder="QRコードのURLを貼り付け（例: https://.../#/c/2）" />
-        </div>
-
-        <button id="go" class="btn-secondary" type="button">開く</button>
-
-        <div id="msg"></div>
       </div>
     </div>
   `);
 
+  // iPhoneは案内のみで終了
+  if (isIOS) {
+    app.appendChild(node);
+    return;
+  }
+
+  // Android / 対応端末のみブラウザ内スキャン
+  const v = node.querySelector("#v");
+  const startBtn = node.querySelector("#start");
+  const stopBtn = node.querySelector("#stop");
   const msg = node.querySelector("#msg");
 
+  let stream = null;
+  let raf = null;
+
+  const stopCamera = () => {
+    if (raf) cancelAnimationFrame(raf);
+    raf = null;
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    stream = null;
+    v.srcObject = null;
+    stopBtn.disabled = true;
+    startBtn.disabled = false;
+  };
+
   const openResult = (text) => {
-    const t = (text || "").trim();
-    if (!t) {
-      msg.innerHTML = `<div class="alert alert-error">URLを入力してください</div>`;
+    if (text.includes("#/")) {
+      location.href = text;
       return;
     }
-    // "#/c/2" みたいなhashだけ
-    if (t.startsWith("#/")) {
-      location.hash = t;
-      return;
-    }
-    // "https://.../#/c/2" みたいなURL
-    if (t.includes("#/")) {
-      location.href = t;
-      return;
-    }
-    msg.innerHTML = `<div class="alert alert-error">有効なURLではありません（#/c/ が必要）</div>`;
+    msg.innerHTML = `<div class="alert alert-error">有効なQRコードではありません</div>`;
   };
 
-  node.querySelector("#go").onclick = () => {
-    openResult(node.querySelector("#manual").value);
-  };
+  startBtn.onclick = async () => {
+    msg.innerHTML = "";
+    try {
+      stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+        audio: false
+      });
+      v.srcObject = stream;
+      await v.play();
 
-  // iPhoneはブラウザ内カメラを使わない（案内のみ）
-  if (!isIOS) {
-    const v = node.querySelector("#v");
-    const startBtn = node.querySelector("#start");
-    const stopBtn = node.querySelector("#stop");
-    const camMsg = node.querySelector("#camMsg");
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
 
-    let stream = null;
-    let raf = null;
-
-    const stopCamera = () => {
-      if (raf) cancelAnimationFrame(raf);
-      raf = null;
-      if (stream) stream.getTracks().forEach(t => t.stop());
-      stream = null;
-      v.srcObject = null;
-      stopBtn.disabled = true;
-      startBtn.disabled = false;
-    };
-
-    startBtn.onclick = async () => {
-      camMsg.innerHTML = "";
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: "environment" },
-          audio: false
-        });
-        v.srcObject = stream;
-        await v.play();
-        startBtn.disabled = true;
-        stopBtn.disabled = false;
-
-        if (!("BarcodeDetector" in window)) {
-          camMsg.innerHTML = `<div class="alert alert-error">この端末は自動スキャン非対応。下のURL入力を使ってね。</div>`;
-          return;
-        }
-
-        const det = new BarcodeDetector({ formats: ["qr_code"] });
-
-        const tick = async () => {
-          try {
-            const barcodes = await det.detect(v);
-            if (barcodes?.[0]?.rawValue) {
-              stopCamera();
-              openResult(barcodes[0].rawValue);
-              return;
-            }
-          } catch {}
-          raf = requestAnimationFrame(tick);
-        };
-        tick();
-
-      } catch (e) {
-        camMsg.innerHTML = `<div class="alert alert-error">カメラ起動に失敗：${e?.message ?? e}</div>`;
-        stopCamera();
+      if (!("BarcodeDetector" in window)) {
+        msg.innerHTML = `<div class="alert alert-error">
+          この端末は自動スキャン非対応です。<br>
+          標準カメラでQRコードを読み取ってください。
+        </div>`;
+        return;
       }
-    };
 
-    stopBtn.onclick = () => stopCamera();
-  }
+      const det = new BarcodeDetector({ formats: ["qr_code"] });
+
+      const tick = async () => {
+        try {
+          const barcodes = await det.detect(v);
+          if (barcodes?.[0]?.rawValue) {
+            stopCamera();
+            openResult(barcodes[0].rawValue);
+            return;
+          }
+        } catch {}
+        raf = requestAnimationFrame(tick);
+      };
+      tick();
+
+    } catch (e) {
+      msg.innerHTML = `<div class="alert alert-error">カメラを起動できませんでした</div>`;
+      stopCamera();
+    }
+  };
+
+  stopBtn.onclick = () => stopCamera();
 
   app.appendChild(node);
 }
