@@ -360,9 +360,9 @@
 const getRoute = () => {
     // ✅ 推測URLや変なURLはハズレへ
   if (r.type === "unknown") {
-    location.hash = "#/c/999";
-    return;
-  }
+  location.hash = "#/c/999-TRAP";
+  return;
+}
 
   const h = location.hash;
 
