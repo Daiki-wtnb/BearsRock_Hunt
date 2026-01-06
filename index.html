@@ -677,6 +677,12 @@ function renderIntro() {
             </div>
 
             <div class="input-group">
+  <label class="input-label">部屋番号</label>
+  <input id="room" maxlength="10" placeholder="例：203 / A-12 など" />
+</div>
+
+            
+            <div class="input-group">
               <label class="input-label">PINコード（4桁）</label>
               <input id="pin" type="password" inputmode="numeric" maxlength="4" placeholder="4桁の数字" />
             </div>
@@ -698,7 +704,15 @@ function renderIntro() {
         const pin  = node.querySelector("#pin").value.trim();
         const msg  = node.querySelector("#msg");
         const btn  = node.querySelector("#btn");
+        const room = node.querySelector("#room").value.trim();
+
         msg.innerHTML = "";
+        if (!room) {
+  msg.innerHTML = '<div class="alert alert-error">部屋番号を入力してください</div>';
+  node.classList.add("shake");
+  setTimeout(() => node.classList.remove("shake"), 300);
+  return;
+}
 
         if (!nick) { msg.innerHTML = '<div class="alert alert-error">ファーストネームを入力してください</div>'; node.classList.add("shake"); setTimeout(()=>node.classList.remove("shake"),300); return; }
         if (!/^[0-9]{4}$/.test(pin)) { msg.innerHTML = '<div class="alert alert-error">PINコードは4桁の数字で入力してください</div>'; node.classList.add("shake"); setTimeout(()=>node.classList.remove("shake"),300); return; }
@@ -707,7 +721,8 @@ function renderIntro() {
         btn.textContent = "登録中...";
 
         try {
-          const { error } = await sb.rpc("register_player", { nick, pin });
+          const { error } = await sb.rpc("register_player", { nick, pin, room });
+
           if (error) throw error;
           msg.innerHTML = '<div class="alert alert-success">✓ 登録完了</div>';
           setTimeout(() => location.hash = "#/", 400);
