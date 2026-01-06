@@ -575,11 +575,11 @@ function renderIntro() {
           <div class="header"><h1>ログイン</h1></div>
           <div class="card">
             <div class="card-title">おかえりなさい</div>
-            <p class="card-subtitle">ニックネームとPINコードを入力してください</p>
+            <p class="card-subtitle">ファーストネームとPINコードを入力してください</p>
 
             <div class="input-group">
-              <label class="input-label">ニックネーム</label>
-              <input id="nick" maxlength="20" placeholder="ニックネームを入力" />
+              <label class="input-label">ファーストネーム</label>
+              <input id="nick" maxlength="20" placeholder="ファーストネームを入力" />
             </div>
 
             <div class="input-group">
@@ -606,7 +606,7 @@ function renderIntro() {
         const msg  = node.querySelector("#msg");
         msg.innerHTML = "";
 
-        if (!nick) { msg.innerHTML = '<div class="alert alert-error">ニックネームを入力してください</div>'; node.classList.add("shake"); setTimeout(()=>node.classList.remove("shake"),300); return; }
+        if (!nick) { msg.innerHTML = '<div class="alert alert-error">ファーストネームを入力してください</div>'; node.classList.add("shake"); setTimeout(()=>node.classList.remove("shake"),300); return; }
         if (!/^[0-9]{4}$/.test(pin)) { msg.innerHTML = '<div class="alert alert-error">PINコードは4桁の数字で入力してください</div>'; node.classList.add("shake"); setTimeout(()=>node.classList.remove("shake"),300); return; }
 
         btn.disabled = true;
@@ -638,11 +638,11 @@ function renderIntro() {
           <div class="header"><h1>新規登録</h1></div>
           <div class="card">
             <div class="card-title">アカウント作成</div>
-            <p class="card-subtitle">ニックネームとPINコードを設定してください。PINは忘れないで。</p>
+            <p class="card-subtitle">ファーストネームとPINコードを設定してください。PINは忘れないで。</p>
 
             <div class="input-group">
-              <label class="input-label">ニックネーム</label>
-              <input id="nick" maxlength="20" placeholder="ニックネームを入力" />
+              <label class="input-label">ファーストネーム</label>
+              <input id="nick" maxlength="20" placeholder="ファーストネームを入力" />
             </div>
 
             <div class="input-group">
@@ -669,7 +669,7 @@ function renderIntro() {
         const btn  = node.querySelector("#btn");
         msg.innerHTML = "";
 
-        if (!nick) { msg.innerHTML = '<div class="alert alert-error">ニックネームを入力してください</div>'; node.classList.add("shake"); setTimeout(()=>node.classList.remove("shake"),300); return; }
+        if (!nick) { msg.innerHTML = '<div class="alert alert-error">ファーストネームを入力してください</div>'; node.classList.add("shake"); setTimeout(()=>node.classList.remove("shake"),300); return; }
         if (!/^[0-9]{4}$/.test(pin)) { msg.innerHTML = '<div class="alert alert-error">PINコードは4桁の数字で入力してください</div>'; node.classList.add("shake"); setTimeout(()=>node.classList.remove("shake"),300); return; }
 
         btn.disabled = true;
