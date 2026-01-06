@@ -1212,7 +1212,7 @@ if (r.type === "cp" && r.n === 999) {
   return;
 }
 
-      const me = await getMe();
+            const me = await getMe();
       const nick = await getNickname(me.id);
       const prog = nick ? await getProgress(me.id) : { checkpoint: 0, updated_at: null };
 
@@ -1223,9 +1223,9 @@ if (r.type === "cp" && r.n === 999) {
       }
 
       if (r.type === "clear") {
-  renderClear(nick);
-  return;
-}
+        renderClear(nick);
+        return;
+      }
 
       if (r.type === "login") { renderLogin(); return; }
       if (r.type === "signup") { renderSignup(); return; }
@@ -1242,11 +1242,21 @@ if (r.type === "cp" && r.n === 999) {
       }
 
       location.hash = "#/login";
+    } catch (e) {
+      // ここがあると「真っ白」にならず原因が見える
+      app.innerHTML = `
+        <div class="card">
+          <div class="card-title">エラーで停止しました</div>
+          <div class="alert alert-error" style="margin-top:12px;">
+            ${e?.message ?? e}
+          </div>
+        </div>
+      `;
+      console.error(e);
     }
-    
-    window.addEventListener("hashchange", route);
-    if (!location.hash) location.hash = "#/intro";
-    route();
-  </script>
-</body>
-</html>
+  }
+
+  window.addEventListener("hashchange", route);
+
+  if (!location.hash) location.hash = "#/intro";
+  route();
