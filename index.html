@@ -536,21 +536,21 @@ function renderIntro() {
   app.appendChild(el(`
     <div>
       <div class="header">
-        <h1>🏁 QRハント</h1>
-        <div class="badge">寮内イベント</div>
+        <h1>🏁 BearsRockHunt</h1>
+        <div class="badge">イベント</div>
       </div>
 
       <div class="card">
         <div class="card-title">ゲーム説明</div>
 
         <p class="card-subtitle">
-          寮内に隠されたQRコードを探して進む宝探しゲームです。<br>
+          BearsRock内に隠されたQRコードを探して進む宝探しゲームです。<br>
           ヒントを頼りに、順番通りチェックポイントをクリアしてください。
         </p>
 
         <div class="hint-box">
           <strong>🎁 景品</strong><br>
-          全チェックポイントをクリアした画面をスタッフに見せると、景品がもらえます。
+          最初に全チェックポイントをクリアした人は、景品がもらえます。1位でなくても、順番でポイントがもらえます。
         </div>
 
         <div class="divider"></div>
@@ -776,7 +776,7 @@ function renderIntro() {
     "ここには何もない。",
     "順番を飛ばしても、進捗は進まない。",
     "推測した？その情熱、正規ルートに使ってくれ。",
-    "寮は広い。ヒントは近い。",
+    "BearsRockは広い。ヒントは近い。",
   ];
   const msg = lines[Math.floor(Math.random() * lines.length)];
 
