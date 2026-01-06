@@ -430,6 +430,8 @@ const getRoute = () => {
   if (h === "#/scan") return { type: "scan" };
   if (h === "#/leaderboard") return { type: "leaderboard" };
   if (h === "#/me") return { type: "me" };
+  if (h === "#/clear") return { type: "clear" };
+
 
   // ④ それ以外は全部ハズレ
   return { type: "unknown" };
@@ -756,6 +758,11 @@ function renderIntro() {
 
             node.querySelector("#hint").style.display = "block";
             btn.style.display = "none";
+            if (target === MAX_CHECKPOINT) {
+  location.hash = "#/clear";
+  return;
+}
+
           } catch (e) {
             msg.innerHTML = `<div class="alert alert-error">エラー：${e?.message ?? e}</div>`;
             node.classList.add("shake");
@@ -806,6 +813,34 @@ function renderIntro() {
         <div style="margin-top:16px;">
           <button type="button" onclick="location.hash='#/'">ホームに戻る</button>
         </div>
+      </div>
+    </div>
+  `));
+}
+　function renderClear(nickname) {
+  app.innerHTML = "";
+  app.appendChild(el(`
+    <div>
+      <div class="header">
+        <h1>🎉 クリア！</h1>
+      </div>
+
+      <div class="card">
+        <div class="card-title">おめでとう、${nickname}！</div>
+        <p class="card-subtitle">
+          全チェックポイントをクリアしました。<br>
+          しばらくするとあなたの部屋の前に景品が届きます。
+        </p>
+
+        <div class="hint-box">
+          <strong>🎁 景品</strong><br>
+          食堂チケット（または景品）を受け取れます。
+        </div>
+
+        <div class="divider"></div>
+
+        <button onclick="location.hash='#/me'">マイページを見る</button>
+        <button class="btn-secondary" onclick="location.hash='#/'" style="margin-top:12px;">ホームへ</button>
       </div>
     </div>
   `));
@@ -1088,6 +1123,11 @@ if (r.type === "cp" && r.n === 999) {
         location.hash = "#/login";
         return;
       }
+
+      if (r.type === "clear") {
+  renderClear(nick);
+  return;
+}
 
       if (r.type === "login") { renderLogin(); return; }
       if (r.type === "signup") { renderSignup(); return; }
