@@ -414,7 +414,7 @@
 
     const SUPABASE_URL = "https://ahynlwtcdrtkzykcccgb.supabase.co";
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFoeW5sd3RjZHJ0a3p5a2NjY2diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc0MTA0MDQsImV4cCI6MjA4Mjk4NjQwNH0.HttRXUS-Qy6VA0t4UE8MIC58tgncg-2bucYfLr14LSA";
-    const MAX_CHECKPOINT = 4;
+    const MAX_CHECKPOINT = 5;
     // ✅ この4つだけが「正解QR」
 const CP_KEYS = {
   1: "f8K3",
@@ -507,20 +507,44 @@ const getRoute = () => {
       return data ?? { checkpoint: 0, updated_at: null };
     }
 
-    async function advanceIfAllowed(user_id, targetCheckpoint) {
-      const current = await getProgress(user_id);
-      if (targetCheckpoint !== current.checkpoint + 1) return { ok: false, current: current.checkpoint };
-      const { error } = await sb.from("progress").update({ checkpoint: targetCheckpoint }).eq("user_id", user_id);
-      if (error) throw error;
-      return { ok: true, current: targetCheckpoint };
+    async function advanceIfAllowed(user_id, targetCheckpoint, passphrase) {
+  // user_id は将来用（このRPCは auth.uid() を使うので必須ではない）
+  const pass = (passphrase ?? "").trim();
+  if (!pass) {
+    return { ok: false, reason: "no_passphrase" };
+  }
+
+  const { data, error } = await sb.rpc("claim_checkpoint", {
+    cp: targetCheckpoint,
+    pass
+  });
+
+  if (error) {
+    const m = error.message || String(error);
+
+    if (m.includes("invalid passphrase")) {
+      return { ok: false, reason: "invalid_passphrase" };
     }
+    if (m.includes("wrong order")) {
+      // 今の進捗を取り直して返す（メッセージ表示用）
+      const current = await getProgress(user_id);
+      return { ok: false, reason: "wrong_order", current: current.checkpoint };
+    }
+    return { ok: false, reason: "other", message: m };
+  }
+
+  // data は更新後の checkpoint（RPCが return してる想定）
+  return { ok: true, current: data ?? targetCheckpoint };
+}
+
 
     function hintText(n) {
       const hints = {
         1: "毎朝、靴が集まる場所の“上”を見ろ",   // ✅ここ修正
         2: "いい匂いがする。さあどこだろう",
         3: "男どもが毎朝集まる場所",
-        4: "クリア！"
+        4: "くっせー、汚ねえ",
+        5: "クリア！"
       };
       return hints[n] ?? "ヒントなし";
     }
@@ -747,7 +771,7 @@ function renderIntro() {
         <div>
           <div class="header">
             <h1>チェックポイント</h1>
-            <div class="badge">📍 CP ${prog.checkpoint}/${MAX_CHECKPOINT}</div>
+            <div class="badge">📍 ${prog.checkpoint}/${MAX_CHECKPOINT}</div>
           </div>
 
           <div class="checkpoint-card">
@@ -761,6 +785,10 @@ function renderIntro() {
             ` : `
               <div class="card-title">チェックポイント到達</div>
               <p class="card-subtitle">到達した人だけ進捗を更新できます</p>
+                        <div class="input-group" style="margin-top:12px;">
+  <label class="input-label">合言葉</label>
+  <input id="pass" maxlength="30" placeholder="QRの下の合言葉を入力" />
+</div>
               <button id="claim" type="button">✓ 到達を確認</button>
             `}
 
@@ -779,43 +807,51 @@ function renderIntro() {
       `);
 
       if (!locked) {
-        node.querySelector("#claim").onclick = async () => {
-          const btn = node.querySelector("#claim");
-          const msg = node.querySelector("#msg");
-          msg.innerHTML = "";
+node.querySelector("#claim").onclick = async () => {
+  const btn = node.querySelector("#claim");
+  const msg = node.querySelector("#msg");
+  msg.innerHTML = "";
 
-          btn.disabled = true;
-          btn.textContent = "確認中...";
+  btn.disabled = true;
+  btn.textContent = "確認中...";
 
-          try {
-            const me = await getMe();
-            const res = await advanceIfAllowed(me.id, target);
+  const pass = node.querySelector("#pass").value; // ★追加：合言葉
 
-            if (!res.ok) {
-              msg.innerHTML = `<div class="alert alert-error">順番が違います。現在はCP${res.current}です</div>`;
-              node.classList.add("shake");
-              setTimeout(()=>node.classList.remove("shake"),300);
-              btn.disabled = false;
-              btn.textContent = "✓ 到達を確認";
-              return;
-            }
+  try {
+    const me = await getMe();
+    const res = await advanceIfAllowed(me.id, target, pass);
 
-            node.querySelector("#hint").style.display = "block";
-            btn.style.display = "none";
-            if (target === MAX_CHECKPOINT) {
-  location.hash = "#/clear";
-  return;
-}
-
-          } catch (e) {
-            msg.innerHTML = `<div class="alert alert-error">エラー：${e?.message ?? e}</div>`;
-            node.classList.add("shake");
-            setTimeout(()=>node.classList.remove("shake"),300);
-            btn.disabled = false;
-            btn.textContent = "✓ 到達を確認";
-          }
-        };
+    if (!res.ok) {
+      if (res.reason === "no_passphrase") {
+        msg.innerHTML = `<div class="alert alert-error">合言葉を入力してください</div>`;
+      } else if (res.reason === "invalid_passphrase") {
+        msg.innerHTML = `<div class="alert alert-error">合言葉が違います</div>`;
+      } else if (res.reason === "wrong_order") {
+        msg.innerHTML = `<div class="alert alert-error">順番が違います。現在は ${res.current} / ${MAX_CHECKPOINT} です</div>`;
+      } else {
+        msg.innerHTML = `<div class="alert alert-error">失敗：${res.message ?? "エラー"}</div>`;
       }
+      btn.disabled = false;
+      btn.textContent = "✓ 到達を確認";
+      return;
+    }
+
+    // 成功：ヒント表示
+    node.querySelector("#hint").style.display = "block";
+    btn.style.display = "none";
+
+    // 最終ならクリア画面へ（君が #/clear を作ってる前提）
+    if (target === MAX_CHECKPOINT) {
+      setTimeout(() => location.hash = "#/clear", 600);
+    }
+
+  } catch (e) {
+    msg.innerHTML = `<div class="alert alert-error">エラー：${e?.message ?? e}</div>`;
+    btn.disabled = false;
+    btn.textContent = "✓ 到達を確認";
+  }
+};
+
 
       app.appendChild(node);
     }
