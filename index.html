@@ -411,20 +411,19 @@ const TRAP_KEY = "TRAP";
     };
 
 const getRoute = () => {
-  const h = location.hash;
+  const h = location.hash || "";
 
-  // ① ゲーム説明ページ
-  if (h === "#/intro" || h === "" || h === "#") {
-    return { type: "intro" };
-  }
+  // ✅ ルートは home にする（ログイン後に必ずここへ来る）
+  if (h === "#/" ) return { type: "home" };
 
-  // ② チェックポイント（ランダム付きのみ有効）
-  const m = h.match(/^#\/c\/(\d+)-[A-Za-z0-9]+$/);
-  if (m) {
-    return { type: "cp", n: parseInt(m[1], 10) };
-  }
+  // ✅ 何もないときだけ intro にする（初回アクセス用）
+  if (h === "" || h === "#") return { type: "intro" };
+  if (h === "#/intro") return { type: "intro" };
 
-  // ③ 通常ページ
+  // ✅ チェックポイント（ランダム必須）
+  const m = h.match(/^#\/c\/(\d+)-([A-Za-z0-9]+)$/);
+  if (m) return { type: "cp", n: parseInt(m[1], 10), key: m[2] };
+
   if (h === "#/login") return { type: "login" };
   if (h === "#/signup") return { type: "signup" };
   if (h === "#/scan") return { type: "scan" };
@@ -432,10 +431,9 @@ const getRoute = () => {
   if (h === "#/me") return { type: "me" };
   if (h === "#/clear") return { type: "clear" };
 
-
-  // ④ それ以外は全部ハズレ
   return { type: "unknown" };
 };
+
 
 
 
@@ -1145,8 +1143,9 @@ if (r.type === "cp" && r.n === 999) {
 
       location.hash = "#/login";
     }
-
+    
     window.addEventListener("hashchange", route);
+    if (!location.hash) location.hash = "#/intro";
     route();
   </script>
 </body>
