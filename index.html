@@ -354,6 +354,37 @@
   margin-top: 10px;
   line-height: 1.5;
 }
+  /* --- leaderboard tweaks --- */
+.me-badge{
+  display:inline-flex;
+  align-items:center;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  margin-left: 8px;
+  border: 1px solid rgba(0,122,255,0.25);
+  background: rgba(0,122,255,0.10);
+  color: var(--primary);
+}
+
+.rank-1 .rank-number{ color: #D4AF37; } /* gold */
+.rank-2 .rank-number{ color: #C0C0C0; } /* silver */
+.rank-3 .rank-number{ color: #CD7F32; } /* bronze */
+
+.finish{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  font-weight: 800;
+  color: var(--primary);
+}
+
+.finish .done{
+  font-size: 16px;
+  line-height: 1;
+}
+
 
   </style>
 </head>
@@ -1042,18 +1073,36 @@ function renderIntro() {
         }
 
         list.innerHTML = data.map((r, idx) => {
-          const me = (r.nickname === nickname);
-          const rankClass = idx < 3 ? "top" : "";
-          return `
-            <div class="list-item ${me ? "active" : ""}">
-              <div style="display:flex;align-items:center;gap:12px;flex:1;">
-                <div class="rank-number ${rankClass}">#${idx + 1}</div>
-                <div><strong>${r.nickname}</strong></div>
-              </div>
-              <div style="font-weight:700;color:var(--primary);">CP ${r.checkpoint}</div>
-            </div>
-          `;
-        }).join("");
+  const isMe = (r.nickname === nickname);
+
+  // 上位3位のクラス（順位番号を金銀銅に）
+  const topClass = idx === 0 ? "rank-1" : idx === 1 ? "rank-2" : idx === 2 ? "rank-3" : "";
+
+  // 4/4 の人だけ 🎉（MAX_CHECKPOINT を使う）
+  const isClear = (r.checkpoint >= MAX_CHECKPOINT);
+
+  // 表記は 3 / 4
+  const progressText = `${r.checkpoint} / ${MAX_CHECKPOINT}`;
+
+  return `
+    <div class="list-item ${isMe ? "active" : ""} ${topClass}">
+      <div style="display:flex;align-items:center;gap:12px;flex:1;">
+        <div class="rank-number">#${idx + 1}</div>
+
+        <div style="display:flex;align-items:center;flex-wrap:wrap;">
+          <strong>${r.nickname}</strong>
+          ${isMe ? `<span class="me-badge">あなた</span>` : ``}
+        </div>
+      </div>
+
+      <div class="finish">
+        <span>${progressText}</span>
+        ${isClear ? `<span class="done">🎉</span>` : ``}
+      </div>
+    </div>
+  `;
+}).join("");
+
       } catch (e) {
         list.innerHTML = `<div class="alert alert-error">取得失敗：${e?.message ?? e}</div>`;
       }
