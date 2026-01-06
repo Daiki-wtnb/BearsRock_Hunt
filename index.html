@@ -413,21 +413,28 @@ const TRAP_KEY = "TRAP";
 const getRoute = () => {
   const h = location.hash;
 
-  // ✅ #/c/1-f8K3 みたいに「番号」と「キー」を両方取る
-  const m = h.match(/^#\/c\/(\d+)-([A-Za-z0-9]+)$/);
-  if (m) {
-    return { type: "cp", n: parseInt(m[1], 10), key: m[2] };
+  // ① ゲーム説明ページ
+  if (h === "#/intro" || h === "" || h === "#") {
+    return { type: "intro" };
   }
 
+  // ② チェックポイント（ランダム付きのみ有効）
+  const m = h.match(/^#\/c\/(\d+)-[A-Za-z0-9]+$/);
+  if (m) {
+    return { type: "cp", n: parseInt(m[1], 10) };
+  }
+
+  // ③ 通常ページ
   if (h === "#/login") return { type: "login" };
   if (h === "#/signup") return { type: "signup" };
   if (h === "#/scan") return { type: "scan" };
   if (h === "#/leaderboard") return { type: "leaderboard" };
   if (h === "#/me") return { type: "me" };
-  if (h === "#/" || h === "" || h === "#") return { type: "home" };
 
+  // ④ それ以外は全部ハズレ
   return { type: "unknown" };
 };
+
 
 
 
@@ -523,6 +530,43 @@ const getRoute = () => {
         </div>
       `));
     }
+function renderIntro() {
+  app.innerHTML = "";
+
+  app.appendChild(el(`
+    <div>
+      <div class="header">
+        <h1>🏁 QRハント</h1>
+        <div class="badge">寮内イベント</div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">ゲーム説明</div>
+
+        <p class="card-subtitle">
+          寮内に隠されたQRコードを探して進む宝探しゲームです。<br>
+          ヒントを頼りに、順番通りチェックポイントをクリアしてください。
+        </p>
+
+        <div class="hint-box">
+          <strong>🎁 景品</strong><br>
+          全チェックポイントをクリアした画面をスタッフに見せると、景品がもらえます。
+        </div>
+
+        <div class="divider"></div>
+
+        <p class="text-muted" style="font-size:13px;">
+          ・PIN（4桁）は再ログインに必要です<br>
+          ・URLを推測しても進捗は進みません
+        </p>
+
+        <button style="margin-top:16px;" onclick="location.hash='#/login'">
+          ▶️ スタート
+        </button>
+      </div>
+    </div>
+  `));
+}
 
     function renderLogin() {
       app.innerHTML = "";
@@ -987,6 +1031,11 @@ const getRoute = () => {
       await ensureAnonLogin();
 
       const r = getRoute();
+ if (r.type === "intro") {
+    renderIntro();
+    return;
+  }
+      
       // ✅ 不明URLはハズレ
 if (r.type === "unknown") {
   renderTrap("GUEST", { checkpoint: 0 }, "UNKNOWN");
@@ -996,6 +1045,11 @@ if (r.type === "unknown") {
 // ✅ CP URLは「この4つだけ許可」
 // 例：#/c/1-f8K3 はOK、#/c/1-aaaa はハズレ
 if (r.type === "cp") {
+  if (r.type === "unknown") {
+  location.hash = "#/c/999-TRAP";
+  return;
+}
+
   // trapは 999-TRAP だけ許可
   if (r.n === 999) {
     if (r.key === TRAP_KEY) {
