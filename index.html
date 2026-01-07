@@ -421,7 +421,9 @@ const CP_KEYS = {
   2: "Qm9A",
   3: "Z7pL",
   4: "Kx2R",
+  5: "Bde7", // ← ここは好きなランダム文字にしてOK
 };
+
 const TRAP_KEY = "TRAP";
 
     const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
@@ -856,7 +858,8 @@ node.querySelector("#claim").onclick = async () => {
       app.appendChild(node);
     }
 
-    function renderTrap(nickname, prog, reason = "") {
+    function renderTrap(nickname = "GUEST", prog = { checkpoint: 0 }, reason = "") {
+
   app.innerHTML = "";
 
   const lines = [
@@ -1160,101 +1163,80 @@ node.querySelector("#claim").onclick = async () => {
     }
 
     async function route() {
-      setNavActive();
-      await ensureAnonLogin();
+  try {
+    setNavActive();
+    await ensureAnonLogin();
 
-      const r = getRoute();
- if (r.type === "intro") {
-    renderIntro();
-    return;
-  }
-      
-      // ✅ 不明URLはハズレ
-if (r.type === "unknown") {
-  renderTrap("GUEST", { checkpoint: 0 }, "UNKNOWN");
-  return;
-}
+    const r = getRoute();
 
-// ✅ CP URLは「この4つだけ許可」
-// 例：#/c/1-f8K3 はOK、#/c/1-aaaa はハズレ
-if (r.type === "cp") {
-  if (r.type === "unknown") {
-  location.hash = "#/c/999-TRAP";
-  return;
-}
+    // イントロはログイン不要
+    if (r.type === "intro") { renderIntro(); return; }
 
-  // trapは 999-TRAP だけ許可
-  if (r.n === 999) {
-    if (r.key === TRAP_KEY) {
-      renderTrap("GUEST", { checkpoint: 0 }, "TRAP");
-      return;
-    } else {
-      renderTrap("GUEST", { checkpoint: 0 }, "TRAP_KEY_MISMATCH");
+    // 不明URLはハズレ
+    if (r.type === "unknown") {
+      renderTrap("GUEST", { checkpoint: 0 }, "UNKNOWN");
       return;
     }
-  }
 
-  // 正解CPは 1..4 で、キーが一致した時だけ通す
-  if (!CP_KEYS[r.n] || r.key !== CP_KEYS[r.n]) {
-    renderTrap("GUEST", { checkpoint: 0 }, "KEY_MISMATCH");
-    return;
-  }
-}
-
-      // route() の中
-if (r.type === "unknown") {
-  renderTrap("GUEST", { checkpoint: 0 });
-  return;
-}
-
-if (r.type === "cp" && r.n === 999) {
-  renderTrap("GUEST", { checkpoint: 0 });
-  return;
-}
-
-            const me = await getMe();
-      const nick = await getNickname(me.id);
-      const prog = nick ? await getProgress(me.id) : { checkpoint: 0, updated_at: null };
-
-      // ✅ログイン前に開かせない（ここが大事）
-      if (!nick && (r.type === "scan" || r.type === "leaderboard" || r.type === "me" || r.type === "home" || r.type === "cp")) {
-        location.hash = "#/login";
+    // CP URL検証（#/c/N-KEY だけ許可）
+    if (r.type === "cp") {
+      // TRAP（#/c/999-TRAP のみ許可）
+      if (r.n === 999) {
+        if (r.key === TRAP_KEY) {
+          renderTrap("GUEST", { checkpoint: 0 }, "TRAP");
+        } else {
+          renderTrap("GUEST", { checkpoint: 0 }, "TRAP_KEY_MISMATCH");
+        }
         return;
       }
 
-      if (r.type === "clear") {
-        renderClear(nick);
+      // 正規CPはキー一致のみ許可
+      if (!CP_KEYS[r.n] || r.key !== CP_KEYS[r.n]) {
+        renderTrap("GUEST", { checkpoint: 0 }, "KEY_MISMATCH");
         return;
       }
+    }
 
-      if (r.type === "login") { renderLogin(); return; }
-      if (r.type === "signup") { renderSignup(); return; }
+    // ここからログイン状態を読む
+    const me = await getMe();
+    const nick = await getNickname(me.id);
+    const prog = nick ? await getProgress(me.id) : { checkpoint: 0, updated_at: null };
 
-      if (r.type === "home") { renderHome(nick, prog); return; }
-      if (r.type === "scan") { renderScan(nick, prog); return; }
-      if (r.type === "me") { renderMe(nick, prog); return; }
-      if (r.type === "leaderboard") { await renderLeaderboard(nick); return; }
-
-      if (r.type === "cp") {
-        if (r.n === 999) { renderTrap(); return; }
-        renderCheckpoint(nick, prog, r.n);
-        return;
-      }
-
+    // ログイン前に見せないページ
+    const needsLogin = (r.type === "home" || r.type === "scan" || r.type === "leaderboard" || r.type === "me" || r.type === "cp" || r.type === "clear");
+    if (!nick && needsLogin) {
       location.hash = "#/login";
-    } catch (e) {
-      // ここがあると「真っ白」にならず原因が見える
-      app.innerHTML = `
-        <div class="card">
-          <div class="card-title">エラーで停止しました</div>
-          <div class="alert alert-error" style="margin-top:12px;">
-            ${e?.message ?? e}
-          </div>
-        </div>
-      `;
-      console.error(e);
+      return;
     }
+
+    // ルーティング
+    if (r.type === "login") { renderLogin(); return; }
+    if (r.type === "signup") { renderSignup(); return; }
+    if (r.type === "home") { renderHome(nick, prog); return; }
+    if (r.type === "scan") { renderScan(nick, prog); return; }
+    if (r.type === "me") { renderMe(nick, prog); return; }
+    if (r.type === "leaderboard") { await renderLeaderboard(nick); return; }
+    if (r.type === "clear") { renderClear(nick); return; }
+
+    if (r.type === "cp") {
+      renderCheckpoint(nick, prog, r.n);
+      return;
+    }
+
+    location.hash = "#/login";
+  } catch (e) {
+    app.innerHTML = `
+      <div class="card">
+        <div class="card-title">エラーで停止しました</div>
+        <div class="alert alert-error" style="margin-top:12px;">
+          ${e?.message ?? e}
+        </div>
+      </div>
+    `;
+    console.error(e);
   }
+}
+
 
   window.addEventListener("hashchange", route);
 
