@@ -1085,10 +1085,41 @@
 
    function renderHome(nickname, prog) {
   app.innerHTML = "";
+
+  // 表示用：現在の言語ラベル
+  const langLabel = {
+    ja: "日本語",
+    en: "English",
+    "zh-Hans": "简体中文",
+    "zh-Hant": "繁體中文",
+    es: "Español",
+  };
+
+  // 切り替え順
+  const order = ["ja", "en", "zh-Hans", "zh-Hant", "es"];
+  const nextLang = (cur) => order[(order.indexOf(cur) + 1) % order.length];
+
   app.appendChild(el(`
     <div>
       <div class="header">
         <h1>${t("APP_TITLE")}</h1>
+
+        <!-- 🌐 言語ボタン -->
+        <button id="langBtn"
+          type="button"
+          style="
+            width:auto;
+            padding:10px 12px;
+            font-size:14px;
+            font-weight:900;
+            border-radius:999px;
+            display:inline-flex;
+            align-items:center;
+            gap:8px;
+            white-space:nowrap;
+          ">
+          🌐 ${langLabel[LANG] ?? LANG}
+        </button>
       </div>
 
       <div class="card">
@@ -1117,7 +1148,13 @@
       </div>
     </div>
   `));
+
+  // ボタンクリックで言語切替 → setLang() が route() を呼んで再描画
+  document.getElementById("langBtn").onclick = () => {
+    setLang(nextLang(LANG));
+  };
 }
+
 
 
     function renderLogin() {
