@@ -353,6 +353,73 @@
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFoeW5sd3RjZHJ0a3p5a2NjY2diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc0MTA0MDQsImV4cCI6MjA4Mjk4NjQwNH0.HttRXUS-Qy6VA0t4UE8MIC58tgncg-2bucYfLr14LSA"; // ← ここだけ差し替え
 
     const MAX_CHECKPOINT = 5;
+    // =======================
+// i18n (多言語) 基本セット
+// =======================
+
+// ① 日本語をマスター（正本）
+const I18N_BASE = {
+  APP_TITLE: "🏁 BearsRockHunt",
+  NAV_HOME: "ホーム",
+  NAV_SCAN: "スキャン",
+  NAV_RANK: "ランキング",
+  NAV_ME: "マイページ",
+
+  LOGIN_TITLE: "ログイン",
+  LOGIN_WELCOME: "おかえりなさい",
+  LOGIN_DESC: "ファーストネームとPINコードを入力してください",
+
+  LABEL_NAME: "ファーストネーム",
+  LABEL_PIN: "PINコード",
+  PLACEHOLDER_NAME: "ファーストネームを入力",
+  PLACEHOLDER_PIN: "4桁の数字",
+
+  BTN_LOGIN: "ログイン",
+  BTN_SIGNUP: "登録して開始",
+};
+
+// ② 他言語（上書き分だけ）
+const I18N = {
+  en: {
+    NAV_HOME: "Home",
+    NAV_SCAN: "Scan",
+    NAV_RANK: "Ranking",
+    NAV_ME: "Me",
+
+    LOGIN_TITLE: "Log in",
+    LOGIN_WELCOME: "Welcome back",
+    LOGIN_DESC: "Enter your name and PIN",
+
+    LABEL_NAME: "Name",
+    LABEL_PIN: "PIN",
+    PLACEHOLDER_NAME: "Enter your name",
+    PLACEHOLDER_PIN: "4-digit PIN",
+
+    BTN_LOGIN: "Log in",
+    BTN_SIGNUP: "Start",
+  }
+};
+
+// ③ 言語状態（保存）
+const LANG_KEY = "brh_lang";
+let LANG = localStorage.getItem(LANG_KEY) || "ja";
+
+// ④ 翻訳関数
+function t(key, vars = {}) {
+  const text =
+    (LANG !== "ja" ? I18N[LANG]?.[key] : null) ??
+    I18N_BASE[key] ??
+    key;
+
+  return String(text).replace(/\{(\w+)\}/g, (_, k) => vars[k] ?? `{${k}}`);
+}
+
+function setLang(lang) {
+  LANG = lang;
+  localStorage.setItem(LANG_KEY, lang);
+  route(); // 再描画
+}
+
 
     // ✅ 正解QR（推測対策）
     // 例: #/c/1-f8K3
@@ -552,7 +619,7 @@
       app.innerHTML = "";
       const node = el(`
         <div>
-          <div class="header"><h1>ログイン</h1></div>
+          <div class="header"><h1>${t("LOGIN_TITLE")}</h1></div>
           <div class="card">
             <div class="card-title">おかえり</div>
             <p class="card-subtitle">ファーストネームとPINコードを入力</p>
