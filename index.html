@@ -1087,8 +1087,7 @@
       app.innerHTML = "";
       app.appendChild(el(`
         <div>
-          ${headerHtml(t("APP_TITLE"), `<div class="badge">📍 ${prog.checkpoint}/${MAX_CHECKPOINT}</div>`)}
-          <div class="card">
+          ${headerHtml(t("APP_TITLE"),
             <div class="stats">
               <div class="stat-item">
                 <div class="stat-value">${prog.checkpoint}</div>
