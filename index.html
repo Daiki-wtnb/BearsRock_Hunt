@@ -1083,37 +1083,42 @@
       `));
     }
 
-    function renderHome(nickname, prog) {
-      app.innerHTML = "";
-      app.appendChild(el(`
-        <div>
-          ${headerHtml(t("APP_TITLE"),
-            <div class="stats">
-              <div class="stat-item">
-                <div class="stat-value">${prog.checkpoint}</div>
-                <div class="stat-label">${t("HOME_DONE")}</div>
-              </div>
-              <div class="stat-item">
-                <div class="stat-value">${Math.max(0, MAX_CHECKPOINT - prog.checkpoint)}</div>
-                <div class="stat-label">${t("HOME_LEFT")}</div>
-              </div>
-            </div>
+   function renderHome(nickname, prog) {
+  app.innerHTML = "";
+  app.appendChild(el(`
+    <div>
+      <div class="header">
+        <h1>${t("APP_TITLE")}</h1>
+      </div>
 
-            <div class="progress-container">
-              <div class="progress-bar" style="width:${progressPercent(prog.checkpoint)}%"></div>
-            </div>
-
-            <p class="card-subtitle">${t("HOME_DESC")}</p>
-            <button type="button" onclick="location.hash='#/scan'">${t("BTN_SCAN")}</button>
+      <div class="card">
+        <div class="stats">
+          <div class="stat-item">
+            <div class="stat-value">${prog.checkpoint}</div>
+            <div class="stat-label">${t("HOME_DONE")}</div>
           </div>
-
-          <div class="card">
-            <div class="card-title">${t("WELCOME", { name: nickname })}</div>
-            <p class="text-muted">${t("HOME_HINT_NOTE")}</p>
+          <div class="stat-item">
+            <div class="stat-value">${Math.max(0, MAX_CHECKPOINT - prog.checkpoint)}</div>
+            <div class="stat-label">${t("HOME_LEFT")}</div>
           </div>
         </div>
-      `));
-    }
+
+        <div class="progress-container">
+          <div class="progress-bar" style="width:${progressPercent(prog.checkpoint)}%"></div>
+        </div>
+
+        <p class="card-subtitle">${t("HOME_DESC")}</p>
+        <button type="button" onclick="location.hash='#/scan'">${t("BTN_SCAN")}</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">${t("WELCOME", { name: nickname })}</div>
+        <p class="text-muted">${t("HOME_HINT_NOTE")}</p>
+      </div>
+    </div>
+  `));
+}
+
 
     function renderLogin() {
       app.innerHTML = "";
