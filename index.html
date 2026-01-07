@@ -78,19 +78,36 @@
     justify-content:flex-end;
     flex-wrap: wrap;
   }
-  .lang-select{
-    appearance: none;
-    -webkit-appearance: none;
-    border: 1px solid var(--border);
+
+  /* ===== language segmented control (ぽちぽちUI) ===== */
+  .lang-seg{
+    display:inline-flex;
+    gap:6px;
+    padding:6px;
+    border-radius:999px;
     background: var(--card);
-    color: var(--text);
-    border-radius: 999px;
-    padding: 6px 10px;
-    font-weight: 900;
-    font-size: 12px;
+    border: 1px solid var(--border);
     box-shadow: var(--shadow);
-    cursor: pointer;
   }
+  .lang-seg button{
+    width:auto;
+    padding:8px 10px;
+    border-radius:999px;
+    border: 0;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 1000;
+    cursor:pointer;
+    box-shadow:none;
+    transition: all 0.15s;
+  }
+  .lang-seg button:hover{ opacity:.9; transform: translateY(-1px); }
+  .lang-seg button.active{
+    background: linear-gradient(90deg, var(--primary), var(--primary-light));
+    color: #fff;
+  }
+
   .card{
     background: var(--card);
     border-radius: 16px;
@@ -411,7 +428,7 @@
       es: "Español",
     };
 
-    // ✅ 日本語を「正本」（ここ直すと、日本語表示は即反映）
+    // ✅ 日本語を「正本」
     const I18N_BASE = {
       APP_TITLE: "🏁 BearsRockHunt",
       EVENT_BADGE: "イベント",
@@ -522,7 +539,7 @@
       ERR_HINT_3: "players / progress テーブルはある？",
     };
 
-    // ✅ 他言語（差分だけでOK）
+    // ✅ 他言語（差分だけ）
     const I18N = {
       en: {
         EVENT_BADGE: "Event",
@@ -916,23 +933,39 @@
       document.documentElement.lang = (lang === "zh-Hans" || lang === "zh-Hant") ? "zh" : lang;
       route(); // 再描画
     }
-    // inline onchange用
     window.__setLang = setLang;
 
-    function langSelectHtml() {
-      const options = Object.entries(LANG_LABELS).map(([k, v]) =>
-        `<option value="${k}" ${k===LANG?"selected":""}>${v}</option>`
-      ).join("");
-      return `<select class="lang-select" onchange="window.__setLang(this.value)">${options}</select>`;
+    function langSegmentHtml() {
+      const short = {
+        ja: "JA",
+        en: "EN",
+        "zh-Hans": "简",
+        "zh-Hant": "繁",
+        es: "ES",
+      };
+      const order = ["ja", "en", "zh-Hans", "zh-Hant", "es"];
+      return `
+        <div class="lang-seg" role="tablist" aria-label="Language">
+          ${order.map(k => `
+            <button
+              type="button"
+              class="${k===LANG ? "active" : ""}"
+              onclick="window.__setLang('${k}')"
+              aria-pressed="${k===LANG}"
+              title="${LANG_LABELS[k] ?? k}"
+            >${short[k] ?? k}</button>
+          `).join("")}
+        </div>
+      `;
     }
 
-    function headerHtml(titleText, rightHtml = "") {
+    function headerHtml(titleText, rightHtml = "", showLang = true) {
       return `
         <div class="header">
           <h1>${titleText}</h1>
           <div class="badge-right">
             ${rightHtml}
-            ${langSelectHtml()}
+            ${showLang ? langSegmentHtml() : ""}
           </div>
         </div>
       `;
@@ -1059,7 +1092,7 @@
       app.innerHTML = "";
       app.appendChild(el(`
         <div>
-          ${headerHtml(t("APP_TITLE"), `<div class="badge">${t("EVENT_BADGE")}</div>`)}
+          ${headerHtml(t("APP_TITLE"), `<div class="badge">${t("EVENT_BADGE")}</div>`, true)}
           <div class="card">
             <div class="card-title">${t("INTRO_TITLE")}</div>
             <p class="card-subtitle">${t("INTRO_DESC")}</p>
@@ -1083,85 +1116,45 @@
       `));
     }
 
-   function renderHome(nickname, prog) {
-  app.innerHTML = "";
+    function renderHome(nickname, prog) {
+      app.innerHTML = "";
+      app.appendChild(el(`
+        <div>
+          ${headerHtml(t("APP_TITLE"), "", true)}
 
-  // 表示用：現在の言語ラベル
-  const langLabel = {
-    ja: "日本語",
-    en: "English",
-    "zh-Hans": "简体中文",
-    "zh-Hant": "繁體中文",
-    es: "Español",
-  };
+          <div class="card">
+            <div class="stats">
+              <div class="stat-item">
+                <div class="stat-value">${prog.checkpoint}</div>
+                <div class="stat-label">${t("HOME_DONE")}</div>
+              </div>
+              <div class="stat-item">
+                <div class="stat-value">${Math.max(0, MAX_CHECKPOINT - prog.checkpoint)}</div>
+                <div class="stat-label">${t("HOME_LEFT")}</div>
+              </div>
+            </div>
 
-  // 切り替え順
-  const order = ["ja", "en", "zh-Hans", "zh-Hant", "es"];
-  const nextLang = (cur) => order[(order.indexOf(cur) + 1) % order.length];
+            <div class="progress-container">
+              <div class="progress-bar" style="width:${progressPercent(prog.checkpoint)}%"></div>
+            </div>
 
-  app.appendChild(el(`
-    <div>
-      <div class="header">
-        <h1>${t("APP_TITLE")}</h1>
-
-        <!-- 🌐 言語ボタン -->
-        <button id="langBtn"
-          type="button"
-          style="
-            width:auto;
-            padding:10px 12px;
-            font-size:14px;
-            font-weight:900;
-            border-radius:999px;
-            display:inline-flex;
-            align-items:center;
-            gap:8px;
-            white-space:nowrap;
-          ">
-          🌐 ${langLabel[LANG] ?? LANG}
-        </button>
-      </div>
-
-      <div class="card">
-        <div class="stats">
-          <div class="stat-item">
-            <div class="stat-value">${prog.checkpoint}</div>
-            <div class="stat-label">${t("HOME_DONE")}</div>
+            <p class="card-subtitle">${t("HOME_DESC")}</p>
+            <button type="button" onclick="location.hash='#/scan'">${t("BTN_SCAN")}</button>
           </div>
-          <div class="stat-item">
-            <div class="stat-value">${Math.max(0, MAX_CHECKPOINT - prog.checkpoint)}</div>
-            <div class="stat-label">${t("HOME_LEFT")}</div>
+
+          <div class="card">
+            <div class="card-title">${t("WELCOME", { name: nickname })}</div>
+            <p class="text-muted">${t("HOME_HINT_NOTE")}</p>
           </div>
         </div>
-
-        <div class="progress-container">
-          <div class="progress-bar" style="width:${progressPercent(prog.checkpoint)}%"></div>
-        </div>
-
-        <p class="card-subtitle">${t("HOME_DESC")}</p>
-        <button type="button" onclick="location.hash='#/scan'">${t("BTN_SCAN")}</button>
-      </div>
-
-      <div class="card">
-        <div class="card-title">${t("WELCOME", { name: nickname })}</div>
-        <p class="text-muted">${t("HOME_HINT_NOTE")}</p>
-      </div>
-    </div>
-  `));
-
-  // ボタンクリックで言語切替 → setLang() が route() を呼んで再描画
-  document.getElementById("langBtn").onclick = () => {
-    setLang(nextLang(LANG));
-  };
-}
-
-
+      `));
+    }
 
     function renderLogin() {
       app.innerHTML = "";
       const node = el(`
         <div>
-          ${headerHtml(t("LOGIN_TITLE"))}
+          ${headerHtml(t("LOGIN_TITLE"), "", true)}
           <div class="card">
             <div class="card-title">${t("LOGIN_CARD_TITLE")}</div>
             <p class="card-subtitle">${t("LOGIN_DESC")}</p>
@@ -1220,7 +1213,7 @@
       app.innerHTML = "";
       const node = el(`
         <div>
-          ${headerHtml(t("SIGNUP_TITLE"))}
+          ${headerHtml(t("SIGNUP_TITLE"), "", true)}
           <div class="card">
             <div class="card-title">${t("SIGNUP_CARD_TITLE")}</div>
             <p class="card-subtitle">${t("SIGNUP_DESC")}</p>
@@ -1287,7 +1280,7 @@
 
       const node = el(`
         <div>
-          ${headerHtml(t("CP_TITLE"), `<div class="badge">📍 ${prog.checkpoint}/${MAX_CHECKPOINT}</div>`)}
+          ${headerHtml(t("CP_TITLE"), `<div class="badge">📍 ${prog.checkpoint}/${MAX_CHECKPOINT}</div>`, true)}
           <div class="checkpoint-card">
             <div class="checkpoint-number">${target}</div>
             <div style="font-weight:900;letter-spacing:.08em;">CHECKPOINT ${target}</div>
@@ -1368,7 +1361,7 @@
 
       app.appendChild(el(`
         <div>
-          ${headerHtml(t("TRAP_TITLE"))}
+          ${headerHtml(t("TRAP_TITLE"), "", true)}
           <div class="card trapCard">
             <div style="display:flex;align-items:center;gap:12px;">
               <div class="trapSkull">💀</div>
@@ -1398,7 +1391,7 @@
       app.innerHTML = "";
       app.appendChild(el(`
         <div>
-          ${headerHtml(t("CLEAR_TITLE"))}
+          ${headerHtml(t("CLEAR_TITLE"), "", true)}
           <div class="card">
             <div class="card-title">${t("CLEAR_CONGRATS", { name: nickname })}</div>
             <p class="card-subtitle">${t("CLEAR_DESC")}</p>
@@ -1422,7 +1415,7 @@
 
       app.appendChild(el(`
         <div>
-          ${headerHtml(t("SCAN_TITLE"), `<div class="badge">📍 ${prog.checkpoint}/${MAX_CHECKPOINT}</div>`)}
+          ${headerHtml(t("SCAN_TITLE"), `<div class="badge">📍 ${prog.checkpoint}/${MAX_CHECKPOINT}</div>`, false)}
           <div class="card">
             <div class="card-title">${t("SCAN_CARD_TITLE")}</div>
             ${
@@ -1457,7 +1450,7 @@
 
       app.appendChild(el(`
         <div>
-          ${headerHtml(t("ME_TITLE"))}
+          ${headerHtml(t("ME_TITLE"), "", true)}
           <div class="card">
             <div class="card-title">${nickname}</div>
 
@@ -1489,7 +1482,7 @@
       app.innerHTML = "";
       app.appendChild(el(`
         <div>
-          ${headerHtml(t("RANK_TITLE"))}
+          ${headerHtml(t("RANK_TITLE"), "", false)}
           <div class="card">
             <div class="card-title">${t("RANK_CARD_TITLE")}</div>
             <p class="card-subtitle">${t("RANK_DESC")}</p>
