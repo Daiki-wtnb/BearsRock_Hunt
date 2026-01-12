@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="ja">
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -77,35 +77,6 @@
     gap: 8px;
     justify-content:flex-end;
     flex-wrap: wrap;
-  }
-
-  /* ===== language segmented control (ぽちぽちUI) ===== */
-  .lang-seg{
-    display:inline-flex;
-    gap:6px;
-    padding:6px;
-    border-radius:999px;
-    background: var(--card);
-    border: 1px solid var(--border);
-    box-shadow: var(--shadow);
-  }
-  .lang-seg button{
-    width:auto;
-    padding:8px 10px;
-    border-radius:999px;
-    border: 0;
-    background: transparent;
-    color: var(--text-secondary);
-    font-size: 12px;
-    font-weight: 1000;
-    cursor:pointer;
-    box-shadow:none;
-    transition: all 0.15s;
-  }
-  .lang-seg button:hover{ opacity:.9; transform: translateY(-1px); }
-  .lang-seg button.active{
-    background: linear-gradient(90deg, var(--primary), var(--primary-light));
-    color: #fff;
   }
 
   .card{
@@ -208,6 +179,20 @@
     color: var(--text);
     margin-top: 10px;
   }
+
+  /* ✅ ぽちぽち言語トグル */
+  .lang-pill{
+    width:auto;
+    padding:10px 12px;
+    font-size:14px;
+    font-weight:900;
+    border-radius:999px;
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    white-space:nowrap;
+  }
+
   .alert{
     padding: 14px 14px;
     border-radius: 12px;
@@ -379,19 +364,19 @@
   <nav class="navbar">
     <a class="nav-item" href="#/">
       <div class="nav-icon">🏠</div>
-      <div id="navHome">ホーム</div>
+      <div id="navHome">Home</div>
     </a>
     <a class="nav-item" href="#/scan">
       <div class="nav-icon">📷</div>
-      <div id="navScan">スキャン</div>
+      <div id="navScan">Scan</div>
     </a>
     <a class="nav-item" href="#/leaderboard">
       <div class="nav-icon">🏆</div>
-      <div id="navRank">ランキング</div>
+      <div id="navRank">Ranking</div>
     </a>
     <a class="nav-item" href="#/me">
       <div class="nav-icon">👤</div>
-      <div id="navMe">マイページ</div>
+      <div id="navMe">Me</div>
     </a>
   </nav>
 
@@ -418,21 +403,29 @@
     // i18n（5言語）
     // =======================
     const LANG_KEY = "brh_lang";
-    let LANG = localStorage.getItem(LANG_KEY) || "ja";
+    // ✅ 初回デフォルトは英語
+    let LANG = localStorage.getItem(LANG_KEY) || "en";
 
     const LANG_LABELS = {
       ja: "日本語",
       en: "English",
-      "zh-Hans": "中文(简体)",
-      "zh-Hant": "中文(繁體)",
+      "zh-Hans": "简体中文",
+      "zh-Hant": "繁體中文",
       es: "Español",
     };
+
+    // ✅ 切り替え順（ぽちぽち）
+    const LANG_ORDER = ["en","ja","zh-Hans","zh-Hant","es"];
+
+    function nextLang(cur){
+      const i = LANG_ORDER.indexOf(cur);
+      return LANG_ORDER[(i + 1 + LANG_ORDER.length) % LANG_ORDER.length];
+    }
 
     // ✅ 日本語を「正本」
     const I18N_BASE = {
       APP_TITLE: "🏁 BearsRockHunt",
       EVENT_BADGE: "イベント",
-      LANG_BADGE: "言語",
 
       NAV_HOME: "ホーム",
       NAV_SCAN: "スキャン",
@@ -539,9 +532,9 @@
       ERR_HINT_3: "players / progress テーブルはある？",
     };
 
-    // ✅ 他言語（差分だけ）
     const I18N = {
       en: {
+        APP_TITLE: "🏁 BearsRockHunt",
         EVENT_BADGE: "Event",
         NAV_HOME: "Home",
         NAV_SCAN: "Scan",
@@ -608,7 +601,11 @@
         HINT_TITLE: "💡 Hint {n}",
 
         TRAP_TITLE: "😈 Trap",
-        TRAP_NOTE_1: "✅ Only the predefined QR URLs are valid",
+        TRAP_LINE_1: "Nothing here.",
+        TRAP_LINE_2: "Guessing won't move your progress.",
+        TRAP_LINE_3: "Stop hunting shortcuts. Hunt hints.",
+        TRAP_LINE_4: "Use that passion on the real route.",
+        TRAP_NOTE_1: "✅ Only predefined QR URLs are valid",
         TRAP_NOTE_2: "🔒 Guessed URLs are all traps",
 
         CLEAR_TITLE: "🎉 Cleared!",
@@ -639,6 +636,9 @@
         YOU_BADGE: "You",
 
         ERR_TITLE: "Stopped by error",
+        ERR_HINT_1: "Did you replace Supabase ANON KEY?",
+        ERR_HINT_2: "Do RPCs exist? (register_player / claim_player / claim_checkpoint / get_leaderboard)",
+        ERR_HINT_3: "Do you have players / progress tables?",
       },
 
       "zh-Hans": {
@@ -703,6 +703,10 @@
         HINT_TITLE: "💡 提示 {n}",
 
         TRAP_TITLE: "😈 陷阱",
+        TRAP_LINE_1: "这里什么都没有。",
+        TRAP_LINE_2: "猜链接不会推进进度。",
+        TRAP_LINE_3: "别找捷径，去找提示。",
+        TRAP_LINE_4: "把热情用在正确路线。",
         TRAP_NOTE_1: "✅ 只有预设的二维码链接有效",
         TRAP_NOTE_2: "🔒 猜测链接都会判定为陷阱",
 
@@ -796,6 +800,10 @@
         HINT_TITLE: "💡 提示 {n}",
 
         TRAP_TITLE: "😈 陷阱",
+        TRAP_LINE_1: "這裡什麼都沒有。",
+        TRAP_LINE_2: "猜連結不會推進進度。",
+        TRAP_LINE_3: "別找捷徑，去找提示。",
+        TRAP_LINE_4: "把熱情用在正規路線。",
         TRAP_NOTE_1: "✅ 只有預設的 QR 連結有效",
         TRAP_NOTE_2: "🔒 猜測連結都會判定為陷阱",
 
@@ -889,6 +897,10 @@
         HINT_TITLE: "💡 Pista {n}",
 
         TRAP_TITLE: "😈 Trampa",
+        TRAP_LINE_1: "No hay nada aquí.",
+        TRAP_LINE_2: "Adivinar URLs no avanza tu progreso.",
+        TRAP_LINE_3: "No busques atajos. Busca pistas.",
+        TRAP_LINE_4: "Usa esa pasión en la ruta correcta.",
         TRAP_NOTE_1: "✅ Solo valen las URLs de QR definidas",
         TRAP_NOTE_2: "🔒 Las URLs adivinadas son trampa",
 
@@ -935,48 +947,16 @@
     }
     window.__setLang = setLang;
 
-    function langSegmentHtml() {
-      const short = {
-        ja: "JA",
-        en: "EN",
-        "zh-Hans": "简",
-        "zh-Hant": "繁",
-        es: "ES",
-      };
-      const order = ["ja", "en", "zh-Hans", "zh-Hant", "es"];
-      return `
-        <div class="lang-seg" role="tablist" aria-label="Language">
-          ${order.map(k => `
-            <button
-              type="button"
-              class="${k===LANG ? "active" : ""}"
-              onclick="window.__setLang('${k}')"
-              aria-pressed="${k===LANG}"
-              title="${LANG_LABELS[k] ?? k}"
-            >${short[k] ?? k}</button>
-          `).join("")}
-        </div>
-      `;
-    }
-
-    function headerHtml(titleText, rightHtml = "", showLang = true) {
-      return `
-        <div class="header">
-          <h1>${titleText}</h1>
-          <div class="badge-right">
-            ${rightHtml}
-            ${showLang ? langSegmentHtml() : ""}
-          </div>
-        </div>
-      `;
-    }
-
     function applyStaticI18n() {
       document.title = t("APP_TITLE");
-      document.getElementById("navHome").textContent = t("NAV_HOME");
-      document.getElementById("navScan").textContent = t("NAV_SCAN");
-      document.getElementById("navRank").textContent = t("NAV_RANK");
-      document.getElementById("navMe").textContent = t("NAV_ME");
+      const navHome = document.getElementById("navHome");
+      const navScan = document.getElementById("navScan");
+      const navRank = document.getElementById("navRank");
+      const navMe   = document.getElementById("navMe");
+      if (navHome) navHome.textContent = t("NAV_HOME");
+      if (navScan) navScan.textContent = t("NAV_SCAN");
+      if (navRank) navRank.textContent = t("NAV_RANK");
+      if (navMe)   navMe.textContent   = t("NAV_ME");
       document.documentElement.lang = (LANG === "zh-Hans" || LANG === "zh-Hant") ? "zh" : LANG;
     }
 
@@ -1076,7 +1056,7 @@
 
     // ====== hints ======
     function hintText(n) {
-      // NOTE: ヒントも多言語化したいなら、ここも t() キー化する（今は日本語固定）
+      // NOTE: ヒント自体を多言語化したいなら t() 化する（今は固定）
       const hints = {
         1: "毎朝、靴が集まる場所の“上”を見ろ",
         2: "いい匂いがする。さあどこだろう",
@@ -1092,7 +1072,13 @@
       app.innerHTML = "";
       app.appendChild(el(`
         <div>
-          ${headerHtml(t("APP_TITLE"), `<div class="badge">${t("EVENT_BADGE")}</div>`, true)}
+          <div class="header">
+            <h1>${t("APP_TITLE")}</h1>
+            <div class="badge-right">
+              <div class="badge">${t("EVENT_BADGE")}</div>
+            </div>
+          </div>
+
           <div class="card">
             <div class="card-title">${t("INTRO_TITLE")}</div>
             <p class="card-subtitle">${t("INTRO_DESC")}</p>
@@ -1116,11 +1102,18 @@
       `));
     }
 
+    // ✅ ホームだけ：ぽちぽち言語切替ボタンを表示
     function renderHome(nickname, prog) {
       app.innerHTML = "";
+
       app.appendChild(el(`
         <div>
-          ${headerHtml(t("APP_TITLE"), "", true)}
+          <div class="header">
+            <h1>${t("APP_TITLE")}</h1>
+            <button id="langBtn" class="lang-pill" type="button">
+              🌐 ${LANG_LABELS[LANG] ?? LANG}
+            </button>
+          </div>
 
           <div class="card">
             <div class="stats">
@@ -1148,13 +1141,17 @@
           </div>
         </div>
       `));
+
+      document.getElementById("langBtn").onclick = () => setLang(nextLang(LANG));
     }
 
     function renderLogin() {
       app.innerHTML = "";
       const node = el(`
         <div>
-          ${headerHtml(t("LOGIN_TITLE"), "", true)}
+          <div class="header">
+            <h1>${t("LOGIN_TITLE")}</h1>
+          </div>
           <div class="card">
             <div class="card-title">${t("LOGIN_CARD_TITLE")}</div>
             <p class="card-subtitle">${t("LOGIN_DESC")}</p>
@@ -1213,7 +1210,9 @@
       app.innerHTML = "";
       const node = el(`
         <div>
-          ${headerHtml(t("SIGNUP_TITLE"), "", true)}
+          <div class="header">
+            <h1>${t("SIGNUP_TITLE")}</h1>
+          </div>
           <div class="card">
             <div class="card-title">${t("SIGNUP_CARD_TITLE")}</div>
             <p class="card-subtitle">${t("SIGNUP_DESC")}</p>
@@ -1280,7 +1279,13 @@
 
       const node = el(`
         <div>
-          ${headerHtml(t("CP_TITLE"), `<div class="badge">📍 ${prog.checkpoint}/${MAX_CHECKPOINT}</div>`, true)}
+          <div class="header">
+            <h1>${t("CP_TITLE")}</h1>
+            <div class="badge-right">
+              <div class="badge">📍 ${prog.checkpoint}/${MAX_CHECKPOINT}</div>
+            </div>
+          </div>
+
           <div class="checkpoint-card">
             <div class="checkpoint-number">${target}</div>
             <div style="font-weight:900;letter-spacing:.08em;">CHECKPOINT ${target}</div>
@@ -1331,7 +1336,7 @@
               if (res.reason === "no_passphrase") msg.innerHTML = `<div class="alert alert-error">${t("PASS_REQUIRED")}</div>`;
               else if (res.reason === "invalid_passphrase") msg.innerHTML = `<div class="alert alert-error">${t("PASS_WRONG")}</div>`;
               else if (res.reason === "wrong_order") msg.innerHTML = `<div class="alert alert-error">${t("ORDER_WRONG", { cur: res.current, max: MAX_CHECKPOINT })}</div>`;
-              else msg.innerHTML = `<div class="alert alert-error">${t("FAIL_GENERIC", { msg: (res.message ?? "エラー") })}</div>`;
+              else msg.innerHTML = `<div class="alert alert-error">${t("FAIL_GENERIC", { msg: (res.message ?? "Error") })}</div>`;
               btn.disabled = false; btn.textContent = t("BTN_CLAIM");
               return;
             }
@@ -1344,7 +1349,7 @@
             }
 
           }catch(e){
-            msg.innerHTML = `<div class="alert alert-error">エラー：${e?.message ?? e}</div>`;
+            msg.innerHTML = `<div class="alert alert-error">Error: ${e?.message ?? e}</div>`;
             btn.disabled = false; btn.textContent = t("BTN_CLAIM");
           }
         };
@@ -1353,7 +1358,7 @@
       app.appendChild(node);
     }
 
-    function renderTrap(nickname = "GUEST", prog = { checkpoint: 0 }, reason = "") {
+    function renderTrap(reason = "") {
       app.innerHTML = "";
 
       const lines = [t("TRAP_LINE_1"), t("TRAP_LINE_2"), t("TRAP_LINE_3"), t("TRAP_LINE_4")];
@@ -1361,7 +1366,10 @@
 
       app.appendChild(el(`
         <div>
-          ${headerHtml(t("TRAP_TITLE"), "", true)}
+          <div class="header">
+            <h1>${t("TRAP_TITLE")}</h1>
+          </div>
+
           <div class="card trapCard">
             <div style="display:flex;align-items:center;gap:12px;">
               <div class="trapSkull">💀</div>
@@ -1391,7 +1399,10 @@
       app.innerHTML = "";
       app.appendChild(el(`
         <div>
-          ${headerHtml(t("CLEAR_TITLE"), "", true)}
+          <div class="header">
+            <h1>${t("CLEAR_TITLE")}</h1>
+          </div>
+
           <div class="card">
             <div class="card-title">${t("CLEAR_CONGRATS", { name: nickname })}</div>
             <p class="card-subtitle">${t("CLEAR_DESC")}</p>
@@ -1409,13 +1420,20 @@
       `));
     }
 
-    function renderScan(nickname, prog) {
+    // ✅ スキャン：言語UIなし
+    function renderScan(prog) {
       app.innerHTML = "";
       const ios = isIOS();
 
       app.appendChild(el(`
         <div>
-          ${headerHtml(t("SCAN_TITLE"), `<div class="badge">📍 ${prog.checkpoint}/${MAX_CHECKPOINT}</div>`, false)}
+          <div class="header">
+            <h1>${t("SCAN_TITLE")}</h1>
+            <div class="badge-right">
+              <div class="badge">📍 ${prog.checkpoint}/${MAX_CHECKPOINT}</div>
+            </div>
+          </div>
+
           <div class="card">
             <div class="card-title">${t("SCAN_CARD_TITLE")}</div>
             ${
@@ -1450,7 +1468,10 @@
 
       app.appendChild(el(`
         <div>
-          ${headerHtml(t("ME_TITLE"), "", true)}
+          <div class="header">
+            <h1>${t("ME_TITLE")}</h1>
+          </div>
+
           <div class="card">
             <div class="card-title">${nickname}</div>
 
@@ -1478,11 +1499,15 @@
       `));
     }
 
+    // ✅ ランキング：言語UIなし
     async function renderLeaderboard(nickname) {
       app.innerHTML = "";
       app.appendChild(el(`
         <div>
-          ${headerHtml(t("RANK_TITLE"), "", false)}
+          <div class="header">
+            <h1>${t("RANK_TITLE")}</h1>
+          </div>
+
           <div class="card">
             <div class="card-title">${t("RANK_CARD_TITLE")}</div>
             <p class="card-subtitle">${t("RANK_DESC")}</p>
@@ -1527,7 +1552,7 @@
         }).join("");
 
       }catch(e){
-        list.innerHTML = `<div class="alert alert-error">取得失敗：${e?.message ?? e}</div>`;
+        list.innerHTML = `<div class="alert alert-error">Failed: ${e?.message ?? e}</div>`;
       }
     }
 
@@ -1541,17 +1566,17 @@
         const r = getRoute();
 
         if (r.type === "intro") { renderIntro(); return; }
-        if (r.type === "unknown") { renderTrap("GUEST", { checkpoint: 0 }, "UNKNOWN"); return; }
+        if (r.type === "unknown") { renderTrap("UNKNOWN"); return; }
 
         // cp key check (before login check)
         if (r.type === "cp") {
           if (r.n === 999) {
-            if (r.key === TRAP_KEY) renderTrap("GUEST", { checkpoint: 0 }, "TRAP");
-            else renderTrap("GUEST", { checkpoint: 0 }, "TRAP_KEY_MISMATCH");
+            if (r.key === TRAP_KEY) renderTrap("TRAP");
+            else renderTrap("TRAP_KEY_MISMATCH");
             return;
           }
           if (!CP_KEYS[r.n] || r.key !== CP_KEYS[r.n]) {
-            renderTrap("GUEST", { checkpoint: 0 }, "KEY_MISMATCH");
+            renderTrap("KEY_MISMATCH");
             return;
           }
         }
@@ -1567,7 +1592,7 @@
         if (!nick && needsLogin) { location.hash = "#/login"; return; }
 
         if (r.type === "home") { renderHome(nick, prog); return; }
-        if (r.type === "scan") { renderScan(nick, prog); return; }
+        if (r.type === "scan") { renderScan(prog); return; }
         if (r.type === "me") { renderMe(nick, prog); return; }
         if (r.type === "leaderboard") { await renderLeaderboard(nick); return; }
         if (r.type === "clear") { renderClear(nick); return; }
