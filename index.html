@@ -45,18 +45,33 @@
     padding: 16px;
     padding-bottom: calc(90px + env(safe-area-inset-bottom));
   }
+
+  /* ===== header (スマホで崩れない対策入り) ===== */
   .header{
     display:flex;
     align-items:center;
     justify-content:space-between;
     padding: 12px 0 20px;
     gap: 12px;
+    flex-wrap: wrap;            /* ← 右側がはみ出したら折り返す */
   }
   .header h1{
     font-size: 32px;
     font-weight: 800;
     letter-spacing: -0.5px;
+    flex: 1 1 auto;             /* ← タイトルは伸びる/縮む */
+    min-width: 0;               /* ← これないと省略が効かない */
+    line-height: 1.05;
   }
+  .header h1.truncate{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;    /* ← タイトルが長くても右UIを潰さない */
+  }
+  @media (max-width: 420px){
+    .header h1{ font-size: 26px; }
+  }
+
   .badge{
     display:inline-flex;
     align-items:center;
@@ -77,9 +92,10 @@
     gap: 8px;
     justify-content:flex-end;
     flex-wrap: wrap;
+    flex: 0 0 auto; /* ← 右側は潰れない */
   }
 
-  /* ===== language segmented control (ぽちぽちUI) ===== */
+  /* ===== language segmented control ===== */
   .lang-seg{
     display:inline-flex;
     gap:6px;
@@ -88,6 +104,9 @@
     background: var(--card);
     border: 1px solid var(--border);
     box-shadow: var(--shadow);
+    max-width: 100%;
+    overflow-x: auto; /* ← どうしても狭い端末でも逃がす */
+    -webkit-overflow-scrolling: touch;
   }
   .lang-seg button{
     width:auto;
@@ -101,6 +120,7 @@
     cursor:pointer;
     box-shadow:none;
     transition: all 0.15s;
+    flex: 0 0 auto;
   }
   .lang-seg button:hover{ opacity:.9; transform: translateY(-1px); }
   .lang-seg button.active{
@@ -368,48 +388,6 @@
     75%{ transform: translateX(8px); }
   }
   .shake{ animation: shake 0.3s ease-in-out; }
-    
-  @media (max-width: 420px){
-  .lang-seg{
-    padding: 4px;
-    gap: 4px;
-  }
-  .lang-seg button{
-    font-size: 11px;
-    padding: 6px 8px;
-    font-weight: 900;
-  }
-}
-/* ✅ header の詰まり対策（根本） */
-.header h1{
-  flex: 1 1 auto;
-  min-width: 0; /* ← これがないと縮まないことがある */
-}
-
-/* ✅ スマホだけ：言語UIを小さく + 折り返し許可 */
-@media (max-width: 520px){
-  .header{
-    flex-wrap: wrap;
-  }
-  .badge-right{
-    width: 100%;
-    justify-content: flex-end;
-  }
-
-  .lang-seg{
-    padding: 4px;
-    gap: 4px;
-  }
-  .lang-seg button{
-    font-size: 11px;
-    padding: 6px 8px;
-  }
-
-  .header h1{
-    font-size: 26px; /* タイトルも少しだけ縮める（衝突回避） */
-  }
-}
-
   </style>
 </head>
 
@@ -461,7 +439,6 @@
     // =======================
     const LANG_KEY = "brh_lang";
     let LANG = localStorage.getItem(LANG_KEY) || "en";
-
 
     const LANG_LABELS = {
       ja: "日本語",
@@ -580,6 +557,13 @@
       ERR_HINT_1: "SupabaseのANON KEYを差し替えた？",
       ERR_HINT_2: "RPC（register_player / claim_player / claim_checkpoint / get_leaderboard）は存在する？",
       ERR_HINT_3: "players / progress テーブルはある？",
+
+      /* ✅ ヒント（ここを正本として必ず全部入れる） */
+      HINT_1: "毎朝、靴が集まる場所の“上”を見ろ",
+      HINT_2: "いい匂いがする。さあどこだろう",
+      HINT_3: "男どもが毎朝集まる場所",
+      HINT_4: "くっせー、汚ねえ",
+      HINT_5: "クリア！",
     };
 
     // ✅ 他言語（差分だけ）
@@ -682,6 +666,13 @@
         YOU_BADGE: "You",
 
         ERR_TITLE: "Stopped by error",
+
+        /* ✅ Hints */
+        HINT_1: "Look above the place where shoes gather every morning.",
+        HINT_2: "Smells good… where could it be?",
+        HINT_3: "The place where the guys gather every morning.",
+        HINT_4: "It stinks. It’s filthy.",
+        HINT_5: "Cleared!",
       },
 
       "zh-Hans": {
@@ -775,6 +766,13 @@
         LOADING: "加载中...",
         EMPTY: "暂无玩家",
         YOU_BADGE: "你",
+
+        /* ✅ Hints（自然にしすぎず、意味が伝わる最小限） */
+        HINT_1: "看看每天早上鞋子聚集的地方上方。",
+        HINT_2: "闻起来很香……会在哪里呢？",
+        HINT_3: "男生们每天早上聚在一起的地方。",
+        HINT_4: "又臭又脏。",
+        HINT_5: "通关！",
       },
 
       "zh-Hant": {
@@ -868,6 +866,13 @@
         LOADING: "載入中...",
         EMPTY: "目前沒有人",
         YOU_BADGE: "你",
+
+        /* ✅ Hints */
+        HINT_1: "看看每天早上鞋子聚集的地方上方。",
+        HINT_2: "聞起來很香……會在哪裡呢？",
+        HINT_3: "男生們每天早上聚在一起的地方。",
+        HINT_4: "又臭又髒。",
+        HINT_5: "通關！",
       },
 
       es: {
@@ -961,6 +966,13 @@
         LOADING: "Cargando...",
         EMPTY: "Aún no hay jugadores",
         YOU_BADGE: "Tú",
+
+        /* ✅ Hints */
+        HINT_1: "Mira arriba del lugar donde se juntan los zapatos cada mañana.",
+        HINT_2: "Huele bien… ¿dónde será?",
+        HINT_3: "El lugar donde se juntan los chicos cada mañana.",
+        HINT_4: "Huele fatal. Está asqueroso.",
+        HINT_5: "¡Completado!",
       }
     };
 
@@ -1005,7 +1017,7 @@
     function headerHtml(titleText, rightHtml = "", showLang = true) {
       return `
         <div class="header">
-          <h1>${titleText}</h1>
+          <h1 class="truncate">${titleText}</h1>
           <div class="badge-right">
             ${rightHtml}
             ${showLang ? langSegmentHtml() : ""}
@@ -1117,17 +1129,9 @@
       return { ok:true, current: data ?? targetCheckpoint };
     }
 
-    // ====== hints ======
+    // ====== hints (✅ 多言語化済み) ======
     function hintText(n) {
-      // NOTE: ヒントも多言語化したいなら、ここも t() キー化する（今は日本語固定）
-      const hints = {
-        1: "毎朝、靴が集まる場所の“上”を見ろ",
-        2: "いい匂いがする。さあどこだろう",
-        3: "男どもが毎朝集まる場所",
-        4: "くっせー、汚ねえ",
-        5: "クリア！"
-      };
-      return hints[n] ?? "ヒントなし";
+      return t(`HINT_${n}`);
     }
 
     // ====== render ======
