@@ -380,6 +380,35 @@
     font-weight: 900;
   }
 }
+/* ✅ header の詰まり対策（根本） */
+.header h1{
+  flex: 1 1 auto;
+  min-width: 0; /* ← これがないと縮まないことがある */
+}
+
+/* ✅ スマホだけ：言語UIを小さく + 折り返し許可 */
+@media (max-width: 520px){
+  .header{
+    flex-wrap: wrap;
+  }
+  .badge-right{
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .lang-seg{
+    padding: 4px;
+    gap: 4px;
+  }
+  .lang-seg button{
+    font-size: 11px;
+    padding: 6px 8px;
+  }
+
+  .header h1{
+    font-size: 26px; /* タイトルも少しだけ縮める（衝突回避） */
+  }
+}
 
   </style>
 </head>
