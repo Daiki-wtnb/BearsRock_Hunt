@@ -1365,7 +1365,8 @@
         node.querySelector("#claim").onclick = async () => {
           const btn = node.querySelector("#claim");
           const msg = node.querySelector("#msg");
-          const pass = node.querySelector("#pass").value;
+          const pass = node.querySelector("#pass").value.trim().toUpperCase();
+
 
           msg.innerHTML = "";
           btn.disabled = true; btn.textContent = t("BTN_CHECKING");
