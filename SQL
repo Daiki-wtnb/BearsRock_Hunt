@@ -1,0 +1,297 @@
+-- =========================================================
+-- BearsRockHunt Minimal DB (clean version)
+-- Tables: checkpoint_secrets / players / progress
+-- RPC: register_player / claim_player / claim_checkpoint / get_leaderboard / touch_updated_at
+-- =========================================================
+
+-- 0) Extensions (PIN hashing)
+-- Supabaseでは多くの場合すでに有効。なければ有効化。
+create extension if not exists pgcrypto;
+
+-- =========================================================
+-- (OPTIONAL) CLEAN RESET
+-- 運用中のDBならここはコメントアウト推奨
+-- =========================================================
+-- drop function if exists public.get_leaderboard();
+-- drop function if exists public.claim_checkpoint(integer, text);
+-- drop function if exists public.claim_player(text, text);
+-- drop function if exists public.register_player(text, text, text);
+-- drop function if exists public.touch_updated_at();
+-- drop table if exists public.progress;
+-- drop table if exists public.players;
+-- drop table if exists public.checkpoint_secrets;
+
+-- =========================================================
+-- 1) TABLES
+-- =========================================================
+
+-- 1-1) checkpoint_secrets (RLS OFF)
+create table if not exists public.checkpoint_secrets (
+  checkpoint integer primary key,
+  passphrase text not null
+);
+
+-- 1-2) players (RLS ON)
+create table if not exists public.players (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  nickname text not null,
+  created_at timestamptz not null default now(),
+  pin_hash text not null,
+  room text not null
+);
+
+-- 1-3) progress (RLS ON)
+create table if not exists public.progress (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  checkpoint integer not null default 0,
+  updated_at timestamptz not null default now()
+);
+
+-- =========================================================
+-- 2) SECURITY (RLS)
+-- =========================================================
+
+-- checkpoint_secrets は RLS OFF のまま（君の今の状態と同じ）
+alter table public.checkpoint_secrets disable row level security;
+
+-- players / progress は RLS ON
+alter table public.players enable row level security;
+alter table public.progress enable row level security;
+
+-- 念のため既存policyを消して作り直す（ある場合だけ）
+drop policy if exists "players_select_own" on public.players;
+drop policy if exists "players_insert_own" on public.players;
+drop policy if exists "players_update_own" on public.players;
+
+drop policy if exists "progress_select_own" on public.progress;
+drop policy if exists "progress_insert_own" on public.progress;
+drop policy if exists "progress_update_own" on public.progress;
+
+-- players: 自分の行だけ select/insert/update
+create policy "players_select_own"
+on public.players for select
+to authenticated
+using (auth.uid() = user_id);
+
+create policy "players_insert_own"
+on public.players for insert
+to authenticated
+with check (auth.uid() = user_id);
+
+create policy "players_update_own"
+on public.players for update
+to authenticated
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
+
+-- progress: 自分の行だけ select/insert/update
+create policy "progress_select_own"
+on public.progress for select
+to authenticated
+using (auth.uid() = user_id);
+
+create policy "progress_insert_own"
+on public.progress for insert
+to authenticated
+with check (auth.uid() = user_id);
+
+create policy "progress_update_own"
+on public.progress for update
+to authenticated
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
+
+-- =========================================================
+-- 3) FUNCTIONS / RPC
+-- =========================================================
+
+-- 3-1) touch_updated_at (optional utility)
+create or replace function public.touch_updated_at()
+returns trigger
+language plpgsql
+as $$
+begin
+  new.updated_at = now();
+  return new;
+end;
+$$;
+
+-- progressのupdated_atを自動更新したいならトリガーを使う（任意）
+drop trigger if exists trg_progress_touch on public.progress;
+create trigger trg_progress_touch
+before update on public.progress
+for each row execute function public.touch_updated_at();
+
+-- 3-2) register_player(nick, pin, room)
+-- 仕様:
+-- - 現在ログインしている auth.uid() を user_id として players/progress を作る
+-- - PINは hash化して保存
+create or replace function public.register_player(nick text, pin text, room text)
+returns void
+language plpgsql
+security definer
+as $$
+declare
+  uid uuid := auth.uid();
+begin
+  if uid is null then
+    raise exception 'not authenticated';
+  end if;
+
+  if nick is null or btrim(nick) = '' then
+    raise exception 'nickname required';
+  end if;
+
+  if room is null or btrim(room) = '' then
+    raise exception 'room required';
+  end if;
+
+  if pin !~ '^[0-9]{4}$' then
+    raise exception 'pin must be 4 digits';
+  end if;
+
+  -- すでに登録済みなら拒否（上書き防止）
+  if exists(select 1 from public.players p where p.user_id = uid) then
+    raise exception 'already registered';
+  end if;
+
+  insert into public.players(user_id, nickname, pin_hash, room)
+  values (uid, nick, crypt(pin, gen_salt('bf')), room);
+
+  insert into public.progress(user_id, checkpoint)
+  values (uid, 0);
+
+end;
+$$;
+
+-- 3-3) claim_player(nick, pin)
+-- 仕様:
+-- - 「同一ユーザー」の players行が存在し、PINが一致したらOK
+-- - nick で本人確認っぽくする（今のフロントの挙動に合わせる）
+create or replace function public.claim_player(nick text, pin text)
+returns void
+language plpgsql
+security definer
+as $$
+declare
+  uid uuid := auth.uid();
+  stored_hash text;
+  stored_nick text;
+begin
+  if uid is null then
+    raise exception 'not authenticated';
+  end if;
+
+  select p.pin_hash, p.nickname
+    into stored_hash, stored_nick
+  from public.players p
+  where p.user_id = uid;
+
+  if stored_hash is null then
+    raise exception 'not registered';
+  end if;
+
+  if stored_nick is distinct from nick then
+    raise exception 'nickname mismatch';
+  end if;
+
+  if stored_hash != crypt(pin, stored_hash) then
+    raise exception 'invalid pin';
+  end if;
+
+  -- OK (何もしない)
+end;
+$$;
+
+-- 3-4) claim_checkpoint(cp, pass)
+-- 仕様:
+-- - checkpoint_secretsと照合（大文字小文字は区別しない）
+-- - 順番チェック（現在のcheckpointが cp-1 でないとダメ）
+-- - 成功したら progress.checkpoint を更新
+create or replace function public.claim_checkpoint(cp integer, pass text)
+returns integer
+language plpgsql
+security definer
+as $$
+declare
+  uid uuid := auth.uid();
+  cur integer;
+  secret text;
+begin
+  if uid is null then
+    raise exception 'not authenticated';
+  end if;
+
+  if cp is null or cp < 1 then
+    raise exception 'invalid checkpoint';
+  end if;
+
+  -- 今の進捗
+  select p.checkpoint into cur
+  from public.progress p
+  where p.user_id = uid;
+
+  if cur is null then
+    raise exception 'progress not found';
+  end if;
+
+  -- 順番
+  if cur <> cp - 1 then
+    raise exception 'wrong order';
+  end if;
+
+  -- 合言葉
+  select s.passphrase into secret
+  from public.checkpoint_secrets s
+  where s.checkpoint = cp;
+
+  if secret is null then
+    raise exception 'secret not found';
+  end if;
+
+  if upper(btrim(pass)) <> upper(btrim(secret)) then
+    raise exception 'invalid passphrase';
+  end if;
+
+  update public.progress
+  set checkpoint = cp, updated_at = now()
+  where user_id = uid;
+
+  return cp;
+end;
+$$;
+
+-- 3-5) get_leaderboard()
+-- 仕様:
+-- - nickname + checkpoint + updated_at を返す
+-- - progress高い順、同点は updated_at が早い順（君の説明通り）
+create or replace function public.get_leaderboard()
+returns table(nickname text, checkpoint integer, updated_at timestamptz)
+language sql
+security definer
+as $$
+  select pl.nickname, pr.checkpoint, pr.updated_at
+  from public.players pl
+  join public.progress pr on pr.user_id = pl.user_id
+  order by pr.checkpoint desc, pr.updated_at asc;
+$$;
+
+-- =========================================================
+-- 4) PERMISSIONS
+-- =========================================================
+-- RLSが効くテーブルは、基本 authenticated のみ
+grant usage on schema public to authenticated;
+grant select, insert, update on public.players to authenticated;
+grant select, insert, update on public.progress to authenticated;
+
+-- checkpoint_secrets は関数内で読むだけなので、直接読めなくても良い
+-- ただ、あなたがSQLで中身確認したいなら selectを付けてもOK
+grant select on public.checkpoint_secrets to authenticated;
+
+-- 関数をRPCとして呼べるように
+grant execute on function public.register_player(text, text, text) to authenticated;
+grant execute on function public.claim_player(text, text) to authenticated;
+grant execute on function public.claim_checkpoint(integer, text) to authenticated;
+grant execute on function public.get_leaderboard() to authenticated;
+
+-- touch_updated_at はトリガー用なので実行権限不要
