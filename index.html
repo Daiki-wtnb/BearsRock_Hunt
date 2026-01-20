@@ -83,7 +83,7 @@
   .header h1.truncate{
     white-space: nowrap;
     overflow: hidden;
-    text-overflow: ellipsis;    /* ← タイトルが長くても右UIを潰さない */
+    text-overflow: ellipsis;
   }
   @media (max-width: 420px){
     .header h1{ font-size: 24px; }
@@ -111,7 +111,7 @@
     gap: 8px;
     justify-content:flex-end;
     flex-wrap: wrap;
-    flex: 0 0 auto; /* ← 右側は潰れない */
+    flex: 0 0 auto;
   }
 
   /* ===== language segmented control ===== */
@@ -124,7 +124,7 @@
     border: 1px solid rgba(148,163,184,0.45);
     box-shadow: 0 16px 40px rgba(15,23,42,0.75);
     max-width: 100%;
-    overflow-x: auto; /* ← どうしても狭い端末でも逃がす */
+    overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     backdrop-filter: blur(18px);
   }
@@ -482,15 +482,8 @@
     from{ opacity: 0; transform: translateY(20px); }
     to{ opacity: 1; transform: translateY(0); }
   }
-  @keyframes slideInRight{
-    from{ opacity: 0; transform: translateX(20px); }
-    to{ opacity: 1; transform: translateX(0); }
-  }
   .page-enter{
     animation: fadeIn 0.3s ease-out, slideInUp 0.3s ease-out;
-  }
-  .page-enter-fast{
-    animation: fadeIn 0.2s ease-out;
   }
 
   /* loading spinner */
@@ -585,32 +578,6 @@
     color: var(--text);
   }
 
-  /* smooth scroll */
-  html{
-    scroll-behavior: smooth;
-  }
-
-  /* skeleton loading */
-  @keyframes skeletonPulse{
-    0%, 100%{ opacity: 1; }
-    50%{ opacity: 0.5; }
-  }
-  .skeleton{
-    background: linear-gradient(90deg, rgba(148,163,184,0.2), rgba(148,163,184,0.4), rgba(148,163,184,0.2));
-    background-size: 200% 100%;
-    animation: skeletonPulse 1.5s ease-in-out infinite;
-    border-radius: var(--radius-md);
-  }
-  .skeleton-text{
-    height: 16px;
-    margin-bottom: 8px;
-  }
-  .skeleton-title{
-    height: 24px;
-    width: 60%;
-    margin-bottom: 12px;
-  }
-
   @media (max-width: 480px){
     .container{
       padding: 14px 12px 110px;
@@ -652,7 +619,7 @@
 
     // ====== 設定 ======
     const SUPABASE_URL = "https://ahynlwtcdrtkzykcccgb.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFoeW5sd3RjZHJ0a3p5a2NjY2diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc0MTA0MDQsImV4cCI6MjA4Mjk4NjQwNH0.HttRXUS-Qy6VA0t4UE8MIC58tgncg-2bucYfLr14LSA";
+    const SUPABASE_ANON_KEY = "REPLACE_WITH_YOUR_ANON_KEY";
 
     const MAX_CHECKPOINT = 5;
 
@@ -790,7 +757,6 @@
       ERR_HINT_2: "RPC（register_player / claim_player / claim_checkpoint / get_leaderboard）は存在する？",
       ERR_HINT_3: "players / progress テーブルはある？",
 
-      /* ✅ ヒント（ここを正本として必ず全部入れる） */
       HINT_1: "毎朝、靴が集まる場所の“上”を見ろ",
       HINT_2: "いい匂いがする。さあどこだろう",
       HINT_3: "男どもが毎朝集まる場所",
@@ -798,7 +764,6 @@
       HINT_5: "クリア！",
     };
 
-    // ✅ 他言語（差分だけ）
     const I18N = {
       en: {
         EVENT_BADGE: "Event",
@@ -806,7 +771,6 @@
         NAV_SCAN: "Scan",
         NAV_RANK: "Ranking",
         NAV_ME: "Me",
-
         INTRO_TITLE: "How to play",
         INTRO_DESC: "Find hidden QR codes inside BearsRock and clear checkpoints.<br>Follow the hints and clear them in order.",
         INTRO_PRIZE_TITLE: "🎁 Prize",
@@ -815,14 +779,12 @@
         INTRO_NOTE_2: "Guessed URLs are all traps",
         INTRO_NOTE_3: "You need the passphrase written under the QR",
         BTN_START: "▶️ Start",
-
         HOME_DONE: "Cleared",
         HOME_LEFT: "Left",
         HOME_DESC: "Scan QR codes to progress through checkpoints",
         BTN_SCAN: "📷 Scan QR",
         WELCOME: "Welcome, {name}",
         HOME_HINT_NOTE: "Hints are shown on your Me page.",
-
         LOGIN_TITLE: "Log in",
         LOGIN_CARD_TITLE: "Welcome back",
         LOGIN_DESC: "Enter your name and PIN",
@@ -837,7 +799,6 @@
         NEED_PIN_4: "PIN must be 4 digits",
         LOGIN_TO_SIGNUP: "New here?",
         LINK_SIGNUP: "Sign up",
-
         SIGNUP_TITLE: "Sign up",
         SIGNUP_CARD_TITLE: "Create account",
         SIGNUP_DESC: "Set name / room / PIN",
@@ -849,7 +810,6 @@
         NEED_ROOM: "Please enter your room",
         SIGNUP_TO_LOGIN: "Already registered?",
         LINK_LOGIN: "Log in",
-
         CP_TITLE: "Checkpoint",
         CP_LOCKED: "🔒 Locked. Clear CP{n} first",
         BTN_BACK_HOME: "Back to Home",
@@ -865,11 +825,9 @@
         FAIL_GENERIC: "Failed: {msg}",
         UNLOCKED: "Cleared! Next hint unlocked",
         HINT_TITLE: "💡 Hint {n}",
-
         TRAP_TITLE: "😈 Trap",
         TRAP_NOTE_1: "✅ Only the predefined QR URLs are valid",
         TRAP_NOTE_2: "🔒 Guessed URLs are all traps",
-
         CLEAR_TITLE: "🎉 Cleared!",
         CLEAR_CONGRATS: "Congrats, {name}!",
         CLEAR_DESC: "You cleared all checkpoints.<br>Your prize will be delivered to your room soon.",
@@ -877,43 +835,35 @@
         CLEAR_PRIZE_DESC: "Cafeteria ticket",
         BTN_VIEW_ME: "View Me",
         BTN_HOME: "Home",
-
         SCAN_TITLE: "📷 Scan",
         SCAN_CARD_TITLE: "Scan a QR code",
         SCAN_IOS_TIP: "On iPhone, use the default Camera app to scan the QR",
         SCAN_IOS_DESC: "Scanning opens Safari.<br>On the opened page, tap “Verify”.",
         SCAN_ANDROID_DESC: "This page is guidance only (default camera is OK).",
-
         ME_TITLE: "👤 Me",
         ME_PROGRESS: "Progress",
         ME_RATE: "Completion",
         ME_HINTS_TITLE: "Unlocked hints",
         ME_NO_HINTS: "No hints yet.",
-
         RANK_TITLE: "🏆 Ranking",
         RANK_CARD_TITLE: "Progress ranking",
         RANK_DESC: "Higher progress first. If tied, earlier time wins",
         LOADING: "Loading...",
         EMPTY: "No players yet",
         YOU_BADGE: "You",
-
         ERR_TITLE: "Stopped by error",
-
-        /* ✅ Hints */
         HINT_1: "Look above the place where shoes gather every morning.",
         HINT_2: "Smells good… where could it be?",
         HINT_3: "The place where the guys gather every morning.",
         HINT_4: "It stinks. It’s filthy.",
         HINT_5: "Cleared!",
       },
-
       "zh-Hans": {
         EVENT_BADGE: "活动",
         NAV_HOME: "首页",
         NAV_SCAN: "扫码",
         NAV_RANK: "排名",
         NAV_ME: "我的",
-
         INTRO_TITLE: "玩法说明",
         INTRO_DESC: "在 BearsRock 内寻找隐藏的二维码并推进关卡。<br>请按顺序根据提示通关。",
         INTRO_PRIZE_TITLE: "🎁 奖品",
@@ -922,14 +872,12 @@
         INTRO_NOTE_2: "猜测链接都会判定为陷阱",
         INTRO_NOTE_3: "需要输入二维码下方的“口令”",
         BTN_START: "▶️ 开始",
-
         HOME_DONE: "已通关",
         HOME_LEFT: "剩余",
         HOME_DESC: "扫描二维码来推进关卡",
         BTN_SCAN: "📷 扫描二维码",
         WELCOME: "欢迎，{name}",
         HOME_HINT_NOTE: "提示在“我的”页面查看。",
-
         LOGIN_TITLE: "登录",
         LOGIN_CARD_TITLE: "欢迎回来",
         LOGIN_DESC: "请输入名字和 PIN",
@@ -942,7 +890,6 @@
         NEED_PIN_4: "PIN 必须为4位数字",
         LOGIN_TO_SIGNUP: "第一次？",
         LINK_SIGNUP: "注册",
-
         SIGNUP_TITLE: "注册",
         SIGNUP_CARD_TITLE: "创建账号",
         SIGNUP_DESC: "设置 名字 / 房间号 / PIN",
@@ -952,7 +899,6 @@
         NEED_ROOM: "请输入房间号",
         SIGNUP_TO_LOGIN: "已注册？",
         LINK_LOGIN: "登录",
-
         CP_TITLE: "关卡",
         CP_LOCKED: "🔒 已锁定：请先通关 CP{n}",
         BTN_BACK_HOME: "返回首页",
@@ -967,11 +913,9 @@
         ORDER_WRONG: "顺序不对。当前 {cur} / {max}",
         UNLOCKED: "通关！已解锁下一条提示",
         HINT_TITLE: "💡 提示 {n}",
-
         TRAP_TITLE: "😈 陷阱",
         TRAP_NOTE_1: "✅ 只有预设的二维码链接有效",
         TRAP_NOTE_2: "🔒 猜测链接都会判定为陷阱",
-
         CLEAR_TITLE: "🎉 通关！",
         CLEAR_CONGRATS: "恭喜，{name}！",
         CLEAR_DESC: "你已通关所有关卡。<br>奖品稍后会放在你的房门前。",
@@ -979,41 +923,34 @@
         CLEAR_PRIZE_DESC: "食堂券",
         BTN_VIEW_ME: "查看我的",
         BTN_HOME: "返回首页",
-
         SCAN_TITLE: "📷 扫码",
         SCAN_CARD_TITLE: "扫描二维码",
         SCAN_IOS_TIP: "iPhone 请用系统相机扫描二维码",
         SCAN_IOS_DESC: "扫描后会打开 Safari。<br>在打开的页面点击“确认到达”。",
         SCAN_ANDROID_DESC: "此页仅为说明（用系统相机即可）。",
-
         ME_TITLE: "👤 我的",
         ME_PROGRESS: "进度",
         ME_RATE: "完成率",
         ME_HINTS_TITLE: "已解锁提示",
         ME_NO_HINTS: "暂无提示。",
-
         RANK_TITLE: "🏆 排名",
         RANK_CARD_TITLE: "进度排名",
         RANK_DESC: "进度高者优先；若相同，先到者优先",
         LOADING: "加载中...",
         EMPTY: "暂无玩家",
         YOU_BADGE: "你",
-
-        /* ✅ Hints（自然にしすぎず、意味が伝わる最小限） */
         HINT_1: "看看每天早上鞋子聚集的地方上方。",
         HINT_2: "闻起来很香……会在哪里呢？",
         HINT_3: "男生们每天早上聚在一起的地方。",
         HINT_4: "又臭又脏。",
         HINT_5: "通关！",
       },
-
       "zh-Hant": {
         EVENT_BADGE: "活動",
         NAV_HOME: "首頁",
         NAV_SCAN: "掃描",
         NAV_RANK: "排行榜",
         NAV_ME: "我的",
-
         INTRO_TITLE: "遊戲說明",
         INTRO_DESC: "在 BearsRock 內尋找隱藏的 QR Code 並推進關卡。<br>請依提示按順序通關。",
         INTRO_PRIZE_TITLE: "🎁 獎品",
@@ -1022,14 +959,12 @@
         INTRO_NOTE_2: "猜測連結都會判定為陷阱",
         INTRO_NOTE_3: "需要輸入 QR 下方的「合言葉」",
         BTN_START: "▶️ 開始",
-
         HOME_DONE: "已完成",
         HOME_LEFT: "剩餘",
         HOME_DESC: "掃描 QR Code 推進關卡",
         BTN_SCAN: "📷 掃描 QR",
         WELCOME: "歡迎，{name}",
         HOME_HINT_NOTE: "提示在「我的」頁面查看。",
-
         LOGIN_TITLE: "登入",
         LOGIN_CARD_TITLE: "歡迎回來",
         LOGIN_DESC: "請輸入名字與 PIN",
@@ -1042,7 +977,6 @@
         NEED_PIN_4: "PIN 必須為4位數字",
         LOGIN_TO_SIGNUP: "第一次？",
         LINK_SIGNUP: "註冊",
-
         SIGNUP_TITLE: "註冊",
         SIGNUP_CARD_TITLE: "建立帳號",
         SIGNUP_DESC: "設定 名字 / 房號 / PIN",
@@ -1052,7 +986,6 @@
         NEED_ROOM: "請輸入房號",
         SIGNUP_TO_LOGIN: "已註冊？",
         LINK_LOGIN: "登入",
-
         CP_TITLE: "關卡",
         CP_LOCKED: "🔒 已鎖定：請先完成 CP{n}",
         BTN_BACK_HOME: "回到首頁",
@@ -1067,11 +1000,9 @@
         ORDER_WRONG: "順序不對。目前 {cur} / {max}",
         UNLOCKED: "完成！已解鎖下一條提示",
         HINT_TITLE: "💡 提示 {n}",
-
         TRAP_TITLE: "😈 陷阱",
         TRAP_NOTE_1: "✅ 只有預設的 QR 連結有效",
         TRAP_NOTE_2: "🔒 猜測連結都會判定為陷阱",
-
         CLEAR_TITLE: "🎉 通關！",
         CLEAR_CONGRATS: "恭喜，{name}！",
         CLEAR_DESC: "你已通關所有關卡。<br>獎品稍後會放在你的房門前。",
@@ -1079,41 +1010,34 @@
         CLEAR_PRIZE_DESC: "食堂券",
         BTN_VIEW_ME: "查看我的",
         BTN_HOME: "回到首頁",
-
         SCAN_TITLE: "📷 掃描",
         SCAN_CARD_TITLE: "掃描 QR Code",
         SCAN_IOS_TIP: "iPhone 請用系統相機掃描 QR Code",
         SCAN_IOS_DESC: "掃描後會開啟 Safari。<br>在開啟的頁面按「到達確認」。",
         SCAN_ANDROID_DESC: "此頁僅為說明（用系統相機即可）。",
-
         ME_TITLE: "👤 我的",
         ME_PROGRESS: "進度",
         ME_RATE: "完成率",
         ME_HINTS_TITLE: "已解鎖提示",
         ME_NO_HINTS: "目前沒有提示。",
-
         RANK_TITLE: "🏆 排行榜",
         RANK_CARD_TITLE: "進度排行榜",
         RANK_DESC: "進度高者優先；同分則先到者優先",
         LOADING: "載入中...",
         EMPTY: "目前沒有人",
         YOU_BADGE: "你",
-
-        /* ✅ Hints */
         HINT_1: "看看每天早上鞋子聚集的地方上方。",
         HINT_2: "聞起來很香……會在哪裡呢？",
         HINT_3: "男生們每天早上聚在一起的地方。",
         HINT_4: "又臭又髒。",
         HINT_5: "通關！",
       },
-
       es: {
         EVENT_BADGE: "Evento",
         NAV_HOME: "Inicio",
         NAV_SCAN: "Escanear",
         NAV_RANK: "Ranking",
         NAV_ME: "Mi perfil",
-
         INTRO_TITLE: "Cómo jugar",
         INTRO_DESC: "Busca los códigos QR escondidos en BearsRock y avanza por los puntos.<br>Sigue las pistas y completa en orden.",
         INTRO_PRIZE_TITLE: "🎁 Premio",
@@ -1122,14 +1046,12 @@
         INTRO_NOTE_2: "Las URLs adivinadas siempre son trampa",
         INTRO_NOTE_3: "Necesitas la contraseña escrita debajo del QR",
         BTN_START: "▶️ Empezar",
-
         HOME_DONE: "Completados",
         HOME_LEFT: "Restantes",
         HOME_DESC: "Escanea los QR para avanzar por los puntos",
         BTN_SCAN: "📷 Escanear QR",
         WELCOME: "Bienvenido, {name}",
         HOME_HINT_NOTE: "Las pistas están en tu perfil.",
-
         LOGIN_TITLE: "Iniciar sesión",
         LOGIN_CARD_TITLE: "Bienvenido de vuelta",
         LOGIN_DESC: "Escribe tu nombre y PIN",
@@ -1142,7 +1064,6 @@
         NEED_PIN_4: "El PIN debe tener 4 dígitos",
         LOGIN_TO_SIGNUP: "¿Primera vez?",
         LINK_SIGNUP: "Registrarse",
-
         SIGNUP_TITLE: "Registro",
         SIGNUP_CARD_TITLE: "Crear cuenta",
         SIGNUP_DESC: "Nombre / Habitación / PIN",
@@ -1152,7 +1073,6 @@
         NEED_ROOM: "Escribe tu habitación",
         SIGNUP_TO_LOGIN: "¿Ya registrado?",
         LINK_LOGIN: "Iniciar sesión",
-
         CP_TITLE: "Checkpoint",
         CP_LOCKED: "🔒 Bloqueado. Completa CP{n} primero",
         BTN_BACK_HOME: "Volver al inicio",
@@ -1167,11 +1087,9 @@
         ORDER_WRONG: "Orden incorrecto. Ahora {cur} / {max}",
         UNLOCKED: "¡Completado! Nueva pista desbloqueada",
         HINT_TITLE: "💡 Pista {n}",
-
         TRAP_TITLE: "😈 Trampa",
         TRAP_NOTE_1: "✅ Solo valen las URLs de QR definidas",
         TRAP_NOTE_2: "🔒 Las URLs adivinadas son trampa",
-
         CLEAR_TITLE: "🎉 ¡Completado!",
         CLEAR_CONGRATS: "¡Felicidades, {name}!",
         CLEAR_DESC: "Has completado todos los checkpoints.<br>El premio llegará a tu puerta pronto.",
@@ -1179,27 +1097,22 @@
         CLEAR_PRIZE_DESC: "Ticket del comedor",
         BTN_VIEW_ME: "Ver perfil",
         BTN_HOME: "Inicio",
-
         SCAN_TITLE: "📷 Escanear",
         SCAN_CARD_TITLE: "Escanear un QR",
         SCAN_IOS_TIP: "En iPhone, usa la app Cámara para escanear el QR",
         SCAN_IOS_DESC: "Se abrirá Safari.<br>En la página, toca “Verificar”.",
         SCAN_ANDROID_DESC: "Esta página es solo guía (la cámara del móvil sirve).",
-
         ME_TITLE: "👤 Mi perfil",
         ME_PROGRESS: "Progreso",
         ME_RATE: "Completado",
         ME_HINTS_TITLE: "Pistas desbloqueadas",
         ME_NO_HINTS: "Aún no hay pistas.",
-
         RANK_TITLE: "🏆 Ranking",
         RANK_CARD_TITLE: "Ranking de progreso",
         RANK_DESC: "Más progreso primero; si empatan, gana quien llegó antes",
         LOADING: "Cargando...",
         EMPTY: "Aún no hay jugadores",
         YOU_BADGE: "Tú",
-
-        /* ✅ Hints */
         HINT_1: "Mira arriba del lugar donde se juntan los zapatos cada mañana.",
         HINT_2: "Huele bien… ¿dónde será?",
         HINT_3: "El lugar donde se juntan los chicos cada mañana.",
@@ -1218,24 +1131,17 @@
       LANG = lang;
       localStorage.setItem(LANG_KEY, lang);
       document.documentElement.lang = (lang === "zh-Hans" || lang === "zh-Hant") ? "zh" : lang;
-      route(); // 再描画
+      route();
     }
     window.__setLang = setLang;
 
     function langSegmentHtml() {
-      const short = {
-        ja: "JA",
-        en: "EN",
-        "zh-Hans": "简",
-        "zh-Hant": "繁",
-        es: "ES",
-      };
-      const order = ["ja", "en", "zh-Hans", "zh-Hant", "es"];
+      const short = { ja:"JA", en:"EN", "zh-Hans":"简", "zh-Hant":"繁", es:"ES" };
+      const order = ["ja","en","zh-Hans","zh-Hant","es"];
       return `
         <div class="lang-seg" role="tablist" aria-label="Language">
           ${order.map(k => `
-            <button
-              type="button"
+            <button type="button"
               class="${k===LANG ? "active" : ""}"
               onclick="window.__setLang('${k}')"
               aria-pressed="${k===LANG}"
@@ -1344,7 +1250,6 @@
       });
     }
 
-    // ====== error handling utilities ======
     async function retryOperation(operation, maxRetries = 3, delay = 1000) {
       for (let i = 0; i < maxRetries; i++) {
         try {
@@ -1429,10 +1334,7 @@
       return { ok:true, current: data ?? targetCheckpoint };
     }
 
-    // ====== hints (✅ 多言語化済み) ======
-    function hintText(n) {
-      return t(`HINT_${n}`);
-    }
+    function hintText(n) { return t(`HINT_${n}`); }
 
     // ====== render ======
     function renderIntro() {
@@ -1545,6 +1447,7 @@
             const { error } = await sb.rpc("claim_player", { nick, pin });
             if (error) throw error;
           }, 3, 1000);
+
           msg.innerHTML = `<div class="alert alert-success">${t("LOGIN_OK")}</div>`;
           showToast(t("LOGIN_OK"), "success", 2000);
           setTimeout(()=> location.hash="#/", 350);
@@ -1615,6 +1518,7 @@
             const { error } = await sb.rpc("register_player", { nick, pin, room });
             if (error) throw error;
           }, 3, 1000);
+
           msg.innerHTML = `<div class="alert alert-success">${t("SIGNUP_OK")}</div>`;
           showToast(t("SIGNUP_OK"), "success", 2000);
           setTimeout(()=> location.hash="#/", 350);
@@ -1677,34 +1581,21 @@
           const msg = node.querySelector("#msg");
           const pass = node.querySelector("#pass").value.trim().toUpperCase();
 
-
           msg.innerHTML = "";
           btn.disabled = true; btn.textContent = t("BTN_CHECKING");
 
           try{
-            const me = await retryOperation(async () => {
-              return await getMe();
-            }, 3, 1000);
-            
-            const res = await retryOperation(async () => {
-              return await advanceWithPassphrase(me.id, target, pass);
-            }, 3, 1000);
+            const me = await retryOperation(async () => await getMe(), 3, 1000);
+            const res = await retryOperation(async () => await advanceWithPassphrase(me.id, target, pass), 3, 1000);
 
             if (!res.ok) {
               let errorMsg = "";
-              if (res.reason === "no_passphrase") {
-                errorMsg = t("PASS_REQUIRED");
-                msg.innerHTML = `<div class="alert alert-error">${errorMsg}</div>`;
-              } else if (res.reason === "invalid_passphrase") {
-                errorMsg = t("PASS_WRONG");
-                msg.innerHTML = `<div class="alert alert-error">${errorMsg}</div>`;
-              } else if (res.reason === "wrong_order") {
-                errorMsg = t("ORDER_WRONG", { cur: res.current, max: MAX_CHECKPOINT });
-                msg.innerHTML = `<div class="alert alert-error">${errorMsg}</div>`;
-              } else {
-                errorMsg = t("FAIL_GENERIC", { msg: (res.message ?? "エラー") });
-                msg.innerHTML = `<div class="alert alert-error">${errorMsg}</div>`;
-              }
+              if (res.reason === "no_passphrase") errorMsg = t("PASS_REQUIRED");
+              else if (res.reason === "invalid_passphrase") errorMsg = t("PASS_WRONG");
+              else if (res.reason === "wrong_order") errorMsg = t("ORDER_WRONG", { cur: res.current, max: MAX_CHECKPOINT });
+              else errorMsg = t("FAIL_GENERIC", { msg: (res.message ?? "error") });
+
+              msg.innerHTML = `<div class="alert alert-error">${errorMsg}</div>`;
               showToast(errorMsg, "error", 3000);
               btn.disabled = false; btn.textContent = t("BTN_CLAIM");
               return;
@@ -1717,9 +1608,8 @@
             if (target >= MAX_CHECKPOINT) {
               setTimeout(()=> location.hash="#/clear", 450);
             }
-
           }catch(e){
-            const errorMsg = `エラー：${e?.message ?? e}`;
+            const errorMsg = t("FAIL_GENERIC", { msg: (e?.message ?? e) });
             msg.innerHTML = `<div class="alert alert-error">${errorMsg}</div>`;
             showToast(errorMsg, "error", 4000);
             btn.disabled = false; btn.textContent = t("BTN_CLAIM");
@@ -1730,9 +1620,8 @@
       app.appendChild(node);
     }
 
-    function renderTrap(nickname = "GUEST", prog = { checkpoint: 0 }, reason = "") {
+    function renderTrap(nickname="GUEST", prog={ checkpoint:0 }, reason="") {
       app.innerHTML = "";
-
       const lines = [t("TRAP_LINE_1"), t("TRAP_LINE_2"), t("TRAP_LINE_3"), t("TRAP_LINE_4")];
       const msg = lines[Math.floor(Math.random() * lines.length)];
 
@@ -1792,7 +1681,7 @@
 
       app.appendChild(el(`
         <div>
-          ${headerHtml(t("SCAN_TITLE"), `<div class="badge">📍 ${prog.checkpoint}/${MAX_CHECKPOINT}</div>`, false)}
+          ${headerHtml(t("SCAN_TITLE"), `<div class="badge">📍 ${prog.checkpoint}/${MAX_CHECKPOINT}</div>`, true)}
           <div class="card">
             <div class="card-title">${t("SCAN_CARD_TITLE")}</div>
             ${
@@ -1810,7 +1699,6 @@
 
     function renderMe(nickname, prog) {
       app.innerHTML = "";
-
       let hintsHtml = "";
       for (let i = 1; i <= Math.min(prog.checkpoint, MAX_CHECKPOINT); i++) {
         hintsHtml += `
@@ -1859,7 +1747,7 @@
       app.innerHTML = "";
       app.appendChild(el(`
         <div>
-          ${headerHtml(t("RANK_TITLE"), "", false)}
+          ${headerHtml(t("RANK_TITLE"), "", true)}
           <div class="card">
             <div class="card-title">${t("RANK_CARD_TITLE")}</div>
             <p class="card-subtitle">${t("RANK_DESC")}</p>
@@ -1875,79 +1763,73 @@
       const list = document.getElementById("list");
 
       try{
-  const data = await retryOperation(async () => {
-    const { data, error } = await sb.rpc("get_leaderboard");
-    if (error) throw error;
-    return data;
-  }, 3, 1000);
+        const data = await retryOperation(async () => {
+          const { data, error } = await sb.rpc("get_leaderboard");
+          if (error) throw error;
+          return data;
+        }, 3, 1000);
 
-  if (!data?.length) {
-    list.innerHTML = `<p class="text-muted text-center">${t("EMPTY")}</p>`;
-    return;
-  }
+        if (!data?.length) {
+          list.innerHTML = `<p class="text-muted text-center">${t("EMPTY")}</p>`;
+          return;
+        }
 
-  list.innerHTML = data.map((r, idx) => {
-    const isMe = (r.nickname === nickname);
-    const topClass = idx===0 ? "rank-1" : idx===1 ? "rank-2" : idx===2 ? "rank-3" : "";
-    const isClear = (r.checkpoint >= MAX_CHECKPOINT);
-    const progressText = `${r.checkpoint} / ${MAX_CHECKPOINT}`;
+        list.innerHTML = data.map((r, idx) => {
+          const isMe = (r.nickname === nickname);
+          const topClass = idx===0 ? "rank-1" : idx===1 ? "rank-2" : idx===2 ? "rank-3" : "";
+          const isClear = (r.checkpoint >= MAX_CHECKPOINT);
+          const progressText = `${r.checkpoint} / ${MAX_CHECKPOINT}`;
 
-    return `
-      <div class="list-item ${isMe ? "active" : ""} ${topClass}">
-        <div style="display:flex;align-items:center;gap:12px;flex:1;">
-          <div class="rank-number">#${idx+1}</div>
-          <div style="display:flex;align-items:center;flex-wrap:wrap;">
-            <strong>${r.nickname}</strong>
-            ${isMe ? `<span class="me-badge">${t("YOU_BADGE")}</span>` : ``}
-          </div>
-        </div>
-        <div class="finish">
-          <span>${progressText}</span>
-          ${isClear ? `<span class="done">🎉</span>` : ``}
-        </div>
-      </div>
-    `;
-  }).join("");
+          return `
+            <div class="list-item ${isMe ? "active" : ""} ${topClass}">
+              <div style="display:flex;align-items:center;gap:12px;flex:1;">
+                <div class="rank-number">#${idx+1}</div>
+                <div style="display:flex;align-items:center;flex-wrap:wrap;">
+                  <strong>${r.nickname}</strong>
+                  ${isMe ? `<span class="me-badge">${t("YOU_BADGE")}</span>` : ``}
+                </div>
+              </div>
+              <div class="finish">
+                <span>${progressText}</span>
+                ${isClear ? `<span class="done">🎉</span>` : ``}
+              </div>
+            </div>
+          `;
+        }).join("");
 
-}catch(e){
-  const errorMsg = `取得失敗：${e?.message ?? e}`;
-  list.innerHTML = `<div class="alert alert-error">${errorMsg}</div>`;
-  showToast(errorMsg, "error", 4000);
-}
-
+      }catch(e){
+        const errorMsg = t("FAIL_GENERIC", { msg: (e?.message ?? e) });
+        list.innerHTML = `<div class="alert alert-error">${errorMsg}</div>`;
+        showToast(errorMsg, "error", 4000);
+      }
+    }  /* ✅ ← これが無くて死んでた */
 
     // ====== main route ======
     async function route() {
       try{
         applyStaticI18n();
         setNavActive();
-        
-        // Show loading for async operations
-        const needsData = !location.hash.match(/^#\/(intro|login|signup)$/);
-        if (needsData) {
-          showLoading();
-        }
 
-        await retryOperation(async () => {
-          await ensureAnonLogin();
-        }, 3, 1000);
+        const needsData = !location.hash.match(/^#\/(intro|login|signup)$/);
+        if (needsData) showLoading();
+
+        await retryOperation(async () => { await ensureAnonLogin(); }, 3, 1000);
 
         const r = getRoute();
 
-        if (r.type === "intro") { 
+        if (r.type === "intro") {
           hideLoading();
-          renderIntro(); 
+          renderIntro();
           animatePageEnter(app.firstElementChild);
-          return; 
+          return;
         }
-        if (r.type === "unknown") { 
+        if (r.type === "unknown") {
           hideLoading();
-          renderTrap("GUEST", { checkpoint: 0 }, "UNKNOWN"); 
+          renderTrap("GUEST", { checkpoint: 0 }, "UNKNOWN");
           animatePageEnter(app.firstElementChild);
-          return; 
+          return;
         }
 
-        // cp key check (before login check)
         if (r.type === "cp") {
           if (r.n === 999) {
             hideLoading();
@@ -1964,17 +1846,10 @@
           }
         }
 
-        const me = await retryOperation(async () => {
-          return await getMe();
-        }, 3, 1000);
-        
-        const nick = await retryOperation(async () => {
-          return await getNickname(me.id);
-        }, 3, 1000);
-        
-        const prog = nick ? await retryOperation(async () => {
-          return await getProgress(me.id);
-        }, 3, 1000) : { checkpoint: 0, updated_at: null };
+        const me = await retryOperation(async () => await getMe(), 3, 1000);
+        const nick = await retryOperation(async () => await getNickname(me.id), 3, 1000);
+        const prog = nick ? await retryOperation(async () => await getProgress(me.id), 3, 1000)
+                          : { checkpoint: 0, updated_at: null };
 
         hideLoading();
 
@@ -1982,20 +1857,16 @@
         if (r.type === "signup") { renderSignup(); animatePageEnter(app.firstElementChild); return; }
 
         const needsLogin = (r.type === "home" || r.type === "scan" || r.type === "leaderboard" || r.type === "me" || r.type === "cp" || r.type === "clear");
-        if (!nick && needsLogin) { 
+        if (!nick && needsLogin) {
           showToast(t("LOGIN_TO_SIGNUP"), "error", 2000);
-          location.hash = "#/login"; 
-          return; 
+          location.hash = "#/login";
+          return;
         }
 
         if (r.type === "home") { renderHome(nick, prog); animatePageEnter(app.firstElementChild); return; }
         if (r.type === "scan") { renderScan(nick, prog); animatePageEnter(app.firstElementChild); return; }
         if (r.type === "me") { renderMe(nick, prog); animatePageEnter(app.firstElementChild); return; }
-        if (r.type === "leaderboard") { 
-          await renderLeaderboard(nick); 
-          animatePageEnter(app.firstElementChild); 
-          return; 
-        }
+        if (r.type === "leaderboard") { await renderLeaderboard(nick); animatePageEnter(app.firstElementChild); return; }
         if (r.type === "clear") { renderClear(nick); animatePageEnter(app.firstElementChild); return; }
         if (r.type === "cp") { renderCheckpoint(nick, prog, r.n); animatePageEnter(app.firstElementChild); return; }
 
@@ -2034,19 +1905,15 @@
       });
     }
 
-    // ====== Accessibility: Keyboard navigation ======
     document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") {
-        hideLoading();
-      }
+      if (e.key === "Escape") hideLoading();
     });
 
-    // ====== Offline detection ======
     window.addEventListener("online", () => {
-      showToast("インターネット接続が復旧しました", "success", 3000);
+      showToast("Back online", "success", 2500);
     });
     window.addEventListener("offline", () => {
-      showToast("オフラインです。一部機能が制限されます", "error", 4000);
+      showToast("Offline", "error", 3500);
     });
   </script>
 </body>
