@@ -3,6 +3,10 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="description" content="BearsRock内に隠されたQRコードを探して進む宝探しゲーム" />
+  <meta name="theme-color" content="#0A84FF" />
+  <link rel="manifest" href="/manifest.json" />
+  <link rel="apple-touch-icon" href="/icon-192.png" />
   <title>BearsRock Hunt</title>
   <style>
   :root{
@@ -72,7 +76,8 @@
     min-width: 0;
     line-height: 1.05;
     background: linear-gradient(120deg, #ffffff, #dbeafe, #93c5fd);
-    -webkit-background-clip:text;
+    -webkit-background-clip: text;
+    background-clip: text;
     color: transparent;
   }
   .header h1.truncate{
@@ -467,6 +472,144 @@
     80%{ transform: translateX(4px); }
   }
   .shake{ animation: shake 0.25s ease-in-out; }
+
+  /* page transition animations */
+  @keyframes fadeIn{
+    from{ opacity: 0; }
+    to{ opacity: 1; }
+  }
+  @keyframes slideInUp{
+    from{ opacity: 0; transform: translateY(20px); }
+    to{ opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slideInRight{
+    from{ opacity: 0; transform: translateX(20px); }
+    to{ opacity: 1; transform: translateX(0); }
+  }
+  .page-enter{
+    animation: fadeIn 0.3s ease-out, slideInUp 0.3s ease-out;
+  }
+  .page-enter-fast{
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  /* loading spinner */
+  @keyframes spin{
+    0%{ transform: rotate(0deg); }
+    100%{ transform: rotate(360deg); }
+  }
+  .spinner{
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(148,163,184,0.3);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  .spinner-large{
+    width: 40px;
+    height: 40px;
+    border-width: 4px;
+  }
+  .loading-overlay{
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(15,23,42,0.85);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    backdrop-filter: blur(8px);
+  }
+  .loading-content{
+    text-align: center;
+    color: var(--text);
+  }
+  .loading-content .spinner{
+    margin-bottom: 12px;
+  }
+
+  /* toast notifications */
+  @keyframes toastSlideIn{
+    from{ opacity: 0; transform: translateX(100%); }
+    to{ opacity: 1; transform: translateX(0); }
+  }
+  @keyframes toastSlideOut{
+    from{ opacity: 1; transform: translateX(0); }
+    to{ opacity: 0; transform: translateX(100%); }
+  }
+  .toast-container{
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 400px;
+    pointer-events: none;
+  }
+  .toast{
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    pointer-events: auto;
+    animation: toastSlideIn 0.3s ease-out;
+    backdrop-filter: blur(18px);
+  }
+  .toast.hiding{
+    animation: toastSlideOut 0.3s ease-out forwards;
+  }
+  .toast-success{
+    border-left: 4px solid var(--success);
+    background: radial-gradient(circle at top left, rgba(52,211,153,0.2), var(--card));
+  }
+  .toast-error{
+    border-left: 4px solid var(--error);
+    background: radial-gradient(circle at top left, rgba(248,113,113,0.2), var(--card));
+  }
+  .toast-icon{
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .toast-message{
+    flex: 1;
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--text);
+  }
+
+  /* smooth scroll */
+  html{
+    scroll-behavior: smooth;
+  }
+
+  /* skeleton loading */
+  @keyframes skeletonPulse{
+    0%, 100%{ opacity: 1; }
+    50%{ opacity: 0.5; }
+  }
+  .skeleton{
+    background: linear-gradient(90deg, rgba(148,163,184,0.2), rgba(148,163,184,0.4), rgba(148,163,184,0.2));
+    background-size: 200% 100%;
+    animation: skeletonPulse 1.5s ease-in-out infinite;
+    border-radius: var(--radius-md);
+  }
+  .skeleton-text{
+    height: 16px;
+    margin-bottom: 8px;
+  }
+  .skeleton-title{
+    height: 24px;
+    width: 60%;
+    margin-bottom: 12px;
+  }
 
   @media (max-width: 480px){
     .container{
@@ -1145,6 +1288,74 @@
       /iPad|iPhone|iPod/.test(navigator.userAgent) ||
       (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 
+    // ====== UI utilities ======
+    let loadingOverlay = null;
+    function showLoading(message = "") {
+      if (loadingOverlay) return;
+      loadingOverlay = el(`
+        <div class="loading-overlay">
+          <div class="loading-content">
+            <div class="spinner spinner-large"></div>
+            ${message ? `<div style="margin-top:12px;font-weight:800;color:var(--text);">${message}</div>` : ""}
+          </div>
+        </div>
+      `);
+      document.body.appendChild(loadingOverlay);
+    }
+    function hideLoading() {
+      if (loadingOverlay) {
+        loadingOverlay.remove();
+        loadingOverlay = null;
+      }
+    }
+
+    let toastContainer = null;
+    function initToastContainer() {
+      if (!toastContainer) {
+        toastContainer = el(`<div class="toast-container"></div>`);
+        document.body.appendChild(toastContainer);
+      }
+      return toastContainer;
+    }
+    function showToast(message, type = "success", duration = 3000) {
+      const container = initToastContainer();
+      const icon = type === "success" ? "✓" : "✕";
+      const toast = el(`
+        <div class="toast toast-${type}">
+          <div class="toast-icon">${icon}</div>
+          <div class="toast-message">${message}</div>
+        </div>
+      `);
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.add("hiding");
+        setTimeout(() => toast.remove(), 300);
+      }, duration);
+    }
+
+    function animatePageEnter(element) {
+      if (!element) return;
+      element.style.opacity = "0";
+      element.style.transform = "translateY(20px)";
+      requestAnimationFrame(() => {
+        element.classList.add("page-enter");
+        element.style.opacity = "";
+        element.style.transform = "";
+      });
+    }
+
+    // ====== error handling utilities ======
+    async function retryOperation(operation, maxRetries = 3, delay = 1000) {
+      for (let i = 0; i < maxRetries; i++) {
+        try {
+          return await operation();
+        } catch (error) {
+          if (i === maxRetries - 1) throw error;
+          await new Promise(resolve => setTimeout(resolve, delay * (i + 1)));
+        }
+      }
+    }
+
     function setNavActive() {
       const links = document.querySelectorAll(".nav-item");
       links.forEach(a => a.classList.remove("active"));
@@ -1296,16 +1507,16 @@
             <p class="card-subtitle">${t("LOGIN_DESC")}</p>
 
             <div class="input-group">
-              <label class="input-label">${t("LABEL_NAME")}</label>
-              <input id="nick" maxlength="20" placeholder="${t("PH_NAME")}" />
+              <label class="input-label" for="nick">${t("LABEL_NAME")}</label>
+              <input id="nick" name="nickname" maxlength="20" placeholder="${t("PH_NAME")}" aria-required="true" aria-label="${t("LABEL_NAME")}" />
             </div>
 
             <div class="input-group">
-              <label class="input-label">${t("LABEL_PIN")}</label>
-              <input id="pin" type="password" inputmode="numeric" maxlength="4" placeholder="${t("PH_PIN")}" />
+              <label class="input-label" for="pin">${t("LABEL_PIN")}</label>
+              <input id="pin" name="pin" type="password" inputmode="numeric" maxlength="4" placeholder="${t("PH_PIN")}" aria-required="true" aria-label="${t("LABEL_PIN")}" />
             </div>
 
-            <button id="btn" type="button">${t("BTN_LOGIN")}</button>
+            <button id="btn" type="button" aria-label="${t("BTN_LOGIN")}">${t("BTN_LOGIN")}</button>
             <div id="msg"></div>
 
             <div class="divider"></div>
@@ -1329,13 +1540,18 @@
         btn.disabled = true; btn.textContent = t("BTN_CHECKING");
 
         try{
-          await ensureAnonLogin();
-          const { error } = await sb.rpc("claim_player", { nick, pin });
-          if (error) throw error;
+          await retryOperation(async () => {
+            await ensureAnonLogin();
+            const { error } = await sb.rpc("claim_player", { nick, pin });
+            if (error) throw error;
+          }, 3, 1000);
           msg.innerHTML = `<div class="alert alert-success">${t("LOGIN_OK")}</div>`;
+          showToast(t("LOGIN_OK"), "success", 2000);
           setTimeout(()=> location.hash="#/", 350);
         }catch(e){
-          msg.innerHTML = `<div class="alert alert-error">${t("LOGIN_FAIL", { msg: (e?.message ?? e) })}</div>`;
+          const errorMsg = t("LOGIN_FAIL", { msg: (e?.message ?? e) });
+          msg.innerHTML = `<div class="alert alert-error">${errorMsg}</div>`;
+          showToast(errorMsg, "error", 4000);
           node.classList.add("shake"); setTimeout(()=>node.classList.remove("shake"),300);
         }finally{
           btn.disabled = false; btn.textContent = t("BTN_LOGIN");
@@ -1355,21 +1571,21 @@
             <p class="card-subtitle">${t("SIGNUP_DESC")}</p>
 
             <div class="input-group">
-              <label class="input-label">${t("LABEL_NAME")}</label>
-              <input id="nick" maxlength="20" placeholder="${t("PH_NAME")}" />
+              <label class="input-label" for="nick">${t("LABEL_NAME")}</label>
+              <input id="nick" name="nickname" maxlength="20" placeholder="${t("PH_NAME")}" aria-required="true" aria-label="${t("LABEL_NAME")}" />
             </div>
 
             <div class="input-group">
-              <label class="input-label">${t("LABEL_ROOM")}</label>
-              <input id="room" maxlength="10" placeholder="${t("PH_ROOM")}" />
+              <label class="input-label" for="room">${t("LABEL_ROOM")}</label>
+              <input id="room" name="room" maxlength="10" placeholder="${t("PH_ROOM")}" aria-required="true" aria-label="${t("LABEL_ROOM")}" />
             </div>
 
             <div class="input-group">
-              <label class="input-label">${t("LABEL_PIN")}</label>
-              <input id="pin" type="password" inputmode="numeric" maxlength="4" placeholder="${t("PH_PIN")}" />
+              <label class="input-label" for="pin">${t("LABEL_PIN")}</label>
+              <input id="pin" name="pin" type="password" inputmode="numeric" maxlength="4" placeholder="${t("PH_PIN")}" aria-required="true" aria-label="${t("LABEL_PIN")}" />
             </div>
 
-            <button id="btn" type="button">${t("BTN_SIGNUP")}</button>
+            <button id="btn" type="button" aria-label="${t("BTN_SIGNUP")}">${t("BTN_SIGNUP")}</button>
             <div id="msg"></div>
 
             <div class="divider"></div>
@@ -1395,12 +1611,17 @@
         btn.disabled = true; btn.textContent = t("BTN_CHECKING");
 
         try{
-          const { error } = await sb.rpc("register_player", { nick, pin, room });
-          if (error) throw error;
+          await retryOperation(async () => {
+            const { error } = await sb.rpc("register_player", { nick, pin, room });
+            if (error) throw error;
+          }, 3, 1000);
           msg.innerHTML = `<div class="alert alert-success">${t("SIGNUP_OK")}</div>`;
+          showToast(t("SIGNUP_OK"), "success", 2000);
           setTimeout(()=> location.hash="#/", 350);
         }catch(e){
-          msg.innerHTML = `<div class="alert alert-error">${t("SIGNUP_FAIL", { msg: (e?.message ?? e) })}</div>`;
+          const errorMsg = t("SIGNUP_FAIL", { msg: (e?.message ?? e) });
+          msg.innerHTML = `<div class="alert alert-error">${errorMsg}</div>`;
+          showToast(errorMsg, "error", 4000);
           node.classList.add("shake"); setTimeout(()=>node.classList.remove("shake"),300);
         }finally{
           btn.disabled = false; btn.textContent = t("BTN_SIGNUP");
@@ -1432,11 +1653,11 @@
                 <p class="card-subtitle">${t("CP_VERIFY_DESC")}</p>
 
                 <div class="input-group">
-                  <label class="input-label">${t("LABEL_PASS")}</label>
-                  <input id="pass" maxlength="30" placeholder="${t("PH_PASS")}" />
+                  <label class="input-label" for="pass">${t("LABEL_PASS")}</label>
+                  <input id="pass" name="passphrase" maxlength="30" placeholder="${t("PH_PASS")}" aria-required="true" aria-label="${t("LABEL_PASS")}" />
                 </div>
 
-                <button id="claim" type="button">${t("BTN_CLAIM")}</button>
+                <button id="claim" type="button" aria-label="${t("BTN_CLAIM")}">${t("BTN_CLAIM")}</button>
                 <div id="msg"></div>
 
                 <div id="hint" style="display:none;">
@@ -1461,27 +1682,46 @@
           btn.disabled = true; btn.textContent = t("BTN_CHECKING");
 
           try{
-            const me = await getMe();
-            const res = await advanceWithPassphrase(me.id, target, pass);
+            const me = await retryOperation(async () => {
+              return await getMe();
+            }, 3, 1000);
+            
+            const res = await retryOperation(async () => {
+              return await advanceWithPassphrase(me.id, target, pass);
+            }, 3, 1000);
 
             if (!res.ok) {
-              if (res.reason === "no_passphrase") msg.innerHTML = `<div class="alert alert-error">${t("PASS_REQUIRED")}</div>`;
-              else if (res.reason === "invalid_passphrase") msg.innerHTML = `<div class="alert alert-error">${t("PASS_WRONG")}</div>`;
-              else if (res.reason === "wrong_order") msg.innerHTML = `<div class="alert alert-error">${t("ORDER_WRONG", { cur: res.current, max: MAX_CHECKPOINT })}</div>`;
-              else msg.innerHTML = `<div class="alert alert-error">${t("FAIL_GENERIC", { msg: (res.message ?? "エラー") })}</div>`;
+              let errorMsg = "";
+              if (res.reason === "no_passphrase") {
+                errorMsg = t("PASS_REQUIRED");
+                msg.innerHTML = `<div class="alert alert-error">${errorMsg}</div>`;
+              } else if (res.reason === "invalid_passphrase") {
+                errorMsg = t("PASS_WRONG");
+                msg.innerHTML = `<div class="alert alert-error">${errorMsg}</div>`;
+              } else if (res.reason === "wrong_order") {
+                errorMsg = t("ORDER_WRONG", { cur: res.current, max: MAX_CHECKPOINT });
+                msg.innerHTML = `<div class="alert alert-error">${errorMsg}</div>`;
+              } else {
+                errorMsg = t("FAIL_GENERIC", { msg: (res.message ?? "エラー") });
+                msg.innerHTML = `<div class="alert alert-error">${errorMsg}</div>`;
+              }
+              showToast(errorMsg, "error", 3000);
               btn.disabled = false; btn.textContent = t("BTN_CLAIM");
               return;
             }
 
             node.querySelector("#hint").style.display = "block";
             btn.style.display = "none";
+            showToast(t("UNLOCKED"), "success", 3000);
 
             if (target >= MAX_CHECKPOINT) {
               setTimeout(()=> location.hash="#/clear", 450);
             }
 
           }catch(e){
-            msg.innerHTML = `<div class="alert alert-error">エラー：${e?.message ?? e}</div>`;
+            const errorMsg = `エラー：${e?.message ?? e}`;
+            msg.innerHTML = `<div class="alert alert-error">${errorMsg}</div>`;
+            showToast(errorMsg, "error", 4000);
             btn.disabled = false; btn.textContent = t("BTN_CLAIM");
           }
         };
@@ -1623,17 +1863,23 @@
           <div class="card">
             <div class="card-title">${t("RANK_CARD_TITLE")}</div>
             <p class="card-subtitle">${t("RANK_DESC")}</p>
-            <div id="list"></div>
+            <div id="list">
+              <div style="display:flex;align-items:center;justify-content:center;padding:40px;">
+                <div class="spinner spinner-large"></div>
+              </div>
+            </div>
           </div>
         </div>
       `));
 
       const list = document.getElementById("list");
-      list.innerHTML = `<p class="text-muted text-center">${t("LOADING")}</p>`;
 
       try{
-        const { data, error } = await sb.rpc("get_leaderboard");
-        if (error) throw error;
+        const { data, error } = await retryOperation(async () => {
+          const result = await sb.rpc("get_leaderboard");
+          if (result.error) throw result.error;
+          return result.data;
+        }, 3, 1000);
 
         if (!data?.length) {
           list.innerHTML = `<p class="text-muted text-center">${t("EMPTY")}</p>`;
@@ -1664,7 +1910,9 @@
         }).join("");
 
       }catch(e){
-        list.innerHTML = `<div class="alert alert-error">取得失敗：${e?.message ?? e}</div>`;
+        const errorMsg = `取得失敗：${e?.message ?? e}`;
+        list.innerHTML = `<div class="alert alert-error">${errorMsg}</div>`;
+        showToast(errorMsg, "error", 4000);
       }
     }
 
@@ -1673,45 +1921,87 @@
       try{
         applyStaticI18n();
         setNavActive();
-        await ensureAnonLogin();
+        
+        // Show loading for async operations
+        const needsData = !location.hash.match(/^#\/(intro|login|signup)$/);
+        if (needsData) {
+          showLoading();
+        }
+
+        await retryOperation(async () => {
+          await ensureAnonLogin();
+        }, 3, 1000);
 
         const r = getRoute();
 
-        if (r.type === "intro") { renderIntro(); return; }
-        if (r.type === "unknown") { renderTrap("GUEST", { checkpoint: 0 }, "UNKNOWN"); return; }
+        if (r.type === "intro") { 
+          hideLoading();
+          renderIntro(); 
+          animatePageEnter(app.firstElementChild);
+          return; 
+        }
+        if (r.type === "unknown") { 
+          hideLoading();
+          renderTrap("GUEST", { checkpoint: 0 }, "UNKNOWN"); 
+          animatePageEnter(app.firstElementChild);
+          return; 
+        }
 
         // cp key check (before login check)
         if (r.type === "cp") {
           if (r.n === 999) {
+            hideLoading();
             if (r.key === TRAP_KEY) renderTrap("GUEST", { checkpoint: 0 }, "TRAP");
             else renderTrap("GUEST", { checkpoint: 0 }, "TRAP_KEY_MISMATCH");
+            animatePageEnter(app.firstElementChild);
             return;
           }
           if (!CP_KEYS[r.n] || r.key !== CP_KEYS[r.n]) {
+            hideLoading();
             renderTrap("GUEST", { checkpoint: 0 }, "KEY_MISMATCH");
+            animatePageEnter(app.firstElementChild);
             return;
           }
         }
 
-        const me = await getMe();
-        const nick = await getNickname(me.id);
-        const prog = nick ? await getProgress(me.id) : { checkpoint: 0, updated_at: null };
+        const me = await retryOperation(async () => {
+          return await getMe();
+        }, 3, 1000);
+        
+        const nick = await retryOperation(async () => {
+          return await getNickname(me.id);
+        }, 3, 1000);
+        
+        const prog = nick ? await retryOperation(async () => {
+          return await getProgress(me.id);
+        }, 3, 1000) : { checkpoint: 0, updated_at: null };
 
-        if (r.type === "login") { renderLogin(); return; }
-        if (r.type === "signup") { renderSignup(); return; }
+        hideLoading();
+
+        if (r.type === "login") { renderLogin(); animatePageEnter(app.firstElementChild); return; }
+        if (r.type === "signup") { renderSignup(); animatePageEnter(app.firstElementChild); return; }
 
         const needsLogin = (r.type === "home" || r.type === "scan" || r.type === "leaderboard" || r.type === "me" || r.type === "cp" || r.type === "clear");
-        if (!nick && needsLogin) { location.hash = "#/login"; return; }
+        if (!nick && needsLogin) { 
+          showToast(t("LOGIN_TO_SIGNUP"), "error", 2000);
+          location.hash = "#/login"; 
+          return; 
+        }
 
-        if (r.type === "home") { renderHome(nick, prog); return; }
-        if (r.type === "scan") { renderScan(nick, prog); return; }
-        if (r.type === "me") { renderMe(nick, prog); return; }
-        if (r.type === "leaderboard") { await renderLeaderboard(nick); return; }
-        if (r.type === "clear") { renderClear(nick); return; }
-        if (r.type === "cp") { renderCheckpoint(nick, prog, r.n); return; }
+        if (r.type === "home") { renderHome(nick, prog); animatePageEnter(app.firstElementChild); return; }
+        if (r.type === "scan") { renderScan(nick, prog); animatePageEnter(app.firstElementChild); return; }
+        if (r.type === "me") { renderMe(nick, prog); animatePageEnter(app.firstElementChild); return; }
+        if (r.type === "leaderboard") { 
+          await renderLeaderboard(nick); 
+          animatePageEnter(app.firstElementChild); 
+          return; 
+        }
+        if (r.type === "clear") { renderClear(nick); animatePageEnter(app.firstElementChild); return; }
+        if (r.type === "cp") { renderCheckpoint(nick, prog, r.n); animatePageEnter(app.firstElementChild); return; }
 
         location.hash = "#/login";
       }catch(e){
+        hideLoading();
         app.innerHTML = `
           <div class="card">
             <div class="card-title">${t("ERR_TITLE")}</div>
@@ -1725,6 +2015,8 @@
             </div>
           </div>
         `;
+        animatePageEnter(app.firstElementChild);
+        showToast(t("ERR_TITLE"), "error", 5000);
         console.error(e);
       }
     }
@@ -1732,6 +2024,30 @@
     window.addEventListener("hashchange", route);
     if (!location.hash) location.hash = "#/intro";
     route();
+
+    // ====== PWA Service Worker Registration ======
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/sw.js")
+          .then(reg => console.log("Service Worker registered:", reg))
+          .catch(err => console.log("Service Worker registration failed:", err));
+      });
+    }
+
+    // ====== Accessibility: Keyboard navigation ======
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        hideLoading();
+      }
+    });
+
+    // ====== Offline detection ======
+    window.addEventListener("online", () => {
+      showToast("インターネット接続が復旧しました", "success", 3000);
+    });
+    window.addEventListener("offline", () => {
+      showToast("オフラインです。一部機能が制限されます", "error", 4000);
+    });
   </script>
 </body>
 </html>
