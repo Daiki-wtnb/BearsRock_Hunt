@@ -1875,46 +1875,46 @@
       const list = document.getElementById("list");
 
       try{
-        const { data, error } = await retryOperation(async () => {
-          const result = await sb.rpc("get_leaderboard");
-          if (result.error) throw result.error;
-          return result.data;
-        }, 3, 1000);
+  const data = await retryOperation(async () => {
+    const { data, error } = await sb.rpc("get_leaderboard");
+    if (error) throw error;
+    return data;
+  }, 3, 1000);
 
-        if (!data?.length) {
-          list.innerHTML = `<p class="text-muted text-center">${t("EMPTY")}</p>`;
-          return;
-        }
+  if (!data?.length) {
+    list.innerHTML = `<p class="text-muted text-center">${t("EMPTY")}</p>`;
+    return;
+  }
 
-        list.innerHTML = data.map((r, idx) => {
-          const isMe = (r.nickname === nickname);
-          const topClass = idx===0 ? "rank-1" : idx===1 ? "rank-2" : idx===2 ? "rank-3" : "";
-          const isClear = (r.checkpoint >= MAX_CHECKPOINT);
-          const progressText = `${r.checkpoint} / ${MAX_CHECKPOINT}`;
+  list.innerHTML = data.map((r, idx) => {
+    const isMe = (r.nickname === nickname);
+    const topClass = idx===0 ? "rank-1" : idx===1 ? "rank-2" : idx===2 ? "rank-3" : "";
+    const isClear = (r.checkpoint >= MAX_CHECKPOINT);
+    const progressText = `${r.checkpoint} / ${MAX_CHECKPOINT}`;
 
-          return `
-            <div class="list-item ${isMe ? "active" : ""} ${topClass}">
-              <div style="display:flex;align-items:center;gap:12px;flex:1;">
-                <div class="rank-number">#${idx+1}</div>
-                <div style="display:flex;align-items:center;flex-wrap:wrap;">
-                  <strong>${r.nickname}</strong>
-                  ${isMe ? `<span class="me-badge">${t("YOU_BADGE")}</span>` : ``}
-                </div>
-              </div>
-              <div class="finish">
-                <span>${progressText}</span>
-                ${isClear ? `<span class="done">🎉</span>` : ``}
-              </div>
-            </div>
-          `;
-        }).join("");
+    return `
+      <div class="list-item ${isMe ? "active" : ""} ${topClass}">
+        <div style="display:flex;align-items:center;gap:12px;flex:1;">
+          <div class="rank-number">#${idx+1}</div>
+          <div style="display:flex;align-items:center;flex-wrap:wrap;">
+            <strong>${r.nickname}</strong>
+            ${isMe ? `<span class="me-badge">${t("YOU_BADGE")}</span>` : ``}
+          </div>
+        </div>
+        <div class="finish">
+          <span>${progressText}</span>
+          ${isClear ? `<span class="done">🎉</span>` : ``}
+        </div>
+      </div>
+    `;
+  }).join("");
 
-      }catch(e){
-        const errorMsg = `取得失敗：${e?.message ?? e}`;
-        list.innerHTML = `<div class="alert alert-error">${errorMsg}</div>`;
-        showToast(errorMsg, "error", 4000);
-      }
-    }
+}catch(e){
+  const errorMsg = `取得失敗：${e?.message ?? e}`;
+  list.innerHTML = `<div class="alert alert-error">${errorMsg}</div>`;
+  showToast(errorMsg, "error", 4000);
+}
+
 
     // ====== main route ======
     async function route() {
