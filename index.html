@@ -1287,7 +1287,8 @@
       LANG = lang;
       localStorage.setItem(LANG_KEY, lang);
       document.documentElement.lang = (lang === "zh-Hans" || lang === "zh-Hant") ? "zh" : lang;
-      route();
+      applyStaticI18n();
+      handleRoute();
     }
     window.__setLang = setLang;
 
@@ -1453,10 +1454,10 @@
     // ====== auth / db ======
     async function ensureAnonLogin() {
       const { data: { session } } = await sb.auth.getSession();
-      if (session) return session;
+      if (session) return session.user;
       const { data, error } = await sb.auth.signInAnonymously();
       if (error) throw error;
-      return data.session;
+      return data.session.user;
     }
     async function getMe() {
       const { data: { user } } = await sb.auth.getUser();
@@ -1708,8 +1709,19 @@
 
         try {
           await retryOperation(async () => {
+            // ✅ Ensure anonymous session exists before calling RPC
+            const session = await ensureAnonLogin();
+            if (!session) throw new Error("Failed to establish session");
+
             const { error } = await sb.rpc("register_player", { nick, pin, room });
-            if (error) throw error;
+            if (error) {
+              if (error.message.includes("already registered")) {
+                // If already registered, we should try to claim this profile or just redirect
+                // But typically this means they should login instead.
+                throw new Error("Already registered. Please login.");
+              }
+              throw error;
+            }
           }, 3, 1000);
 
           msg.innerHTML = `<div class="alert alert-success">${t("SIGNUP_OK")}</div>`;
@@ -1728,10 +1740,10 @@
       app.appendChild(node);
     }
 
-    function renderCheckpoint(nickname, prog, route) {
+    function renderCheckpoint(nickname, prog, cpRoute) {
       app.innerHTML = "";
 
-      const target = route.find(cp => !prog.cleared_checkpoints.includes(cp));
+      const target = cpRoute.find(cp => !prog.cleared_checkpoints.includes(cp));
       const isClearedAll = !target;
       const currentStep = prog.cleared_checkpoints.length + 1;
 
@@ -1796,7 +1808,7 @@
             }
 
             showToast(t("UNLOCKED"), "success", 3000);
-            setTimeout(() => route(), 450); // Refresh to show next step or clear
+            setTimeout(() => handleRoute(), 450); // Refresh to show next step or clear
           } catch (e) {
             const errorMsg = t("FAIL_GENERIC", { msg: (e?.message ?? e) });
             msg.innerHTML = `<div class="alert alert-error">${errorMsg}</div>`;
@@ -1997,7 +2009,7 @@
     }
 
     // ====== main route ======
-    async function route() {
+    async function handleRoute() {
       const r = getRoute();
       setNavActive();
 
@@ -2087,9 +2099,12 @@
       }
     }
 
-    window.addEventListener("hashchange", route);
+    window.addEventListener("hashchange", handleRoute);
     if (!location.hash) location.hash = "#/intro";
-    window.addEventListener("load", route);
+    window.addEventListener("load", () => {
+      applyStaticI18n();
+      handleRoute();
+    });
 
     if ("serviceWorker" in navigator) {
       window.addEventListener("load", () => {

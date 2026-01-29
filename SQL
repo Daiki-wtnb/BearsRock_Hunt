@@ -130,6 +130,7 @@ create or replace function public.register_player(nick text, pin text, room text
 returns void
 language plpgsql
 security definer
+set search_path = public
 as $$
 declare
   uid uuid := auth.uid();
@@ -150,12 +151,17 @@ begin
     raise exception 'pin must be 4 digits';
   end if;
 
-  -- 既存の「ニックネーム」が別の人に使われていないかチェック
-  if exists(select 1 from public.players p where p.nickname = nick) then
+  -- Ensure we handle potential race conditions or RLS visibility issues
+  -- By using security definer and set search_path, we bypass RLS for the existence check.
+  
+  -- 1) Check if NICKNAME is taken by ANYONE ELSE
+  if exists(select 1 from public.players p where p.nickname = nick and p.user_id <> uid) then
     raise exception 'nickname already taken';
   end if;
 
-  -- 自分がすでに登録済みなら拒否
+  -- 2) Check if I AM ALREADY REGISTERED (Duplicate UID)
+  -- If I am already registered with a DIFFERENT nickname, we might want to allow updating?
+  -- But the current logic says "already registered".
   if exists(select 1 from public.players p where p.user_id = uid) then
     raise exception 'already registered';
   end if;
@@ -177,6 +183,7 @@ create or replace function public.claim_player(nick text, pin text)
 returns void
 language plpgsql
 security definer
+set search_path = public
 as $$
 declare
   uid uuid := auth.uid();
@@ -223,6 +230,7 @@ create or replace function public.claim_checkpoint(cp integer, pass text)
 returns integer
 language plpgsql
 security definer
+set search_path = public
 as $$
 declare
   uid uuid := auth.uid();
