@@ -1495,7 +1495,7 @@
         return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
       }
     }
-    function getRoute(userId) {
+    function getUserRoute(userId) {
       if (!userId) return [1, 2, 3, 4, 5];
       // Create seed from UUID (simple sum of char codes)
       let seed = 0;
@@ -1570,50 +1570,8 @@
       `));
     }
 
-    function renderHome(nickname, prog) {
-      app.innerHTML = "";
-
-      const me = sb.auth.getUser(); // Sync get? No, promise. Passed nickname/prog.
-      // Need route here.
-      // Ideally pass route to renderHome or calc it.
-      // We can fetch ID from somewhere or pass it.
-      // Refactor: route() passes full user object or ID?
-      // Temporarily, we regenerate route from ID if possible, but we don't have ID here easily unless passed.
-      // Let's rely on valid args.
-
-      // WAIT: renderHome is called from route() where we HAVE `me`.
-      // Let's update `route()` to pass `me.id` or `myRoute` to `renderHome`.
-      // Since I can't edit `route` arguments in THIS tool call (already done),
-      // I will assume `prog` object *could* carry the route info or I use a global?
-      // Better: Update `renderHome` signature in the caller (next step) or here.
-      // Let's update `renderHome` content first, and I'll fix the call site in `route` if needed.
-      // Actually, I just updated `route` to call `renderHome(nickname, prog)`.
-      // I need to update `route` to pass the route array.
-
-      // Let's stick to the plan:
-      // The `route` function I just wrote calls `renderHome(nickname, prog)`. 
-      // I should have updated it to `renderHome(nickname, prog, myRoute)`.
-      // I will update renderHome to accept optional route, and then update route() again if needed.
-      // OR, I can get user ID from `sb.auth.session` sync?
-    }
-
-    // REDOING: `renderHome` needs the route to show the correct hint.
-    // I'll grab user ID from `sb.auth.getSession()` (cache) or assume passed.
-    // Let's insert a helper to get ID synchronously or hack it.
-    // Actually, `route()` logic had `me` object.
-
-    // I will update renderHome to take `route` argument.
-    // AND then I will update `route()` call separately or assume I can fix it.
-    // Wait, the previous `route` edit maintained the function signature `renderHome(nickname, prog)`.
-    // I need to change that line in `route` logic.
-
-    // Let's update `renderHome` first.
     function renderHome(nickname, prog, myRoute) {
       app.innerHTML = "";
-      // If myRoute not passed (legacy call), try to recalc?
-      // We need ID for recalc.
-      // Let's just assume myRoute is passed. I will fix the caller.
-
       const currentCount = prog.cleared_checkpoints?.length ?? 0;
       const target = myRoute ? myRoute.find(cp => !(prog.cleared_checkpoints || []).includes(cp)) : (currentCount + 1);
 
@@ -1643,9 +1601,6 @@
 
           <div class="card">
             <div class="card-title">${t("WELCOME", { name: nickname })}</div>
-            <!-- Show Current Target Hint directly on Home? Or keep "Note"? -->
-            <!-- User request: "Prevent sharing". -->
-            <!-- If everyone sees "Hint 1" but for different places, they realize it's different. -->
             <div class="hint-box" style="margin-top:10px;">
                <strong>Target: Checkpoint #${currentCount + 1}</strong><br>
                ${target ? hintText(target) : "Loading..."}
@@ -1794,14 +1749,8 @@
     function renderCheckpoint(nickname, prog, route) {
       app.innerHTML = "";
 
-      // Determine CURRENT target: First item in route that is NOT in cleared_checkpoints
       const target = route.find(cp => !prog.cleared_checkpoints.includes(cp));
       const isClearedAll = !target;
-
-      // If cleared all, redirect or show something? 
-      // Assuming caller handles #/clear redirect.
-
-      // "Step Number" is how many have been cleared + 1
       const currentStep = prog.cleared_checkpoints.length + 1;
 
       const node = el(`
@@ -1813,14 +1762,62 @@
           </div>
 
           <div class="card">
-            showToast(t("UNLOCKED"), "success", 3000);
+            ${isClearedAll ? `
+                <div class="alert alert-success">${t("CLEAR_DESC")}</div>
+                <button type="button" onclick="location.hash='#/clear'">${t("BTN_VIEW_ME")}</button>
+              ` : `
+                <div class="card-title">${t("CP_VERIFY_TITLE")}</div>
+                <p class="card-subtitle">${t("CP_VERIFY_DESC")}</p>
 
-            if (target >= MAX_CHECKPOINT) {
-              setTimeout(() => location.hash = "#/clear", 450);
+                <div class="input-group">
+                  <label class="input-label" for="pass">${t("LABEL_PASS")}</label>
+                  <input id="pass" name="passphrase" maxlength="30" placeholder="${t("PH_PASS")}" aria-required="true" aria-label="${t("LABEL_PASS")}" />
+                </div>
+
+                <button id="claim" type="button" aria-label="${t("BTN_CLAIM")}">${t("BTN_CLAIM")}</button>
+                <div id="msg"></div>
+
+                <div class="hint-box">
+                  <strong>${t("HINT_TITLE", { n: currentStep })}</strong><br>
+                  ${target ? hintText(target) : ""}
+                </div>
+              `
+        }
+          </div>
+        </div>
+      `);
+
+      if (!isClearedAll) {
+        node.querySelector("#claim").onclick = async () => {
+          const btn = node.querySelector("#claim");
+          const msg = node.querySelector("#msg");
+          const pass = node.querySelector("#pass").value.trim().toUpperCase();
+
+          msg.innerHTML = "";
+          btn.disabled = true; btn.textContent = t("BTN_CHECKING");
+
+          try {
+            const me = await retryOperation(async () => await getMe(), 3, 1000);
+            const res = await retryOperation(async () => await advanceWithPassphrase(me.id, target, pass), 3, 1000);
+
+            if (!res.ok) {
+              let errorMsg = "";
+              if (res.reason === "no_passphrase") errorMsg = t("PASS_REQUIRED");
+              else if (res.reason === "invalid_passphrase") errorMsg = t("PASS_WRONG");
+              else if (res.reason === "wrong_order") errorMsg = t("ORDER_WRONG", { cur: res.current, max: MAX_CHECKPOINT });
+              else errorMsg = t("FAIL_GENERIC", { msg: (res.message ?? "error") });
+
+              msg.innerHTML = `<div class="alert alert-error">${errorMsg}</div>`;
+              showToast(errorMsg, "error", 3000);
+              btn.disabled = false; btn.textContent = t("BTN_CLAIM");
+              return;
             }
+
+            showToast(t("UNLOCKED"), "success", 3000);
+            setTimeout(() => route(), 450); // Refresh to show next step or clear
           } catch (e) {
             const errorMsg = t("FAIL_GENERIC", { msg: (e?.message ?? e) });
-            msg.innerHTML = `< div class= "alert alert-error" > ${ errorMsg }</div > `;
+            msg.innerHTML = `<div class="alert alert-error">${errorMsg}</div>`;
             showToast(errorMsg, "error", 4000);
             btn.disabled = false; btn.textContent = t("BTN_CLAIM");
           }
@@ -1830,59 +1827,58 @@
       app.appendChild(node);
     }
 
-    function renderTrap(nickname = "GUEST", prog = { checkpoint: 0 }, reason = "") {
+    function renderTrap(nickname, prog, reason) {
       app.innerHTML = "";
       const lines = [t("TRAP_LINE_1"), t("TRAP_LINE_2"), t("TRAP_LINE_3"), t("TRAP_LINE_4")];
       const msg = lines[Math.floor(Math.random() * lines.length)];
 
       app.appendChild(el(`
-      < div >
-      ${ headerHtml(t("TRAP_TITLE"), "", true)
-    }
-    <div class="card trapCard">
-      <div style="display:flex;align-items:center;gap:12px;">
-        <div class="trapSkull">💀</div>
         <div>
-          <div class="glitch" data-text="TRAP">TRAP</div>
-          <div class="text-muted" style="margin-top:6px;">${msg}</div>
+          ${headerHtml(t("TRAP_TITLE"), "", true)}
+          <div class="card trapCard">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div class="trapSkull">💀</div>
+              <div>
+                <div class="glitch" data-text="TRAP">TRAP</div>
+                <div class="text-muted" style="margin-top:6px;">${msg}</div>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="smallHint">
+              <div>${t("TRAP_NOTE_1")}</div>
+              <div>${t("TRAP_NOTE_2")}</div>
+              ${reason ? `<div style="opacity:.7;margin-top:6px;">debug: ${reason}</div>` : ``}
+            </div>
+
+            <div style="margin-top:14px;">
+              <button type="button" onclick="location.hash='#/'">${t("BTN_BACK_HOME")}</button>
+            </div>
+          </div>
         </div>
-      </div>
-
-      <div class="divider"></div>
-
-      <div class="smallHint">
-        <div>${t("TRAP_NOTE_1")}</div>
-        <div>${t("TRAP_NOTE_2")}</div>
-        ${reason ? `<div style="opacity:.7;margin-top:6px;">debug: ${reason}</div>` : ``}
-      </div>
-
-      <div style="margin-top:14px;">
-        <button type="button" onclick="location.hash='#/'">${t("BTN_BACK_HOME")}</button>
-      </div>
-    </div>
-        </div >
       `));
     }
 
     function renderClear(nickname) {
       app.innerHTML = "";
       app.appendChild(el(`
-      < div >
-      ${ headerHtml(t("CLEAR_TITLE"), "", true) }
-    <div class="card">
-      <div class="card-title">${t("CLEAR_CONGRATS", { name: nickname })}</div>
-      <p class="card-subtitle">${t("CLEAR_DESC")}</p>
+        <div>
+          ${headerHtml(t("CLEAR_TITLE"), "", true)}
+          <div class="card">
+            <div class="card-title">${t("CLEAR_CONGRATS", { name: nickname })}</div>
+            <p class="card-subtitle">${t("CLEAR_DESC")}</p>
 
-      <div class="hint-box">
-        <strong>${t("CLEAR_PRIZE_TITLE")}</strong><br>${t("CLEAR_PRIZE_DESC")}
-      </div>
+            <div class="hint-box">
+              <strong>${t("CLEAR_PRIZE_TITLE")}</strong><br>${t("CLEAR_PRIZE_DESC")}
+            </div>
 
-      <div class="divider"></div>
+            <div class="divider"></div>
 
-      <button type="button" onclick="location.hash='#/me'">${t("BTN_VIEW_ME")}</button>
-      <button class="btn-secondary" type="button" onclick="location.hash='#/'">${t("BTN_HOME")}</button>
-    </div>
-        </div >
+            <button type="button" onclick="location.hash='#/me'">${t("BTN_VIEW_ME")}</button>
+            <button class="btn-secondary" type="button" onclick="location.hash='#/'">${t("BTN_HOME")}</button>
+          </div>
+        </div>
       `));
     }
 
@@ -1891,57 +1887,61 @@
       const ios = isIOS();
 
       app.appendChild(el(`
-      < div >
-      ${ headerHtml(t("SCAN_TITLE"), `<div class="badge">📍 ${prog.checkpoint}/${MAX_CHECKPOINT}</div>`, true) }
-    <div class="card">
-      <div class="card-title">${t("SCAN_CARD_TITLE")}</div>
-      ${ios ? `
+        <div>
+          ${headerHtml(t("SCAN_TITLE"), `<div class="badge">📍 ${prog.cleared_checkpoints?.length || 0}/${MAX_CHECKPOINT}</div>`, true)}
+          <div class="card">
+            <div class="card-title">${t("SCAN_CARD_TITLE")}</div>
+            ${ios ? `
                 <div class="alert alert-success">${t("SCAN_IOS_TIP")}</div>
                 <p class="card-subtitle">${t("SCAN_IOS_DESC")}</p>
               ` : `
                 <div class="alert alert-success">${t("SCAN_ANDROID_DESC")}</div>
               `
-      }
-    </div>
-        </div >
+        }
+          </div>
+        </div>
       `));
     }
 
     function renderMe(nickname, prog) {
       app.innerHTML = "";
+
+      const count = prog.cleared_checkpoints?.length ?? 0;
       let hintsHtml = "";
-      for (let i = 1; i <= Math.min(prog.checkpoint, MAX_CHECKPOINT); i++) {
-        hintsHtml += `
-      < div class="list-item" >
+      const cleared = prog.cleared_checkpoints || [];
+      if (cleared.length > 0) {
+        hintsHtml = cleared.map((cp, idx) => `
+          <div class="list-item">
             <div>
-              <strong>${t("CP_TITLE")} ${i}</strong>
-              <div class="text-muted" style="font-size:13px;margin-top:4px;line-height:1.5;">${hintText(i)}</div>
+              <strong>Step ${idx + 1} (CP ${cp})</strong>
+              <div class="text-muted" style="font-size:13px;margin-top:4px;line-height:1.5;">${hintText(cp)}</div>
             </div>
             <div style="font-size:18px;">✅</div>
-          </div >
-      `;
+          </div>
+        `).join("");
+      } else {
+        hintsHtml = `<p class="text-muted">${t("ME_NO_HINTS")}</p>`;
       }
-      if (!hintsHtml) hintsHtml = `< p class="text-muted" > ${ t("ME_NO_HINTS") }</p > `;
 
       app.appendChild(el(`
-      < div >
-      ${ headerHtml(t("ME_TITLE"), "", true) }
+        <div>
+          ${headerHtml(t("ME_TITLE"), "", true)}
           <div class="card">
             <div class="card-title">${nickname}</div>
 
             <div class="stats">
               <div class="stat-item">
-                <div class="stat-value">${prog.checkpoint}</div>
+                <div class="stat-value">${count}</div>
                 <div class="stat-label">${t("ME_PROGRESS")}</div>
               </div>
               <div class="stat-item">
-                <div class="stat-value">${progressPercent(prog.checkpoint)}%</div>
+                <div class="stat-value">${progressPercent(count)}%</div>
                 <div class="stat-label">${t("ME_RATE")}</div>
               </div>
             </div>
 
             <div class="progress-container">
-              <div class="progress-bar" style="width:${progressPercent(prog.checkpoint)}%"></div>
+              <div class="progress-bar" style="width:${progressPercent(count)}%"></div>
             </div>
           </div>
 
@@ -1949,25 +1949,25 @@
             <div class="card-title">${t("ME_HINTS_TITLE")}</div>
             <div style="margin-top:14px;">${hintsHtml}</div>
           </div>
-        </div >
+        </div>
       `));
     }
 
     async function renderLeaderboard(nickname) {
       app.innerHTML = "";
       app.appendChild(el(`
-      < div >
-      ${ headerHtml(t("RANK_TITLE"), "", true) }
-    <div class="card">
-      <div class="card-title">${t("RANK_CARD_TITLE")}</div>
-      <p class="card-subtitle">${t("RANK_DESC")}</p>
-      <div id="list">
-        <div style="display:flex;align-items:center;justify-content:center;padding:40px;">
-          <div class="spinner spinner-large"></div>
+        <div>
+          ${headerHtml(t("RANK_TITLE"), "", true)}
+          <div class="card">
+            <div class="card-title">${t("RANK_CARD_TITLE")}</div>
+            <p class="card-subtitle">${t("RANK_DESC")}</p>
+            <div id="list">
+              <div style="display:flex;align-items:center;justify-content:center;padding:40px;">
+                <div class="spinner spinner-large"></div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-        </div >
       `));
 
       const list = document.getElementById("list");
@@ -1980,7 +1980,7 @@
         }, 3, 1000);
 
         if (!data?.length) {
-          list.innerHTML = `< p class="text-muted text-center" > ${ t("EMPTY") }</p > `;
+          list.innerHTML = `<p class="text-muted text-center">${t("EMPTY")}</p>`;
           return;
         }
 
@@ -1988,9 +1988,9 @@
           const isMe = (r.nickname === nickname);
           const topClass = idx === 0 ? "rank-1" : idx === 1 ? "rank-2" : idx === 2 ? "rank-3" : "";
           const isClear = (r.checkpoint >= MAX_CHECKPOINT);
-          const progressText = `${ r.checkpoint } / ${MAX_CHECKPOINT}`;
+          const progressText = `${r.checkpoint} / ${MAX_CHECKPOINT}`;
 
-    return `
+          return `
             <div class="list-item ${isMe ? "active" : ""} ${topClass}">
               <div style="display:flex;align-items:center;gap:12px;flex:1;">
                 <div class="rank-number">#${idx + 1}</div>
@@ -2008,17 +2008,17 @@
         }).join("");
 
       } catch (e) {
-      const errorMsg = t("FAIL_GENERIC", { msg: (e?.message ?? e) });
-      list.innerHTML = `<div class="alert alert-error">${errorMsg}</div>`;
-      showToast(errorMsg, "error", 4000);
+        const errorMsg = t("FAIL_GENERIC", { msg: (e?.message ?? e) });
+        list.innerHTML = `<div class="alert alert-error">${errorMsg}</div>`;
+        showToast(errorMsg, "error", 4000);
+      }
     }
-    }  /* ✅ ← これが無くて死んでた */
 
     // ====== main route ======
     async function route() {
       const r = getRoute();
       setNavActive();
-      // Intro, Login, Signup, Scan, Leaderboard, etc don't check progress strictly
+
       if (r.type === "intro") { return renderIntro(); }
       if (r.type === "login") { return renderLogin(); }
       if (r.type === "signup") { return renderSignup(); }
@@ -2026,196 +2026,107 @@
       showLoading(t("LOADING"));
       try {
         const me = await ensureAnonLogin();
-        const nickname = await getNickname(me.id);
+        let nick = null;
+        let prog = { checkpoint: 0, updated_at: null, cleared_checkpoints: [] };
 
-        // If logged in but no nickname -> go to login/signup
-        if (!nickname) {
+        try {
+          nick = await getNickname(me.id);
+          if (nick) {
+            prog = await getProgress(me.id);
+          }
+        } catch (e) { }
+
+        if (!nick) {
           hideLoading();
           return (location.hash = "#/login");
         }
 
-        const prog = await getProgress(me.id);
-        const myRoute = getRoute(me.id); // Get randomized route
-        const currentTarget = myRoute.find(cp => !prog.cleared_checkpoints.includes(cp)); // First uncleared CP
+        const myRoute = getUserRoute(me.id);
+        const currentTarget = myRoute.find(cp => !(prog.cleared_checkpoints || []).includes(cp));
 
-        // Routing Logic
         if (r.type === "home") {
           hideLoading();
-          // If cleared all
           if (!currentTarget) return (location.hash = "#/clear");
-          return renderHome(nickname, prog, myRoute); // Pass random route
+          return renderHome(nick, prog, myRoute);
         }
 
         if (r.type === "leaderboard") {
           hideLoading();
-          // Render Leaderboard (Needs implementation or check existing)
-          // Simple placeholder or component
-          app.innerHTML = "";
-          app.appendChild(el(`<div>${headerHtml(t("RANK_TITLE"), "", true)}<div class="card"><div class="card-title">${t("RANK_CARD_TITLE")}</div><p class="text-muted">${t("RANK_DESC")}</p><iframe style="width:100%;height:400px;border:none;" srcdoc="Leaderboard disabled locally"></iframe></div></div>`));
-          // Note: In real app, fetch leaderboard here.
-          return;
+          return renderLeaderboard(nick);
         }
 
         if (r.type === "me") {
           hideLoading();
-          // Hints Log
-          // Show hints for ALL CLEARED CPs + CURRENT TARGET
-          const unlockedCPs = [...prog.cleared_checkpoints];
-          if (currentTarget) unlockedCPs.push(currentTarget);
-
-          // Note: Since route is random, we should probably label them "Hint for Step X (CP Y)"
-
-          const hintHtml = unlockedCPs.length === 0 ? `<p>${t("ME_NO_HINTS")}</p>` :
-            unlockedCPs.map((cp, idx) => {
-              // idx is roughly the step order IF the user followed the route.
-              // But wait, unlockedCPs order depends on cleared_checkpoints order (which is append).
-              // Actually cleared_checkpoints is strictly ordered by time.
-              return `<div class="hint-box"><strong>${t("HINT_TITLE", { n: "CP" + cp })}</strong><br>${hintText(cp)}</div>`
-            }).join("");
-
-          app.innerHTML = "";
-          app.appendChild(el(`
-              <div>
-                ${headerHtml(t("ME_TITLE"), "", true)}
-                <div class="card">
-                  <div class="stats">
-                    <div class="stat-item"><div class="stat-value">${prog.cleared_checkpoints.length}</div><div class="stat-label">${t("ME_PROGRESS")}</div></div>
-                    <div class="stat-item"><div class="stat-value">${Math.round(prog.cleared_checkpoints.length / MAX_CHECKPOINT * 100)}%</div><div class="stat-label">${t("ME_RATE")}</div></div>
-                  </div>
-                  <div class="card-title">${t("ME_HINTS_TITLE")}</div>
-                  ${hintHtml}
-                </div>
-              </div>
-            `));
-          return;
-        }
-
-        if (r.type === "clear") {
-          hideLoading();
-          if (currentTarget) return (location.hash = "#/"); // Not cleared yet
-          app.innerHTML = "";
-          app.appendChild(el(`
-              <div>
-                ${headerHtml(t("CLEAR_TITLE"), "", true)}
-                <div class="card">
-                  <div class="text-center" style="font-size:60px;margin-bottom:10px;">🎉</div>
-                  <div class="card-title text-center">${t("CLEAR_CONGRATS", { name: nickname })}</div>
-                  <p class="text-center" style="margin-bottom:20px;line-height:1.6;">${t("CLEAR_DESC")}</p>
-                  
-                  <div class="hint-box">
-                    <strong>${t("CLEAR_PRIZE_TITLE")}</strong><br>
-                    ${t("CLEAR_PRIZE_DESC")}
-                  </div>
-
-                  <button type="button" onclick="location.hash='#/me'">${t("BTN_VIEW_ME")}</button>
-                  <button class="btn-secondary" type="button" onclick="location.hash='#/'">${t("BTN_HOME")}</button>
-                </div>
-              </div>
-            `));
-          return;
+          return renderMe(nick, prog);
         }
 
         if (r.type === "scan") {
           hideLoading();
-          const isios = isIOS();
-          app.innerHTML = "";
-          app.appendChild(el(`
-              <div>
-                ${headerHtml(t("SCAN_TITLE"), "", true)}
-                <div class="card">
-                  <div class="card-title text-center">${t("SCAN_CARD_TITLE")}</div>
-                  <div style="text-align:center;margin:30px 0;">
-                    <div style="font-size:80px;">📷</div>
-                  </div>
-                  <div class="alert ${isios ? "alert-success" : "alert-error"}">
-                    <strong>${isios ? "iPhone" : "Android / PC"}</strong><br>
-                    ${isios ? t("SCAN_IOS_TIP") : t("SCAN_ANDROID_DESC")}
-                  </div>
-                  <p class="text-muted" style="margin-top:10px;">
-                    ${isios ? t("SCAN_IOS_DESC") : ""}
-                  </p>
-                  
-                  <!-- DEV ONLY: Manual Jump -->
-                  <div class="divider"></div>
-                  <p class="text-center" style="font-size:10px;color:#666;">DEV: Manual Input</p>
-                  <input id="devCp" placeholder="CP ID (1-5)" type="number" style="margin-bottom:8px;">
-                  <button type="button" onclick="location.hash='#/c/'+document.getElementById('devCp').value+'-0000'">Go</button>
-                </div>
-              </div>
-            `));
-          return;
+          return renderScan(nick, prog);
+        }
+
+        if (r.type === "clear") {
+          hideLoading();
+          if (currentTarget) return (location.hash = "#/");
+          return renderClear(nick);
         }
 
         if (r.type === "cp") {
-          const me = await retryOperation(async () => await getMe(), 3, 1000);
-          const nick = await retryOperation(async () => await getNickname(me.id), 3, 1000);
-          const prog = nick ? await retryOperation(async () => await getProgress(me.id), 3, 1000)
-            : { checkpoint: 0, updated_at: null };
-
           hideLoading();
-
-          if (r.type === "login") { renderLogin(); animatePageEnter(app.firstElementChild); return; }
-          if (r.type === "signup") { renderSignup(); animatePageEnter(app.firstElementChild); return; }
-
-          const needsLogin = (r.type === "home" || r.type === "scan" || r.type === "leaderboard" || r.type === "me" || r.type === "cp" || r.type === "clear");
-          if (!nick && needsLogin) {
-            showToast(t("LOGIN_TO_SIGNUP"), "error", 2000);
-            location.hash = "#/login";
+          if (!myRoute.includes(r.n)) {
+            showToast("Invalid CP", "error");
+            location.hash = "#/";
             return;
           }
-
-          if (r.type === "home") { renderHome(nick, prog); animatePageEnter(app.firstElementChild); return; }
-          if (r.type === "scan") { renderScan(nick, prog); animatePageEnter(app.firstElementChild); return; }
-          if (r.type === "me") { renderMe(nick, prog); animatePageEnter(app.firstElementChild); return; }
-          if (r.type === "leaderboard") { await renderLeaderboard(nick); animatePageEnter(app.firstElementChild); return; }
-          if (r.type === "clear") { renderClear(nick); animatePageEnter(app.firstElementChild); return; }
-          if (r.type === "cp") { renderCheckpoint(nick, prog, r.n); animatePageEnter(app.firstElementChild); return; }
-
-          location.hash = "#/login";
-        } catch (e) {
-          hideLoading();
-          app.innerHTML = `
-          <div class="card">
-            <div class="card-title">${t("ERR_TITLE")}</div>
-            <div class="alert alert-error" style="margin-top:12px;">
-              ${e?.message ?? e}
-            </div>
-            <div class="text-muted" style="margin-top:10px;line-height:1.6;">
-              ・${t("ERR_HINT_1")}<br>
-              ・${t("ERR_HINT_2")}<br>
-              ・${t("ERR_HINT_3")}
-            </div>
-          </div>
-        `;
-          animatePageEnter(app.firstElementChild);
-          showToast(t("ERR_TITLE"), "error", 5000);
-          console.error(e);
+          if ((prog.cleared_checkpoints || []).includes(r.n)) {
+            showToast("Already cleared!", "success");
+            location.hash = "#/";
+            return;
+          }
+          if (r.n !== currentTarget) {
+            showToast(`Not your target!`, "error", 4000);
+            app.innerHTML = "";
+            app.appendChild(el(`<div>${headerHtml(t("TRAP_TITLE"), "", true)}<div class="card"><div class="alert alert-error">Wrong Location</div><button class="btn-secondary" onclick="location.hash='#/'">Back Home</button></div></div>`));
+            return;
+          }
+          if (!CP_KEYS[r.n] || r.key !== CP_KEYS[r.n]) {
+            renderTrap(nick, prog, "KEY_MISMATCH");
+            return;
+          }
+          return renderCheckpoint(nick, prog, myRoute);
         }
+
+        location.hash = "#/";
+
+      } catch (e) {
+        hideLoading();
+        console.error(e);
+        app.innerHTML = `<div class="card"><div class="alert alert-error">${t("ERR_TITLE")}<br>${e.message}</div></div>`;
       }
+    }
 
     window.addEventListener("hashchange", route);
-      if (!location.hash) location.hash = "#/intro";
-      route();
+    if (!location.hash) location.hash = "#/intro";
+    window.addEventListener("load", route);
 
-      // ====== PWA Service Worker Registration ======
-      if ("serviceWorker" in navigator) {
-        window.addEventListener("load", () => {
-          navigator.serviceWorker.register("/sw.js")
-            .then(reg => console.log("Service Worker registered:", reg))
-            .catch(err => console.log("Service Worker registration failed:", err));
-        });
-      }
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("/sw.js")
+          .then(reg => console.log("Service Worker registered:", reg))
+          .catch(err => console.log("Service Worker registration failed:", err));
+      });
+    }
 
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") hideLoading();
-      });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") hideLoading();
+    });
 
-      window.addEventListener("online", () => {
-        showToast("Back online", "success", 2500);
-      });
-      window.addEventListener("offline", () => {
-        showToast("Offline", "error", 3500);
-      });
+    window.addEventListener("online", () => {
+      showToast("Back online", "success", 2500);
+    });
+    window.addEventListener("offline", () => {
+      showToast("Offline", "error", 3500);
+    });
   </script>
 </body>
 
