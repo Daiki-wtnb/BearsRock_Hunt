@@ -150,7 +150,12 @@ begin
     raise exception 'pin must be 4 digits';
   end if;
 
-  -- すでに登録済みなら拒否（上書き防止）
+  -- 既存の「ニックネーム」が別の人に使われていないかチェック
+  if exists(select 1 from public.players p where p.nickname = nick) then
+    raise exception 'nickname already taken';
+  end if;
+
+  -- 自分がすでに登録済みなら拒否
   if exists(select 1 from public.players p where p.user_id = uid) then
     raise exception 'already registered';
   end if;
@@ -175,31 +180,37 @@ security definer
 as $$
 declare
   uid uuid := auth.uid();
+  target_user_id uuid;
   stored_hash text;
-  stored_nick text;
 begin
   if uid is null then
     raise exception 'not authenticated';
   end if;
 
-  select p.pin_hash, p.nickname
-    into stored_hash, stored_nick
+  -- ニックネームから登録情報を探す（UID関係なく）
+  select p.user_id, p.pin_hash
+    into target_user_id, stored_hash
   from public.players p
-  where p.user_id = uid;
+  where p.nickname = nick;
 
-  if stored_hash is null then
-    raise exception 'not registered';
+  if target_user_id is null then
+    raise exception 'player not found';
   end if;
 
-  if stored_nick is distinct from nick then
-    raise exception 'nickname mismatch';
-  end if;
-
+  -- PINチェック
   if stored_hash != crypt(pin, stored_hash) then
     raise exception 'invalid pin';
   end if;
 
-  -- OK (何もしない)
+  -- もし現在の UID と 登録されている UID が違う場合（別端末/別ブラウザ）、
+  -- 登録情報を新しい UID に紐付け直す。
+  if target_user_id <> uid then
+    -- progressを先に更新（外部キー制約のため）
+    update public.progress set user_id = uid where user_id = target_user_id;
+    update public.players set user_id = uid where user_id = target_user_id;
+  end if;
+
+  -- OK
 end;
 $$;
 
