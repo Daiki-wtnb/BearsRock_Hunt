@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="ja">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -9,584 +10,757 @@
   <link rel="apple-touch-icon" href="/icon-192.png" />
   <title>BearsRock Hunt</title>
   <style>
-  :root{
-    --primary:#0A84FF;
-    --primary-light:#5AC8FA;
-    --primary-soft:rgba(10,132,255,0.12);
-    --bg:#0B1020;
-    --bg-soft:radial-gradient(circle at top, #1c2240 0, #050814 55%, #02030a 100%);
-    --card:rgba(18,22,40,0.96);
-    --card-soft:rgba(23,29,52,0.9);
-    --border:rgba(255,255,255,0.06);
-    --text:#F9FAFB;
-    --text-secondary:#9CA3AF;
-    --success:#34D399;
-    --error:#F97373;
-    --shadow: 0 18px 45px rgba(0,0,0,0.45);
-    --radius-lg:18px;
-    --radius-md:14px;
-    --transition-fast:0.18s ease-out;
-  }
-  @media (prefers-color-scheme: light) {
-    :root{
-      --primary:#007AFF;
-      --primary-light:#5AC8FA;
-      --primary-soft:rgba(0,122,255,0.10);
-      --bg:#F3F4F8;
-      --bg-soft:radial-gradient(circle at top, #ffffff 0, #f3f4f8 55%, #e5e7f0 100%);
-      --card:#FFFFFF;
-      --card-soft:#F9FAFB;
-      --border:rgba(15,23,42,0.06);
-      --text:#020617;
-      --text-secondary:#6B7280;
-      --success:#16A34A;
-      --error:#EF4444;
-      --shadow: 0 16px 40px rgba(15,23,42,0.16);
+    :root {
+      --primary: #0A84FF;
+      --primary-light: #5AC8FA;
+      --primary-soft: rgba(10, 132, 255, 0.12);
+      --bg: #0B1020;
+      --bg-soft: radial-gradient(circle at top, #1c2240 0, #050814 55%, #02030a 100%);
+      --card: rgba(18, 22, 40, 0.96);
+      --card-soft: rgba(23, 29, 52, 0.9);
+      --border: rgba(255, 255, 255, 0.06);
+      --text: #F9FAFB;
+      --text-secondary: #9CA3AF;
+      --success: #34D399;
+      --error: #F97373;
+      --shadow: 0 18px 45px rgba(0, 0, 0, 0.45);
+      --radius-lg: 18px;
+      --radius-md: 14px;
+      --transition-fast: 0.18s ease-out;
     }
-  }
-  *{ box-sizing:border-box; margin:0; padding:0; }
-  html,body{ height:100%; }
-  body{
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Hiragino Sans", "Noto Sans JP", sans-serif;
-    background: var(--bg-soft);
-    color: var(--text);
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
-  }
-  .container{
-    max-width: 640px;
-    margin: 0 auto;
-    padding: 18px 18px 120px;
-  }
 
-  /* ===== header (スマホで崩れない対策入り) ===== */
-  .header{
-    display:flex;
-    align-items:flex-start;
-    justify-content:space-between;
-    padding: 8px 2px 22px;
-    gap: 14px;
-    flex-wrap: wrap;
-  }
-  .header h1{
-    font-size: 30px;
-    font-weight: 900;
-    letter-spacing: -0.04em;
-    flex: 1 1 auto;
-    min-width: 0;
-    line-height: 1.05;
-    background: linear-gradient(120deg, #ffffff, #dbeafe, #93c5fd);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
-  }
-  .header h1.truncate{
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  @media (max-width: 420px){
-    .header h1{ font-size: 24px; }
-  }
-
-  .badge{
-    display:inline-flex;
-    align-items:center;
-    gap: 6px;
-    padding: 6px 11px;
-    background: radial-gradient(circle at top left, rgba(59,130,246,0.22), transparent 65%), var(--card-soft);
-    border: 1px solid rgba(148,163,184,0.45);
-    border-radius: 999px;
-    font-size: 12px;
-    font-weight: 800;
-    letter-spacing: .04em;
-    text-transform: uppercase;
-    color: var(--text-secondary);
-    box-shadow: 0 10px 30px rgba(15,23,42,.45);
-    white-space: nowrap;
-  }
-  .badge-right{
-    display:flex;
-    align-items:center;
-    gap: 8px;
-    justify-content:flex-end;
-    flex-wrap: wrap;
-    flex: 0 0 auto;
-  }
-
-  /* ===== language segmented control ===== */
-  .lang-seg{
-    display:inline-flex;
-    gap:4px;
-    padding:4px;
-    border-radius:999px;
-    background: radial-gradient(circle at top left, rgba(59,130,246,0.35), transparent 60%), rgba(15,23,42,0.96);
-    border: 1px solid rgba(148,163,184,0.45);
-    box-shadow: 0 16px 40px rgba(15,23,42,0.75);
-    max-width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    backdrop-filter: blur(18px);
-  }
-  .lang-seg button{
-    width:auto;
-    padding:7px 11px;
-    border-radius:999px;
-    border: 0;
-    background: transparent;
-    color: var(--text-secondary);
-    font-size: 11px;
-    font-weight: 900;
-    cursor:pointer;
-    box-shadow:none;
-    transition: all var(--transition-fast);
-    flex: 0 0 auto;
-  }
-  .lang-seg button:hover{ opacity:.9; transform: translateY(-1px) scale(1.02); }
-  .lang-seg button.active{
-    background: linear-gradient(120deg, var(--primary), var(--primary-light));
-    color: #fff;
-    box-shadow: 0 10px 25px rgba(37,99,235,0.6);
-  }
-
-  .card{
-    position: relative;
-    background:
-      radial-gradient(circle at top left, rgba(59,130,246,0.16), transparent 60%),
-      radial-gradient(circle at bottom right, rgba(14,165,233,0.12), transparent 65%),
-      var(--card);
-    border-radius: var(--radius-lg);
-    padding: 20px 18px 18px;
-    margin-bottom: 18px;
-    box-shadow: var(--shadow);
-    border: 1px solid var(--border);
-    backdrop-filter: blur(18px);
-    overflow: hidden;
-  }
-  .card-title{
-    font-size: 19px;
-    font-weight: 900;
-    margin-bottom: 8px;
-    letter-spacing: -0.03em;
-  }
-  .card-subtitle{
-    font-size: 14px;
-    color: var(--text-secondary);
-    margin-bottom: 16px;
-    line-height: 1.7;
-  }
-  .stats{
-    display:flex;
-    gap: 12px;
-    margin-bottom: 16px;
-  }
-  .stat-item{
-    flex:1;
-    background: linear-gradient(145deg, rgba(15,23,42,0.85), rgba(15,23,42,0.4));
-    padding: 12px;
-    border-radius: var(--radius-md);
-    text-align:center;
-    border: 1px solid rgba(148,163,184,0.25);
-  }
-  .stat-value{
-    font-size: 24px;
-    font-weight: 900;
-    color: var(--primary-light);
-    margin-bottom: 4px;
-  }
-  .stat-label{
-    font-size: 11px;
-    color: var(--text-secondary);
-    font-weight: 800;
-    letter-spacing:.12em;
-    text-transform: uppercase;
-  }
-  .progress-container{
-    background: rgba(15,23,42,0.9);
-    border-radius: 999px;
-    height: 9px;
-    overflow:hidden;
-    margin: 12px 0 16px;
-    border:1px solid rgba(148,163,184,0.3);
-  }
-  .progress-bar{
-    height: 100%;
-    background: linear-gradient(90deg, var(--primary), var(--primary-light));
-    border-radius: 999px;
-    transition: width 0.35s ease-out;
-    box-shadow: 0 0 0 1px rgba(96,165,250,0.4),
-                0 0 18px rgba(59,130,246,0.75);
-  }
-  .input-group{ margin-bottom: 14px; }
-  .input-label{
-    display:block;
-    font-size: 14px;
-    font-weight: 800;
-    margin-bottom: 7px;
-    color: var(--text);
-  }
-  input{
-    width:100%;
-    padding: 14px 14px;
-    border: 1px solid rgba(148,163,184,0.38);
-    border-radius: var(--radius-md);
-    background: radial-gradient(circle at top left, rgba(15,23,42,0.9), rgba(15,23,42,0.95));
-    color: var(--text);
-    font-size: 15px;
-    outline:none;
-    transition: border-color var(--transition-fast),
-                box-shadow var(--transition-fast),
-                background var(--transition-fast),
-                transform var(--transition-fast);
-  }
-  input::placeholder{
-    color: rgba(148,163,184,0.8);
-  }
-  input:focus{
-    border-color: rgba(96,165,250,0.9);
-    box-shadow: 0 0 0 1px rgba(37,99,235,0.8),
-                0 0 0 8px rgba(37,99,235,0.22);
-    background: radial-gradient(circle at top left, rgba(15,23,42,1), rgba(15,23,42,0.98));
-    transform: translateY(-1px);
-  }
-  button{
-    width:100%;
-    padding: 15px 14px;
-    border: none;
-    border-radius: var(--radius-md);
-    background: linear-gradient(135deg, var(--primary), var(--primary-light));
-    color: white;
-    font-size: 15px;
-    font-weight: 900;
-    cursor:pointer;
-    transition: transform var(--transition-fast),
-                box-shadow var(--transition-fast),
-                opacity var(--transition-fast),
-                filter var(--transition-fast);
-    box-shadow: 0 16px 35px rgba(37,99,235,0.6);
-    transform-origin:center;
-  }
-  button:hover:not(:disabled){
-    opacity: .97;
-    transform: translateY(-1px) scale(1.01);
-    box-shadow: 0 22px 45px rgba(37,99,235,0.75);
-    filter: saturate(1.1);
-  }
-  button:active:not(:disabled){
-    transform: translateY(0) scale(0.99);
-    box-shadow: 0 10px 26px rgba(15,23,42,0.7);
-  }
-  button:disabled{
-    opacity: .45;
-    cursor: not-allowed;
-    box-shadow:none;
-  }
-  .btn-secondary{
-    background: radial-gradient(circle at top left, rgba(148,163,184,0.35), rgba(148,163,184,0.1));
-    color: var(--text);
-    margin-top: 10px;
-    box-shadow: none;
-    border:1px solid rgba(148,163,184,0.55);
-  }
-  .alert{
-    padding: 13px 13px;
-    border-radius: var(--radius-md);
-    margin: 10px 0;
-    font-size: 13px;
-    font-weight: 800;
-    line-height: 1.5;
-  }
-  .alert-error{
-    background: radial-gradient(circle at top left, rgba(248,113,113,0.18), transparent 60%);
-    color: var(--error);
-    border: 1px solid rgba(248,113,113,0.5);
-  }
-  .alert-success{
-    background: radial-gradient(circle at top left, rgba(52,211,153,0.16), transparent 60%);
-    color: var(--success);
-    border: 1px solid rgba(52,211,153,0.5);
-  }
-  .link{ color: var(--primary); text-decoration:none; font-weight: 900; }
-  .text-center{ text-align:center; }
-  .text-muted{ color: var(--text-secondary); font-size: 13px; }
-  .divider{
-    height:1px;
-    background: linear-gradient(90deg, transparent, rgba(148,163,184,0.4), transparent);
-    margin: 18px 0;
-  }
-
-  /* list / leaderboard */
-  .list-item{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding: 12px 13px;
-    background: linear-gradient(145deg, rgba(15,23,42,0.88), rgba(15,23,42,0.7));
-    border-radius: var(--radius-md);
-    margin-bottom: 9px;
-    border: 1px solid rgba(148,163,184,0.35);
-  }
-  .list-item.active{
-    background: linear-gradient(135deg, rgba(37,99,235,0.3), rgba(59,130,246,0.1));
-    border: 1px solid rgba(59,130,246,0.8);
-    box-shadow: 0 14px 35px rgba(37,99,235,0.55);
-  }
-  .rank-number{
-    font-size: 17px;
-    font-weight: 900;
-    color: var(--text-secondary);
-    min-width: 52px;
-  }
-  .rank-1 .rank-number{ color:#D4AF37; }
-  .rank-2 .rank-number{ color:#C0C0C0; }
-  .rank-3 .rank-number{ color:#CD7F32; }
-  .me-badge{
-    display:inline-flex;
-    align-items:center;
-    padding: 2px 8px;
-    border-radius: 999px;
-    font-size: 11px;
-    font-weight: 900;
-    margin-left: 8px;
-    border: 1px solid rgba(0,122,255,0.25);
-    background: rgba(0,122,255,0.10);
-    color: var(--primary);
-  }
-  .finish{
-    display:inline-flex;
-    align-items:center;
-    gap: 6px;
-    font-weight: 900;
-    color: var(--primary-light);
-  }
-  .finish .done{ font-size: 16px; line-height: 1; }
-
-  /* checkpoint */
-  .checkpoint-card{
-    background: radial-gradient(circle at top left, rgba(59,130,246,0.6), rgba(14,116,144,0.85));
-    color: white;
-    padding: 20px 18px 22px;
-    border-radius: var(--radius-lg);
-    margin: 16px 0;
-    text-align:center;
-    box-shadow: 0 22px 60px rgba(30,64,175,0.9);
-  }
-  .checkpoint-number{
-    font-size: 42px;
-    font-weight: 1000;
-    margin-bottom: 4px;
-  }
-  .hint-box{
-    background: linear-gradient(135deg, rgba(15,23,42,1), rgba(15,23,42,0.92));
-    padding: 13px 13px 13px;
-    border-radius: var(--radius-md);
-    margin: 12px 0;
-    border-left: 4px solid rgba(96,165,250,0.9);
-    line-height: 1.6;
-    font-weight: 800;
-    border-top: 1px solid rgba(148,163,184,0.35);
-    border-right: 1px solid rgba(30,64,175,0.5);
-    border-bottom: 1px solid rgba(15,23,42,0.9);
-  }
-
-  /* trap */
-  .trapCard{
-    border: 1px solid rgba(239,68,68,.45);
-    background:
-      radial-gradient(130% 130% at 15% 0%, rgba(239,68,68,.4), transparent 60%),
-      radial-gradient(140% 140% at 100% 15%, rgba(251,191,36,.25), transparent 60%),
-      radial-gradient(120% 120% at 50% 110%, rgba(15,23,42,1), rgba(15,23,42,0.96));
-    position: relative;
-    overflow: hidden;
-    box-shadow: 0 18px 55px rgba(127,29,29,0.8);
-  }
-  .trapSkull{ font-size: 44px; }
-  .glitch{
-    font-weight: 1000;
-    letter-spacing: .10em;
-    text-transform: uppercase;
-    position: relative;
-    display:inline-block;
-  }
-  .glitch::before, .glitch::after{
-    content: attr(data-text);
-    position:absolute; left:0; top:0;
-    opacity:.65;
-  }
-  .glitch::before{ transform: translate(2px,0); color: rgba(255,69,58,.9); }
-  .glitch::after{ transform: translate(-2px,0); color: rgba(10,132,255,.9); }
-  .smallHint{
-    font-size: 12px;
-    color: var(--text-secondary);
-    margin-top: 10px;
-    line-height: 1.6;
-    font-weight: 800;
-  }
-
-  /* navbar */
-  .navbar{
-    position: fixed;
-    bottom: 0; left: 0; right: 0;
-    background:
-      radial-gradient(circle at 10% -20%, rgba(59,130,246,0.55), transparent 60%),
-      rgba(15,23,42,0.96);
-    border-top: 1px solid rgba(148,163,184,0.4);
-    display:flex;
-    padding: 8px 10px;
-    padding-bottom: calc(10px + env(safe-area-inset-bottom));
-    box-shadow: 0 -16px 40px rgba(15,23,42,0.95);
-    z-index: 1000;
-    backdrop-filter: blur(22px);
-  }
-  .nav-item{
-    flex:1;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    gap: 4px;
-    padding: 8px 6px;
-    text-decoration:none;
-    color: var(--text-secondary);
-    font-size: 10px;
-    font-weight: 900;
-    border-radius: 12px;
-    transition: all var(--transition-fast);
-    user-select:none;
-  }
-  .nav-item.active{
-    color: #E5F0FF;
-    background: radial-gradient(circle at top, rgba(59,130,246,0.7), rgba(37,99,235,0.3));
-    box-shadow: 0 12px 30px rgba(37,99,235,0.9);
-  }
-  .nav-item:active{
-    transform: scale(0.96) translateY(1px);
-  }
-  .nav-icon{ font-size: 20px; }
-
-  /* shake */
-  @keyframes shake{
-    0%,100%{ transform: translateX(0); }
-    20%{ transform: translateX(-6px); }
-    40%{ transform: translateX(6px); }
-    60%{ transform: translateX(-4px); }
-    80%{ transform: translateX(4px); }
-  }
-  .shake{ animation: shake 0.25s ease-in-out; }
-
-  /* page transition animations */
-  @keyframes fadeIn{
-    from{ opacity: 0; }
-    to{ opacity: 1; }
-  }
-  @keyframes slideInUp{
-    from{ opacity: 0; transform: translateY(20px); }
-    to{ opacity: 1; transform: translateY(0); }
-  }
-  .page-enter{
-    animation: fadeIn 0.3s ease-out, slideInUp 0.3s ease-out;
-  }
-
-  /* loading spinner */
-  @keyframes spin{
-    0%{ transform: rotate(0deg); }
-    100%{ transform: rotate(360deg); }
-  }
-  .spinner{
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    border: 3px solid rgba(148,163,184,0.3);
-    border-top-color: var(--primary);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
-  .spinner-large{
-    width: 40px;
-    height: 40px;
-    border-width: 4px;
-  }
-  .loading-overlay{
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(15,23,42,0.85);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 9999;
-    backdrop-filter: blur(8px);
-  }
-  .loading-content{
-    text-align: center;
-    color: var(--text);
-  }
-  .loading-content .spinner{
-    margin-bottom: 12px;
-  }
-
-  /* toast notifications */
-  @keyframes toastSlideIn{
-    from{ opacity: 0; transform: translateX(100%); }
-    to{ opacity: 1; transform: translateX(0); }
-  }
-  @keyframes toastSlideOut{
-    from{ opacity: 1; transform: translateX(0); }
-    to{ opacity: 0; transform: translateX(100%); }
-  }
-  .toast-container{
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 10000;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    max-width: 400px;
-    pointer-events: none;
-  }
-  .toast{
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    padding: 14px 16px;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    pointer-events: auto;
-    animation: toastSlideIn 0.3s ease-out;
-    backdrop-filter: blur(18px);
-  }
-  .toast.hiding{
-    animation: toastSlideOut 0.3s ease-out forwards;
-  }
-  .toast-success{
-    border-left: 4px solid var(--success);
-    background: radial-gradient(circle at top left, rgba(52,211,153,0.2), var(--card));
-  }
-  .toast-error{
-    border-left: 4px solid var(--error);
-    background: radial-gradient(circle at top left, rgba(248,113,113,0.2), var(--card));
-  }
-  .toast-icon{
-    font-size: 20px;
-    flex-shrink: 0;
-  }
-  .toast-message{
-    flex: 1;
-    font-size: 14px;
-    font-weight: 800;
-    color: var(--text);
-  }
-
-  @media (max-width: 480px){
-    .container{
-      padding: 14px 12px 110px;
+    @media (prefers-color-scheme: light) {
+      :root {
+        --primary: #007AFF;
+        --primary-light: #5AC8FA;
+        --primary-soft: rgba(0, 122, 255, 0.10);
+        --bg: #F3F4F8;
+        --bg-soft: radial-gradient(circle at top, #ffffff 0, #f3f4f8 55%, #e5e7f0 100%);
+        --card: #FFFFFF;
+        --card-soft: #F9FAFB;
+        --border: rgba(15, 23, 42, 0.06);
+        --text: #020617;
+        --text-secondary: #6B7280;
+        --success: #16A34A;
+        --error: #EF4444;
+        --shadow: 0 16px 40px rgba(15, 23, 42, 0.16);
+      }
     }
-    .card{
-      padding: 18px 14px 16px;
-      border-radius: 16px;
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
     }
-  }
+
+    html,
+    body {
+      height: 100%;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Hiragino Sans", "Noto Sans JP", sans-serif;
+      background: var(--bg-soft);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+    }
+
+    .container {
+      max-width: 640px;
+      margin: 0 auto;
+      padding: 18px 18px 120px;
+    }
+
+    /* ===== header (スマホで崩れない対策入り) ===== */
+    .header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 8px 2px 22px;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .header h1 {
+      font-size: 30px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      flex: 1 1 auto;
+      min-width: 0;
+      line-height: 1.05;
+      background: linear-gradient(120deg, #ffffff, #dbeafe, #93c5fd);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .header h1.truncate {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    @media (max-width: 420px) {
+      .header h1 {
+        font-size: 24px;
+      }
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 11px;
+      background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.22), transparent 65%), var(--card-soft);
+      border: 1px solid rgba(148, 163, 184, 0.45);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .04em;
+      text-transform: uppercase;
+      color: var(--text-secondary);
+      box-shadow: 0 10px 30px rgba(15, 23, 42, .45);
+      white-space: nowrap;
+    }
+
+    .badge-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+      flex: 0 0 auto;
+    }
+
+    /* ===== language segmented control ===== */
+    .lang-seg {
+      display: inline-flex;
+      gap: 4px;
+      padding: 4px;
+      border-radius: 999px;
+      background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.35), transparent 60%), rgba(15, 23, 42, 0.96);
+      border: 1px solid rgba(148, 163, 184, 0.45);
+      box-shadow: 0 16px 40px rgba(15, 23, 42, 0.75);
+      max-width: 100%;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      backdrop-filter: blur(18px);
+    }
+
+    .lang-seg button {
+      width: auto;
+      padding: 7px 11px;
+      border-radius: 999px;
+      border: 0;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: none;
+      transition: all var(--transition-fast);
+      flex: 0 0 auto;
+    }
+
+    .lang-seg button:hover {
+      opacity: .9;
+      transform: translateY(-1px) scale(1.02);
+    }
+
+    .lang-seg button.active {
+      background: linear-gradient(120deg, var(--primary), var(--primary-light));
+      color: #fff;
+      box-shadow: 0 10px 25px rgba(37, 99, 235, 0.6);
+    }
+
+    .card {
+      position: relative;
+      background:
+        radial-gradient(circle at top left, rgba(59, 130, 246, 0.16), transparent 60%),
+        radial-gradient(circle at bottom right, rgba(14, 165, 233, 0.12), transparent 65%),
+        var(--card);
+      border-radius: var(--radius-lg);
+      padding: 20px 18px 18px;
+      margin-bottom: 18px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      backdrop-filter: blur(18px);
+      overflow: hidden;
+    }
+
+    .card-title {
+      font-size: 19px;
+      font-weight: 900;
+      margin-bottom: 8px;
+      letter-spacing: -0.03em;
+    }
+
+    .card-subtitle {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      line-height: 1.7;
+    }
+
+    .stats {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .stat-item {
+      flex: 1;
+      background: linear-gradient(145deg, rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.4));
+      padding: 12px;
+      border-radius: var(--radius-md);
+      text-align: center;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 900;
+      color: var(--primary-light);
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      font-weight: 800;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    .progress-container {
+      background: rgba(15, 23, 42, 0.9);
+      border-radius: 999px;
+      height: 9px;
+      overflow: hidden;
+      margin: 12px 0 16px;
+      border: 1px solid rgba(148, 163, 184, 0.3);
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--primary-light));
+      border-radius: 999px;
+      transition: width 0.35s ease-out;
+      box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.4),
+        0 0 18px rgba(59, 130, 246, 0.75);
+    }
+
+    .input-group {
+      margin-bottom: 14px;
+    }
+
+    .input-label {
+      display: block;
+      font-size: 14px;
+      font-weight: 800;
+      margin-bottom: 7px;
+      color: var(--text);
+    }
+
+    input {
+      width: 100%;
+      padding: 14px 14px;
+      border: 1px solid rgba(148, 163, 184, 0.38);
+      border-radius: var(--radius-md);
+      background: radial-gradient(circle at top left, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.95));
+      color: var(--text);
+      font-size: 15px;
+      outline: none;
+      transition: border-color var(--transition-fast),
+        box-shadow var(--transition-fast),
+        background var(--transition-fast),
+        transform var(--transition-fast);
+    }
+
+    input::placeholder {
+      color: rgba(148, 163, 184, 0.8);
+    }
+
+    input:focus {
+      border-color: rgba(96, 165, 250, 0.9);
+      box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.8),
+        0 0 0 8px rgba(37, 99, 235, 0.22);
+      background: radial-gradient(circle at top left, rgba(15, 23, 42, 1), rgba(15, 23, 42, 0.98));
+      transform: translateY(-1px);
+    }
+
+    button {
+      width: 100%;
+      padding: 15px 14px;
+      border: none;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: white;
+      font-size: 15px;
+      font-weight: 900;
+      cursor: pointer;
+      transition: transform var(--transition-fast),
+        box-shadow var(--transition-fast),
+        opacity var(--transition-fast),
+        filter var(--transition-fast);
+      box-shadow: 0 16px 35px rgba(37, 99, 235, 0.6);
+      transform-origin: center;
+    }
+
+    button:hover:not(:disabled) {
+      opacity: .97;
+      transform: translateY(-1px) scale(1.01);
+      box-shadow: 0 22px 45px rgba(37, 99, 235, 0.75);
+      filter: saturate(1.1);
+    }
+
+    button:active:not(:disabled) {
+      transform: translateY(0) scale(0.99);
+      box-shadow: 0 10px 26px rgba(15, 23, 42, 0.7);
+    }
+
+    button:disabled {
+      opacity: .45;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .btn-secondary {
+      background: radial-gradient(circle at top left, rgba(148, 163, 184, 0.35), rgba(148, 163, 184, 0.1));
+      color: var(--text);
+      margin-top: 10px;
+      box-shadow: none;
+      border: 1px solid rgba(148, 163, 184, 0.55);
+    }
+
+    .alert {
+      padding: 13px 13px;
+      border-radius: var(--radius-md);
+      margin: 10px 0;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1.5;
+    }
+
+    .alert-error {
+      background: radial-gradient(circle at top left, rgba(248, 113, 113, 0.18), transparent 60%);
+      color: var(--error);
+      border: 1px solid rgba(248, 113, 113, 0.5);
+    }
+
+    .alert-success {
+      background: radial-gradient(circle at top left, rgba(52, 211, 153, 0.16), transparent 60%);
+      color: var(--success);
+      border: 1px solid rgba(52, 211, 153, 0.5);
+    }
+
+    .link {
+      color: var(--primary);
+      text-decoration: none;
+      font-weight: 900;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .text-muted {
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(148, 163, 184, 0.4), transparent);
+      margin: 18px 0;
+    }
+
+    /* list / leaderboard */
+    .list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 13px;
+      background: linear-gradient(145deg, rgba(15, 23, 42, 0.88), rgba(15, 23, 42, 0.7));
+      border-radius: var(--radius-md);
+      margin-bottom: 9px;
+      border: 1px solid rgba(148, 163, 184, 0.35);
+    }
+
+    .list-item.active {
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.3), rgba(59, 130, 246, 0.1));
+      border: 1px solid rgba(59, 130, 246, 0.8);
+      box-shadow: 0 14px 35px rgba(37, 99, 235, 0.55);
+    }
+
+    .rank-number {
+      font-size: 17px;
+      font-weight: 900;
+      color: var(--text-secondary);
+      min-width: 52px;
+    }
+
+    .rank-1 .rank-number {
+      color: #D4AF37;
+    }
+
+    .rank-2 .rank-number {
+      color: #C0C0C0;
+    }
+
+    .rank-3 .rank-number {
+      color: #CD7F32;
+    }
+
+    .me-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 900;
+      margin-left: 8px;
+      border: 1px solid rgba(0, 122, 255, 0.25);
+      background: rgba(0, 122, 255, 0.10);
+      color: var(--primary);
+    }
+
+    .finish {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 900;
+      color: var(--primary-light);
+    }
+
+    .finish .done {
+      font-size: 16px;
+      line-height: 1;
+    }
+
+    /* checkpoint */
+    .checkpoint-card {
+      background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.6), rgba(14, 116, 144, 0.85));
+      color: white;
+      padding: 20px 18px 22px;
+      border-radius: var(--radius-lg);
+      margin: 16px 0;
+      text-align: center;
+      box-shadow: 0 22px 60px rgba(30, 64, 175, 0.9);
+    }
+
+    .checkpoint-number {
+      font-size: 42px;
+      font-weight: 1000;
+      margin-bottom: 4px;
+    }
+
+    .hint-box {
+      background: linear-gradient(135deg, rgba(15, 23, 42, 1), rgba(15, 23, 42, 0.92));
+      padding: 13px 13px 13px;
+      border-radius: var(--radius-md);
+      margin: 12px 0;
+      border-left: 4px solid rgba(96, 165, 250, 0.9);
+      line-height: 1.6;
+      font-weight: 800;
+      border-top: 1px solid rgba(148, 163, 184, 0.35);
+      border-right: 1px solid rgba(30, 64, 175, 0.5);
+      border-bottom: 1px solid rgba(15, 23, 42, 0.9);
+    }
+
+    /* trap */
+    .trapCard {
+      border: 1px solid rgba(239, 68, 68, .45);
+      background:
+        radial-gradient(130% 130% at 15% 0%, rgba(239, 68, 68, .4), transparent 60%),
+        radial-gradient(140% 140% at 100% 15%, rgba(251, 191, 36, .25), transparent 60%),
+        radial-gradient(120% 120% at 50% 110%, rgba(15, 23, 42, 1), rgba(15, 23, 42, 0.96));
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 18px 55px rgba(127, 29, 29, 0.8);
+    }
+
+    .trapSkull {
+      font-size: 44px;
+    }
+
+    .glitch {
+      font-weight: 1000;
+      letter-spacing: .10em;
+      text-transform: uppercase;
+      position: relative;
+      display: inline-block;
+    }
+
+    .glitch::before,
+    .glitch::after {
+      content: attr(data-text);
+      position: absolute;
+      left: 0;
+      top: 0;
+      opacity: .65;
+    }
+
+    .glitch::before {
+      transform: translate(2px, 0);
+      color: rgba(255, 69, 58, .9);
+    }
+
+    .glitch::after {
+      transform: translate(-2px, 0);
+      color: rgba(10, 132, 255, .9);
+    }
+
+    .smallHint {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 10px;
+      line-height: 1.6;
+      font-weight: 800;
+    }
+
+    /* navbar */
+    .navbar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background:
+        radial-gradient(circle at 10% -20%, rgba(59, 130, 246, 0.55), transparent 60%),
+        rgba(15, 23, 42, 0.96);
+      border-top: 1px solid rgba(148, 163, 184, 0.4);
+      display: flex;
+      padding: 8px 10px;
+      padding-bottom: calc(10px + env(safe-area-inset-bottom));
+      box-shadow: 0 -16px 40px rgba(15, 23, 42, 0.95);
+      z-index: 1000;
+      backdrop-filter: blur(22px);
+    }
+
+    .nav-item {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 8px 6px;
+      text-decoration: none;
+      color: var(--text-secondary);
+      font-size: 10px;
+      font-weight: 900;
+      border-radius: 12px;
+      transition: all var(--transition-fast);
+      user-select: none;
+    }
+
+    .nav-item.active {
+      color: #E5F0FF;
+      background: radial-gradient(circle at top, rgba(59, 130, 246, 0.7), rgba(37, 99, 235, 0.3));
+      box-shadow: 0 12px 30px rgba(37, 99, 235, 0.9);
+    }
+
+    .nav-item:active {
+      transform: scale(0.96) translateY(1px);
+    }
+
+    .nav-icon {
+      font-size: 20px;
+    }
+
+    /* shake */
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      20% {
+        transform: translateX(-6px);
+      }
+
+      40% {
+        transform: translateX(6px);
+      }
+
+      60% {
+        transform: translateX(-4px);
+      }
+
+      80% {
+        transform: translateX(4px);
+      }
+    }
+
+    .shake {
+      animation: shake 0.25s ease-in-out;
+    }
+
+    /* page transition animations */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+
+      to {
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .page-enter {
+      animation: fadeIn 0.3s ease-out, slideInUp 0.3s ease-out;
+    }
+
+    /* loading spinner */
+    @keyframes spin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(148, 163, 184, 0.3);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .spinner-large {
+      width: 40px;
+      height: 40px;
+      border-width: 4px;
+    }
+
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(15, 23, 42, 0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      backdrop-filter: blur(8px);
+    }
+
+    .loading-content {
+      text-align: center;
+      color: var(--text);
+    }
+
+    .loading-content .spinner {
+      margin-bottom: 12px;
+    }
+
+    /* toast notifications */
+    @keyframes toastSlideIn {
+      from {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    @keyframes toastSlideOut {
+      from {
+        opacity: 1;
+        transform: translateX(0);
+      }
+
+      to {
+        opacity: 0;
+        transform: translateX(100%);
+      }
+    }
+
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 10000;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      max-width: 400px;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      padding: 14px 16px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      pointer-events: auto;
+      animation: toastSlideIn 0.3s ease-out;
+      backdrop-filter: blur(18px);
+    }
+
+    .toast.hiding {
+      animation: toastSlideOut 0.3s ease-out forwards;
+    }
+
+    .toast-success {
+      border-left: 4px solid var(--success);
+      background: radial-gradient(circle at top left, rgba(52, 211, 153, 0.2), var(--card));
+    }
+
+    .toast-error {
+      border-left: 4px solid var(--error);
+      background: radial-gradient(circle at top left, rgba(248, 113, 113, 0.2), var(--card));
+    }
+
+    .toast-icon {
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .toast-message {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 14px 12px 110px;
+      }
+
+      .card {
+        padding: 18px 14px 16px;
+        border-radius: 16px;
+      }
+    }
   </style>
 </head>
 
@@ -661,7 +835,7 @@
       INTRO_TITLE: "ゲーム説明",
       INTRO_DESC: "BearsRock内に隠されたQRコードを探して進む宝探しゲームです。<br>ヒントを頼りに、順番通りチェックポイントをクリアしてください。",
       INTRO_PRIZE_TITLE: "🎁 景品",
-      INTRO_PRIZE_DESC: "全チェックポイントを最初にクリアした人は景品がもらえます。<br>（部屋番号が必要です）",
+      INTRO_PRIZE_DESC: "全チェックポイントを<b>一番最初にクリアした１名のみ</b>に豪華景品があります！<br>（部屋番号が必要です）",
       INTRO_NOTE_1: "PIN（4桁）は再ログインに必要",
       INTRO_NOTE_2: "推測URLは全部ハズレ",
       INTRO_NOTE_3: "QRの下に書いてある「合言葉」が必要",
@@ -727,7 +901,7 @@
 
       CLEAR_TITLE: "🎉 クリア！",
       CLEAR_CONGRATS: "おめでとう、{name}！",
-      CLEAR_DESC: "全チェックポイントをクリアしました。<br>しばらくするとあなたの部屋の前に景品が届きます。",
+      CLEAR_DESC: "全チェックポイントをクリアしました。<br>ランキングを確認して、１位なら部屋の前で待っていてください！",
       CLEAR_PRIZE_TITLE: "🎁 景品",
       CLEAR_PRIZE_DESC: "食堂チケット",
       BTN_VIEW_ME: "マイページを見る",
@@ -1136,15 +1310,15 @@
     window.__setLang = setLang;
 
     function langSegmentHtml() {
-      const short = { ja:"JA", en:"EN", "zh-Hans":"简", "zh-Hant":"繁", es:"ES" };
-      const order = ["ja","en","zh-Hans","zh-Hant","es"];
+      const short = { ja: "JA", en: "EN", "zh-Hans": "简", "zh-Hant": "繁", es: "ES" };
+      const order = ["ja", "en", "zh-Hans", "zh-Hant", "es"];
       return `
         <div class="lang-seg" role="tablist" aria-label="Language">
           ${order.map(k => `
             <button type="button"
-              class="${k===LANG ? "active" : ""}"
+              class="${k === LANG ? "active" : ""}"
               onclick="window.__setLang('${k}')"
-              aria-pressed="${k===LANG}"
+              aria-pressed="${k === LANG}"
               title="${LANG_LABELS[k] ?? k}"
             >${short[k] ?? k}</button>
           `).join("")}
@@ -1267,7 +1441,7 @@
       const h = location.hash || "#/";
       const target =
         h.startsWith("#/c/") ? "#/" :
-        (["#/scan","#/leaderboard","#/me","#/"].includes(h) ? h : "#/login");
+          (["#/scan", "#/leaderboard", "#/me", "#/"].includes(h) ? h : "#/login");
       links.forEach(a => {
         if (a.getAttribute("href") === target) a.classList.add("active");
       });
@@ -1311,27 +1485,58 @@
       if (error) throw error;
       return data?.nickname ?? null;
     }
+    // ====== utils ======
+    // Deterministic Shuffle (seeded by user ID)
+    function mulberry32(a) {
+      return function () {
+        var t = a += 0x6D2B79F5;
+        t = Math.imul(t ^ (t >>> 15), t | 1);
+        t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      }
+    }
+    function getRoute(userId) {
+      if (!userId) return [1, 2, 3, 4, 5];
+      // Create seed from UUID (simple sum of char codes)
+      let seed = 0;
+      for (let i = 0; i < userId.length; i++) seed += userId.charCodeAt(i);
+      const rng = mulberry32(seed);
+
+      const arr = [1, 2, 3, 4, 5];
+      // Fisher-Yates Shuffle
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(rng() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
     async function getProgress(user_id) {
-      const { data, error } = await sb.from("progress").select("checkpoint, updated_at").eq("user_id", user_id).maybeSingle();
+      // Fetch cleared_checkpoints if available (after migration)
+      // Fallback for old schema is handled gracefully? 
+      // Actually we'll assume migration runs.
+      const { data, error } = await sb.from("progress").select("checkpoint, updated_at, cleared_checkpoints").eq("user_id", user_id).maybeSingle();
       if (error) throw error;
-      return data ?? { checkpoint: 0, updated_at: null };
+      const base = data ?? { checkpoint: 0, updated_at: null, cleared_checkpoints: [] };
+      if (!base.cleared_checkpoints) base.cleared_checkpoints = []; // Handle null/undefined
+      return base;
     }
 
     async function advanceWithPassphrase(user_id, targetCheckpoint, passphrase) {
       const pass = (passphrase ?? "").trim();
-      if (!pass) return { ok:false, reason:"no_passphrase" };
+      if (!pass) return { ok: false, reason: "no_passphrase" };
 
       const { data, error } = await sb.rpc("claim_checkpoint", { cp: targetCheckpoint, pass });
       if (error) {
         const m = error.message || String(error);
-        if (m.includes("invalid passphrase")) return { ok:false, reason:"invalid_passphrase" };
+        if (m.includes("invalid passphrase")) return { ok: false, reason: "invalid_passphrase" };
         if (m.includes("wrong order")) {
           const cur = await getProgress(user_id);
-          return { ok:false, reason:"wrong_order", current: cur.checkpoint };
+          return { ok: false, reason: "wrong_order", current: cur.checkpoint };
         }
-        return { ok:false, reason:"other", message: m };
+        return { ok: false, reason: "other", message: m };
       }
-      return { ok:true, current: data ?? targetCheckpoint };
+      return { ok: true, current: data ?? targetCheckpoint };
     }
 
     function hintText(n) { return t(`HINT_${n}`); }
@@ -1367,6 +1572,51 @@
 
     function renderHome(nickname, prog) {
       app.innerHTML = "";
+
+      const me = sb.auth.getUser(); // Sync get? No, promise. Passed nickname/prog.
+      // Need route here.
+      // Ideally pass route to renderHome or calc it.
+      // We can fetch ID from somewhere or pass it.
+      // Refactor: route() passes full user object or ID?
+      // Temporarily, we regenerate route from ID if possible, but we don't have ID here easily unless passed.
+      // Let's rely on valid args.
+
+      // WAIT: renderHome is called from route() where we HAVE `me`.
+      // Let's update `route()` to pass `me.id` or `myRoute` to `renderHome`.
+      // Since I can't edit `route` arguments in THIS tool call (already done),
+      // I will assume `prog` object *could* carry the route info or I use a global?
+      // Better: Update `renderHome` signature in the caller (next step) or here.
+      // Let's update `renderHome` content first, and I'll fix the call site in `route` if needed.
+      // Actually, I just updated `route` to call `renderHome(nickname, prog)`.
+      // I need to update `route` to pass the route array.
+
+      // Let's stick to the plan:
+      // The `route` function I just wrote calls `renderHome(nickname, prog)`. 
+      // I should have updated it to `renderHome(nickname, prog, myRoute)`.
+      // I will update renderHome to accept optional route, and then update route() again if needed.
+      // OR, I can get user ID from `sb.auth.session` sync?
+    }
+
+    // REDOING: `renderHome` needs the route to show the correct hint.
+    // I'll grab user ID from `sb.auth.getSession()` (cache) or assume passed.
+    // Let's insert a helper to get ID synchronously or hack it.
+    // Actually, `route()` logic had `me` object.
+
+    // I will update renderHome to take `route` argument.
+    // AND then I will update `route()` call separately or assume I can fix it.
+    // Wait, the previous `route` edit maintained the function signature `renderHome(nickname, prog)`.
+    // I need to change that line in `route` logic.
+
+    // Let's update `renderHome` first.
+    function renderHome(nickname, prog, myRoute) {
+      app.innerHTML = "";
+      // If myRoute not passed (legacy call), try to recalc?
+      // We need ID for recalc.
+      // Let's just assume myRoute is passed. I will fix the caller.
+
+      const currentCount = prog.cleared_checkpoints?.length ?? 0;
+      const target = myRoute ? myRoute.find(cp => !(prog.cleared_checkpoints || []).includes(cp)) : (currentCount + 1);
+
       app.appendChild(el(`
         <div>
           ${headerHtml(t("APP_TITLE"), "", true)}
@@ -1374,17 +1624,17 @@
           <div class="card">
             <div class="stats">
               <div class="stat-item">
-                <div class="stat-value">${prog.checkpoint}</div>
+                <div class="stat-value">${currentCount}</div>
                 <div class="stat-label">${t("HOME_DONE")}</div>
               </div>
               <div class="stat-item">
-                <div class="stat-value">${Math.max(0, MAX_CHECKPOINT - prog.checkpoint)}</div>
+                <div class="stat-value">${Math.max(0, MAX_CHECKPOINT - currentCount)}</div>
                 <div class="stat-label">${t("HOME_LEFT")}</div>
               </div>
             </div>
 
             <div class="progress-container">
-              <div class="progress-bar" style="width:${progressPercent(prog.checkpoint)}%"></div>
+              <div class="progress-bar" style="width:${progressPercent(currentCount)}%"></div>
             </div>
 
             <p class="card-subtitle">${t("HOME_DESC")}</p>
@@ -1393,7 +1643,13 @@
 
           <div class="card">
             <div class="card-title">${t("WELCOME", { name: nickname })}</div>
-            <p class="text-muted">${t("HOME_HINT_NOTE")}</p>
+            <!-- Show Current Target Hint directly on Home? Or keep "Note"? -->
+            <!-- User request: "Prevent sharing". -->
+            <!-- If everyone sees "Hint 1" but for different places, they realize it's different. -->
+            <div class="hint-box" style="margin-top:10px;">
+               <strong>Target: Checkpoint #${currentCount + 1}</strong><br>
+               ${target ? hintText(target) : "Loading..."}
+            </div>
           </div>
         </div>
       `));
@@ -1432,16 +1688,16 @@
       node.querySelector("#btn").onclick = async () => {
         const btn = node.querySelector("#btn");
         const nick = node.querySelector("#nick").value.trim();
-        const pin  = node.querySelector("#pin").value.trim();
-        const msg  = node.querySelector("#msg");
+        const pin = node.querySelector("#pin").value.trim();
+        const msg = node.querySelector("#msg");
         msg.innerHTML = "";
 
-        if (!nick) { msg.innerHTML = `<div class="alert alert-error">${t("NEED_NAME")}</div>`; node.classList.add("shake"); setTimeout(()=>node.classList.remove("shake"),300); return; }
-        if (!/^[0-9]{4}$/.test(pin)) { msg.innerHTML = `<div class="alert alert-error">${t("NEED_PIN_4")}</div>`; node.classList.add("shake"); setTimeout(()=>node.classList.remove("shake"),300); return; }
+        if (!nick) { msg.innerHTML = `<div class="alert alert-error">${t("NEED_NAME")}</div>`; node.classList.add("shake"); setTimeout(() => node.classList.remove("shake"), 300); return; }
+        if (!/^[0-9]{4}$/.test(pin)) { msg.innerHTML = `<div class="alert alert-error">${t("NEED_PIN_4")}</div>`; node.classList.add("shake"); setTimeout(() => node.classList.remove("shake"), 300); return; }
 
         btn.disabled = true; btn.textContent = t("BTN_CHECKING");
 
-        try{
+        try {
           await retryOperation(async () => {
             await ensureAnonLogin();
             const { error } = await sb.rpc("claim_player", { nick, pin });
@@ -1450,13 +1706,13 @@
 
           msg.innerHTML = `<div class="alert alert-success">${t("LOGIN_OK")}</div>`;
           showToast(t("LOGIN_OK"), "success", 2000);
-          setTimeout(()=> location.hash="#/", 350);
-        }catch(e){
+          setTimeout(() => location.hash = "#/", 350);
+        } catch (e) {
           const errorMsg = t("LOGIN_FAIL", { msg: (e?.message ?? e) });
           msg.innerHTML = `<div class="alert alert-error">${errorMsg}</div>`;
           showToast(errorMsg, "error", 4000);
-          node.classList.add("shake"); setTimeout(()=>node.classList.remove("shake"),300);
-        }finally{
+          node.classList.add("shake"); setTimeout(() => node.classList.remove("shake"), 300);
+        } finally {
           btn.disabled = false; btn.textContent = t("BTN_LOGIN");
         }
       };
@@ -1503,17 +1759,17 @@
         const btn = node.querySelector("#btn");
         const nick = node.querySelector("#nick").value.trim();
         const room = node.querySelector("#room").value.trim();
-        const pin  = node.querySelector("#pin").value.trim();
-        const msg  = node.querySelector("#msg");
+        const pin = node.querySelector("#pin").value.trim();
+        const msg = node.querySelector("#msg");
         msg.innerHTML = "";
 
-        if (!nick) { msg.innerHTML = `<div class="alert alert-error">${t("NEED_NAME")}</div>`; node.classList.add("shake"); setTimeout(()=>node.classList.remove("shake"),300); return; }
-        if (!room) { msg.innerHTML = `<div class="alert alert-error">${t("NEED_ROOM")}</div>`; node.classList.add("shake"); setTimeout(()=>node.classList.remove("shake"),300); return; }
-        if (!/^[0-9]{4}$/.test(pin)) { msg.innerHTML = `<div class="alert alert-error">${t("NEED_PIN_4")}</div>`; node.classList.add("shake"); setTimeout(()=>node.classList.remove("shake"),300); return; }
+        if (!nick) { msg.innerHTML = `<div class="alert alert-error">${t("NEED_NAME")}</div>`; node.classList.add("shake"); setTimeout(() => node.classList.remove("shake"), 300); return; }
+        if (!room) { msg.innerHTML = `<div class="alert alert-error">${t("NEED_ROOM")}</div>`; node.classList.add("shake"); setTimeout(() => node.classList.remove("shake"), 300); return; }
+        if (!/^[0-9]{4}$/.test(pin)) { msg.innerHTML = `<div class="alert alert-error">${t("NEED_PIN_4")}</div>`; node.classList.add("shake"); setTimeout(() => node.classList.remove("shake"), 300); return; }
 
         btn.disabled = true; btn.textContent = t("BTN_CHECKING");
 
-        try{
+        try {
           await retryOperation(async () => {
             const { error } = await sb.rpc("register_player", { nick, pin, room });
             if (error) throw error;
@@ -1521,13 +1777,13 @@
 
           msg.innerHTML = `<div class="alert alert-success">${t("SIGNUP_OK")}</div>`;
           showToast(t("SIGNUP_OK"), "success", 2000);
-          setTimeout(()=> location.hash="#/", 350);
-        }catch(e){
+          setTimeout(() => location.hash = "#/", 350);
+        } catch (e) {
           const errorMsg = t("SIGNUP_FAIL", { msg: (e?.message ?? e) });
           msg.innerHTML = `<div class="alert alert-error">${errorMsg}</div>`;
           showToast(errorMsg, "error", 4000);
-          node.classList.add("shake"); setTimeout(()=>node.classList.remove("shake"),300);
-        }finally{
+          node.classList.add("shake"); setTimeout(() => node.classList.remove("shake"), 300);
+        } finally {
           btn.disabled = false; btn.textContent = t("BTN_SIGNUP");
         }
       };
@@ -1535,82 +1791,36 @@
       app.appendChild(node);
     }
 
-    function renderCheckpoint(nickname, prog, target) {
+    function renderCheckpoint(nickname, prog, route) {
       app.innerHTML = "";
-      const locked = prog.checkpoint < (target - 1);
+
+      // Determine CURRENT target: First item in route that is NOT in cleared_checkpoints
+      const target = route.find(cp => !prog.cleared_checkpoints.includes(cp));
+      const isClearedAll = !target;
+
+      // If cleared all, redirect or show something? 
+      // Assuming caller handles #/clear redirect.
+
+      // "Step Number" is how many have been cleared + 1
+      const currentStep = prog.cleared_checkpoints.length + 1;
 
       const node = el(`
         <div>
-          ${headerHtml(t("CP_TITLE"), `<div class="badge">📍 ${prog.checkpoint}/${MAX_CHECKPOINT}</div>`, true)}
+          ${headerHtml(t("CP_TITLE"), `<div class="badge">📍 ${prog.cleared_checkpoints.length}/${MAX_CHECKPOINT}</div>`, true)}
           <div class="checkpoint-card">
-            <div class="checkpoint-number">${target}</div>
-            <div style="font-weight:900;letter-spacing:.08em;">CHECKPOINT ${target}</div>
+            <div class="checkpoint-number">#${currentStep}</div>
+            <div style="font-weight:900;letter-spacing:.08em;">Find Checkpoint ${target}</div>
           </div>
 
           <div class="card">
-            ${
-              locked ? `
-                <div class="alert alert-error">${t("CP_LOCKED", { n: target-1 })}</div>
-                <button class="btn-secondary" type="button" onclick="location.hash='#/'">${t("BTN_BACK_HOME")}</button>
-              ` : `
-                <div class="card-title">${t("CP_VERIFY_TITLE")}</div>
-                <p class="card-subtitle">${t("CP_VERIFY_DESC")}</p>
-
-                <div class="input-group">
-                  <label class="input-label" for="pass">${t("LABEL_PASS")}</label>
-                  <input id="pass" name="passphrase" maxlength="30" placeholder="${t("PH_PASS")}" aria-required="true" aria-label="${t("LABEL_PASS")}" />
-                </div>
-
-                <button id="claim" type="button" aria-label="${t("BTN_CLAIM")}">${t("BTN_CLAIM")}</button>
-                <div id="msg"></div>
-
-                <div id="hint" style="display:none;">
-                  <div class="alert alert-success"><strong>${t("UNLOCKED")}</strong></div>
-                  <div class="hint-box"><strong>${t("HINT_TITLE", { n: target })}</strong><br>${hintText(target)}</div>
-                  <button class="btn-secondary" type="button" onclick="location.hash='#/'">${t("BTN_BACK_HOME")}</button>
-                </div>
-              `
-            }
-          </div>
-        </div>
-      `);
-
-      if (!locked) {
-        node.querySelector("#claim").onclick = async () => {
-          const btn = node.querySelector("#claim");
-          const msg = node.querySelector("#msg");
-          const pass = node.querySelector("#pass").value.trim().toUpperCase();
-
-          msg.innerHTML = "";
-          btn.disabled = true; btn.textContent = t("BTN_CHECKING");
-
-          try{
-            const me = await retryOperation(async () => await getMe(), 3, 1000);
-            const res = await retryOperation(async () => await advanceWithPassphrase(me.id, target, pass), 3, 1000);
-
-            if (!res.ok) {
-              let errorMsg = "";
-              if (res.reason === "no_passphrase") errorMsg = t("PASS_REQUIRED");
-              else if (res.reason === "invalid_passphrase") errorMsg = t("PASS_WRONG");
-              else if (res.reason === "wrong_order") errorMsg = t("ORDER_WRONG", { cur: res.current, max: MAX_CHECKPOINT });
-              else errorMsg = t("FAIL_GENERIC", { msg: (res.message ?? "error") });
-
-              msg.innerHTML = `<div class="alert alert-error">${errorMsg}</div>`;
-              showToast(errorMsg, "error", 3000);
-              btn.disabled = false; btn.textContent = t("BTN_CLAIM");
-              return;
-            }
-
-            node.querySelector("#hint").style.display = "block";
-            btn.style.display = "none";
             showToast(t("UNLOCKED"), "success", 3000);
 
             if (target >= MAX_CHECKPOINT) {
-              setTimeout(()=> location.hash="#/clear", 450);
+              setTimeout(() => location.hash = "#/clear", 450);
             }
-          }catch(e){
+          } catch (e) {
             const errorMsg = t("FAIL_GENERIC", { msg: (e?.message ?? e) });
-            msg.innerHTML = `<div class="alert alert-error">${errorMsg}</div>`;
+            msg.innerHTML = `< div class= "alert alert-error" > ${ errorMsg }</div > `;
             showToast(errorMsg, "error", 4000);
             btn.disabled = false; btn.textContent = t("BTN_CLAIM");
           }
@@ -1620,58 +1830,59 @@
       app.appendChild(node);
     }
 
-    function renderTrap(nickname="GUEST", prog={ checkpoint:0 }, reason="") {
+    function renderTrap(nickname = "GUEST", prog = { checkpoint: 0 }, reason = "") {
       app.innerHTML = "";
       const lines = [t("TRAP_LINE_1"), t("TRAP_LINE_2"), t("TRAP_LINE_3"), t("TRAP_LINE_4")];
       const msg = lines[Math.floor(Math.random() * lines.length)];
 
       app.appendChild(el(`
+      < div >
+      ${ headerHtml(t("TRAP_TITLE"), "", true)
+    }
+    <div class="card trapCard">
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="trapSkull">💀</div>
         <div>
-          ${headerHtml(t("TRAP_TITLE"), "", true)}
-          <div class="card trapCard">
-            <div style="display:flex;align-items:center;gap:12px;">
-              <div class="trapSkull">💀</div>
-              <div>
-                <div class="glitch" data-text="TRAP">TRAP</div>
-                <div class="text-muted" style="margin-top:6px;">${msg}</div>
-              </div>
-            </div>
-
-            <div class="divider"></div>
-
-            <div class="smallHint">
-              <div>${t("TRAP_NOTE_1")}</div>
-              <div>${t("TRAP_NOTE_2")}</div>
-              ${reason ? `<div style="opacity:.7;margin-top:6px;">debug: ${reason}</div>` : ``}
-            </div>
-
-            <div style="margin-top:14px;">
-              <button type="button" onclick="location.hash='#/'">${t("BTN_BACK_HOME")}</button>
-            </div>
-          </div>
+          <div class="glitch" data-text="TRAP">TRAP</div>
+          <div class="text-muted" style="margin-top:6px;">${msg}</div>
         </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="smallHint">
+        <div>${t("TRAP_NOTE_1")}</div>
+        <div>${t("TRAP_NOTE_2")}</div>
+        ${reason ? `<div style="opacity:.7;margin-top:6px;">debug: ${reason}</div>` : ``}
+      </div>
+
+      <div style="margin-top:14px;">
+        <button type="button" onclick="location.hash='#/'">${t("BTN_BACK_HOME")}</button>
+      </div>
+    </div>
+        </div >
       `));
     }
 
     function renderClear(nickname) {
       app.innerHTML = "";
       app.appendChild(el(`
-        <div>
-          ${headerHtml(t("CLEAR_TITLE"), "", true)}
-          <div class="card">
-            <div class="card-title">${t("CLEAR_CONGRATS", { name: nickname })}</div>
-            <p class="card-subtitle">${t("CLEAR_DESC")}</p>
+      < div >
+      ${ headerHtml(t("CLEAR_TITLE"), "", true) }
+    <div class="card">
+      <div class="card-title">${t("CLEAR_CONGRATS", { name: nickname })}</div>
+      <p class="card-subtitle">${t("CLEAR_DESC")}</p>
 
-            <div class="hint-box">
-              <strong>${t("CLEAR_PRIZE_TITLE")}</strong><br>${t("CLEAR_PRIZE_DESC")}
-            </div>
+      <div class="hint-box">
+        <strong>${t("CLEAR_PRIZE_TITLE")}</strong><br>${t("CLEAR_PRIZE_DESC")}
+      </div>
 
-            <div class="divider"></div>
+      <div class="divider"></div>
 
-            <button type="button" onclick="location.hash='#/me'">${t("BTN_VIEW_ME")}</button>
-            <button class="btn-secondary" type="button" onclick="location.hash='#/'">${t("BTN_HOME")}</button>
-          </div>
-        </div>
+      <button type="button" onclick="location.hash='#/me'">${t("BTN_VIEW_ME")}</button>
+      <button class="btn-secondary" type="button" onclick="location.hash='#/'">${t("BTN_HOME")}</button>
+    </div>
+        </div >
       `));
     }
 
@@ -1680,20 +1891,19 @@
       const ios = isIOS();
 
       app.appendChild(el(`
-        <div>
-          ${headerHtml(t("SCAN_TITLE"), `<div class="badge">📍 ${prog.checkpoint}/${MAX_CHECKPOINT}</div>`, true)}
-          <div class="card">
-            <div class="card-title">${t("SCAN_CARD_TITLE")}</div>
-            ${
-              ios ? `
+      < div >
+      ${ headerHtml(t("SCAN_TITLE"), `<div class="badge">📍 ${prog.checkpoint}/${MAX_CHECKPOINT}</div>`, true) }
+    <div class="card">
+      <div class="card-title">${t("SCAN_CARD_TITLE")}</div>
+      ${ios ? `
                 <div class="alert alert-success">${t("SCAN_IOS_TIP")}</div>
                 <p class="card-subtitle">${t("SCAN_IOS_DESC")}</p>
               ` : `
                 <div class="alert alert-success">${t("SCAN_ANDROID_DESC")}</div>
               `
-            }
-          </div>
-        </div>
+      }
+    </div>
+        </div >
       `));
     }
 
@@ -1702,20 +1912,20 @@
       let hintsHtml = "";
       for (let i = 1; i <= Math.min(prog.checkpoint, MAX_CHECKPOINT); i++) {
         hintsHtml += `
-          <div class="list-item">
+      < div class="list-item" >
             <div>
               <strong>${t("CP_TITLE")} ${i}</strong>
               <div class="text-muted" style="font-size:13px;margin-top:4px;line-height:1.5;">${hintText(i)}</div>
             </div>
             <div style="font-size:18px;">✅</div>
-          </div>
-        `;
+          </div >
+      `;
       }
-      if (!hintsHtml) hintsHtml = `<p class="text-muted">${t("ME_NO_HINTS")}</p>`;
+      if (!hintsHtml) hintsHtml = `< p class="text-muted" > ${ t("ME_NO_HINTS") }</p > `;
 
       app.appendChild(el(`
-        <div>
-          ${headerHtml(t("ME_TITLE"), "", true)}
+      < div >
+      ${ headerHtml(t("ME_TITLE"), "", true) }
           <div class="card">
             <div class="card-title">${nickname}</div>
 
@@ -1739,30 +1949,30 @@
             <div class="card-title">${t("ME_HINTS_TITLE")}</div>
             <div style="margin-top:14px;">${hintsHtml}</div>
           </div>
-        </div>
+        </div >
       `));
     }
 
     async function renderLeaderboard(nickname) {
       app.innerHTML = "";
       app.appendChild(el(`
-        <div>
-          ${headerHtml(t("RANK_TITLE"), "", true)}
-          <div class="card">
-            <div class="card-title">${t("RANK_CARD_TITLE")}</div>
-            <p class="card-subtitle">${t("RANK_DESC")}</p>
-            <div id="list">
-              <div style="display:flex;align-items:center;justify-content:center;padding:40px;">
-                <div class="spinner spinner-large"></div>
-              </div>
-            </div>
-          </div>
+      < div >
+      ${ headerHtml(t("RANK_TITLE"), "", true) }
+    <div class="card">
+      <div class="card-title">${t("RANK_CARD_TITLE")}</div>
+      <p class="card-subtitle">${t("RANK_DESC")}</p>
+      <div id="list">
+        <div style="display:flex;align-items:center;justify-content:center;padding:40px;">
+          <div class="spinner spinner-large"></div>
         </div>
+      </div>
+    </div>
+        </div >
       `));
 
       const list = document.getElementById("list");
 
-      try{
+      try {
         const data = await retryOperation(async () => {
           const { data, error } = await sb.rpc("get_leaderboard");
           if (error) throw error;
@@ -1770,20 +1980,20 @@
         }, 3, 1000);
 
         if (!data?.length) {
-          list.innerHTML = `<p class="text-muted text-center">${t("EMPTY")}</p>`;
+          list.innerHTML = `< p class="text-muted text-center" > ${ t("EMPTY") }</p > `;
           return;
         }
 
         list.innerHTML = data.map((r, idx) => {
           const isMe = (r.nickname === nickname);
-          const topClass = idx===0 ? "rank-1" : idx===1 ? "rank-2" : idx===2 ? "rank-3" : "";
+          const topClass = idx === 0 ? "rank-1" : idx === 1 ? "rank-2" : idx === 2 ? "rank-3" : "";
           const isClear = (r.checkpoint >= MAX_CHECKPOINT);
-          const progressText = `${r.checkpoint} / ${MAX_CHECKPOINT}`;
+          const progressText = `${ r.checkpoint } / ${MAX_CHECKPOINT}`;
 
-          return `
+    return `
             <div class="list-item ${isMe ? "active" : ""} ${topClass}">
               <div style="display:flex;align-items:center;gap:12px;flex:1;">
-                <div class="rank-number">#${idx+1}</div>
+                <div class="rank-number">#${idx + 1}</div>
                 <div style="display:flex;align-items:center;flex-wrap:wrap;">
                   <strong>${r.nickname}</strong>
                   ${isMe ? `<span class="me-badge">${t("YOU_BADGE")}</span>` : ``}
@@ -1797,83 +2007,174 @@
           `;
         }).join("");
 
-      }catch(e){
-        const errorMsg = t("FAIL_GENERIC", { msg: (e?.message ?? e) });
-        list.innerHTML = `<div class="alert alert-error">${errorMsg}</div>`;
-        showToast(errorMsg, "error", 4000);
-      }
+      } catch (e) {
+      const errorMsg = t("FAIL_GENERIC", { msg: (e?.message ?? e) });
+      list.innerHTML = `<div class="alert alert-error">${errorMsg}</div>`;
+      showToast(errorMsg, "error", 4000);
+    }
     }  /* ✅ ← これが無くて死んでた */
 
     // ====== main route ======
     async function route() {
-      try{
-        applyStaticI18n();
-        setNavActive();
+      const r = getRoute();
+      setNavActive();
+      // Intro, Login, Signup, Scan, Leaderboard, etc don't check progress strictly
+      if (r.type === "intro") { return renderIntro(); }
+      if (r.type === "login") { return renderLogin(); }
+      if (r.type === "signup") { return renderSignup(); }
 
-        const needsData = !location.hash.match(/^#\/(intro|login|signup)$/);
-        if (needsData) showLoading();
+      showLoading(t("LOADING"));
+      try {
+        const me = await ensureAnonLogin();
+        const nickname = await getNickname(me.id);
 
-        await retryOperation(async () => { await ensureAnonLogin(); }, 3, 1000);
-
-        const r = getRoute();
-
-        if (r.type === "intro") {
+        // If logged in but no nickname -> go to login/signup
+        if (!nickname) {
           hideLoading();
-          renderIntro();
-          animatePageEnter(app.firstElementChild);
+          return (location.hash = "#/login");
+        }
+
+        const prog = await getProgress(me.id);
+        const myRoute = getRoute(me.id); // Get randomized route
+        const currentTarget = myRoute.find(cp => !prog.cleared_checkpoints.includes(cp)); // First uncleared CP
+
+        // Routing Logic
+        if (r.type === "home") {
+          hideLoading();
+          // If cleared all
+          if (!currentTarget) return (location.hash = "#/clear");
+          return renderHome(nickname, prog, myRoute); // Pass random route
+        }
+
+        if (r.type === "leaderboard") {
+          hideLoading();
+          // Render Leaderboard (Needs implementation or check existing)
+          // Simple placeholder or component
+          app.innerHTML = "";
+          app.appendChild(el(`<div>${headerHtml(t("RANK_TITLE"), "", true)}<div class="card"><div class="card-title">${t("RANK_CARD_TITLE")}</div><p class="text-muted">${t("RANK_DESC")}</p><iframe style="width:100%;height:400px;border:none;" srcdoc="Leaderboard disabled locally"></iframe></div></div>`));
+          // Note: In real app, fetch leaderboard here.
           return;
         }
-        if (r.type === "unknown") {
+
+        if (r.type === "me") {
           hideLoading();
-          renderTrap("GUEST", { checkpoint: 0 }, "UNKNOWN");
-          animatePageEnter(app.firstElementChild);
+          // Hints Log
+          // Show hints for ALL CLEARED CPs + CURRENT TARGET
+          const unlockedCPs = [...prog.cleared_checkpoints];
+          if (currentTarget) unlockedCPs.push(currentTarget);
+
+          // Note: Since route is random, we should probably label them "Hint for Step X (CP Y)"
+
+          const hintHtml = unlockedCPs.length === 0 ? `<p>${t("ME_NO_HINTS")}</p>` :
+            unlockedCPs.map((cp, idx) => {
+              // idx is roughly the step order IF the user followed the route.
+              // But wait, unlockedCPs order depends on cleared_checkpoints order (which is append).
+              // Actually cleared_checkpoints is strictly ordered by time.
+              return `<div class="hint-box"><strong>${t("HINT_TITLE", { n: "CP" + cp })}</strong><br>${hintText(cp)}</div>`
+            }).join("");
+
+          app.innerHTML = "";
+          app.appendChild(el(`
+              <div>
+                ${headerHtml(t("ME_TITLE"), "", true)}
+                <div class="card">
+                  <div class="stats">
+                    <div class="stat-item"><div class="stat-value">${prog.cleared_checkpoints.length}</div><div class="stat-label">${t("ME_PROGRESS")}</div></div>
+                    <div class="stat-item"><div class="stat-value">${Math.round(prog.cleared_checkpoints.length / MAX_CHECKPOINT * 100)}%</div><div class="stat-label">${t("ME_RATE")}</div></div>
+                  </div>
+                  <div class="card-title">${t("ME_HINTS_TITLE")}</div>
+                  ${hintHtml}
+                </div>
+              </div>
+            `));
+          return;
+        }
+
+        if (r.type === "clear") {
+          hideLoading();
+          if (currentTarget) return (location.hash = "#/"); // Not cleared yet
+          app.innerHTML = "";
+          app.appendChild(el(`
+              <div>
+                ${headerHtml(t("CLEAR_TITLE"), "", true)}
+                <div class="card">
+                  <div class="text-center" style="font-size:60px;margin-bottom:10px;">🎉</div>
+                  <div class="card-title text-center">${t("CLEAR_CONGRATS", { name: nickname })}</div>
+                  <p class="text-center" style="margin-bottom:20px;line-height:1.6;">${t("CLEAR_DESC")}</p>
+                  
+                  <div class="hint-box">
+                    <strong>${t("CLEAR_PRIZE_TITLE")}</strong><br>
+                    ${t("CLEAR_PRIZE_DESC")}
+                  </div>
+
+                  <button type="button" onclick="location.hash='#/me'">${t("BTN_VIEW_ME")}</button>
+                  <button class="btn-secondary" type="button" onclick="location.hash='#/'">${t("BTN_HOME")}</button>
+                </div>
+              </div>
+            `));
+          return;
+        }
+
+        if (r.type === "scan") {
+          hideLoading();
+          const isios = isIOS();
+          app.innerHTML = "";
+          app.appendChild(el(`
+              <div>
+                ${headerHtml(t("SCAN_TITLE"), "", true)}
+                <div class="card">
+                  <div class="card-title text-center">${t("SCAN_CARD_TITLE")}</div>
+                  <div style="text-align:center;margin:30px 0;">
+                    <div style="font-size:80px;">📷</div>
+                  </div>
+                  <div class="alert ${isios ? "alert-success" : "alert-error"}">
+                    <strong>${isios ? "iPhone" : "Android / PC"}</strong><br>
+                    ${isios ? t("SCAN_IOS_TIP") : t("SCAN_ANDROID_DESC")}
+                  </div>
+                  <p class="text-muted" style="margin-top:10px;">
+                    ${isios ? t("SCAN_IOS_DESC") : ""}
+                  </p>
+                  
+                  <!-- DEV ONLY: Manual Jump -->
+                  <div class="divider"></div>
+                  <p class="text-center" style="font-size:10px;color:#666;">DEV: Manual Input</p>
+                  <input id="devCp" placeholder="CP ID (1-5)" type="number" style="margin-bottom:8px;">
+                  <button type="button" onclick="location.hash='#/c/'+document.getElementById('devCp').value+'-0000'">Go</button>
+                </div>
+              </div>
+            `));
           return;
         }
 
         if (r.type === "cp") {
-          if (r.n === 999) {
-            hideLoading();
-            if (r.key === TRAP_KEY) renderTrap("GUEST", { checkpoint: 0 }, "TRAP");
-            else renderTrap("GUEST", { checkpoint: 0 }, "TRAP_KEY_MISMATCH");
-            animatePageEnter(app.firstElementChild);
+          const me = await retryOperation(async () => await getMe(), 3, 1000);
+          const nick = await retryOperation(async () => await getNickname(me.id), 3, 1000);
+          const prog = nick ? await retryOperation(async () => await getProgress(me.id), 3, 1000)
+            : { checkpoint: 0, updated_at: null };
+
+          hideLoading();
+
+          if (r.type === "login") { renderLogin(); animatePageEnter(app.firstElementChild); return; }
+          if (r.type === "signup") { renderSignup(); animatePageEnter(app.firstElementChild); return; }
+
+          const needsLogin = (r.type === "home" || r.type === "scan" || r.type === "leaderboard" || r.type === "me" || r.type === "cp" || r.type === "clear");
+          if (!nick && needsLogin) {
+            showToast(t("LOGIN_TO_SIGNUP"), "error", 2000);
+            location.hash = "#/login";
             return;
           }
-          if (!CP_KEYS[r.n] || r.key !== CP_KEYS[r.n]) {
-            hideLoading();
-            renderTrap("GUEST", { checkpoint: 0 }, "KEY_MISMATCH");
-            animatePageEnter(app.firstElementChild);
-            return;
-          }
-        }
 
-        const me = await retryOperation(async () => await getMe(), 3, 1000);
-        const nick = await retryOperation(async () => await getNickname(me.id), 3, 1000);
-        const prog = nick ? await retryOperation(async () => await getProgress(me.id), 3, 1000)
-                          : { checkpoint: 0, updated_at: null };
+          if (r.type === "home") { renderHome(nick, prog); animatePageEnter(app.firstElementChild); return; }
+          if (r.type === "scan") { renderScan(nick, prog); animatePageEnter(app.firstElementChild); return; }
+          if (r.type === "me") { renderMe(nick, prog); animatePageEnter(app.firstElementChild); return; }
+          if (r.type === "leaderboard") { await renderLeaderboard(nick); animatePageEnter(app.firstElementChild); return; }
+          if (r.type === "clear") { renderClear(nick); animatePageEnter(app.firstElementChild); return; }
+          if (r.type === "cp") { renderCheckpoint(nick, prog, r.n); animatePageEnter(app.firstElementChild); return; }
 
-        hideLoading();
-
-        if (r.type === "login") { renderLogin(); animatePageEnter(app.firstElementChild); return; }
-        if (r.type === "signup") { renderSignup(); animatePageEnter(app.firstElementChild); return; }
-
-        const needsLogin = (r.type === "home" || r.type === "scan" || r.type === "leaderboard" || r.type === "me" || r.type === "cp" || r.type === "clear");
-        if (!nick && needsLogin) {
-          showToast(t("LOGIN_TO_SIGNUP"), "error", 2000);
           location.hash = "#/login";
-          return;
-        }
-
-        if (r.type === "home") { renderHome(nick, prog); animatePageEnter(app.firstElementChild); return; }
-        if (r.type === "scan") { renderScan(nick, prog); animatePageEnter(app.firstElementChild); return; }
-        if (r.type === "me") { renderMe(nick, prog); animatePageEnter(app.firstElementChild); return; }
-        if (r.type === "leaderboard") { await renderLeaderboard(nick); animatePageEnter(app.firstElementChild); return; }
-        if (r.type === "clear") { renderClear(nick); animatePageEnter(app.firstElementChild); return; }
-        if (r.type === "cp") { renderCheckpoint(nick, prog, r.n); animatePageEnter(app.firstElementChild); return; }
-
-        location.hash = "#/login";
-      }catch(e){
-        hideLoading();
-        app.innerHTML = `
+        } catch (e) {
+          hideLoading();
+          app.innerHTML = `
           <div class="card">
             <div class="card-title">${t("ERR_TITLE")}</div>
             <div class="alert alert-error" style="margin-top:12px;">
@@ -1886,35 +2187,36 @@
             </div>
           </div>
         `;
-        animatePageEnter(app.firstElementChild);
-        showToast(t("ERR_TITLE"), "error", 5000);
-        console.error(e);
+          animatePageEnter(app.firstElementChild);
+          showToast(t("ERR_TITLE"), "error", 5000);
+          console.error(e);
+        }
       }
-    }
 
     window.addEventListener("hashchange", route);
-    if (!location.hash) location.hash = "#/intro";
-    route();
+      if (!location.hash) location.hash = "#/intro";
+      route();
 
-    // ====== PWA Service Worker Registration ======
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => {
-        navigator.serviceWorker.register("/sw.js")
-          .then(reg => console.log("Service Worker registered:", reg))
-          .catch(err => console.log("Service Worker registration failed:", err));
+      // ====== PWA Service Worker Registration ======
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("/sw.js")
+            .then(reg => console.log("Service Worker registered:", reg))
+            .catch(err => console.log("Service Worker registration failed:", err));
+        });
+      }
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") hideLoading();
       });
-    }
 
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") hideLoading();
-    });
-
-    window.addEventListener("online", () => {
-      showToast("Back online", "success", 2500);
-    });
-    window.addEventListener("offline", () => {
-      showToast("Offline", "error", 3500);
-    });
+      window.addEventListener("online", () => {
+        showToast("Back online", "success", 2500);
+      });
+      window.addEventListener("offline", () => {
+        showToast("Offline", "error", 3500);
+      });
   </script>
 </body>
+
 </html>
