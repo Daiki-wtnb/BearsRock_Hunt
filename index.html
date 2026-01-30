@@ -778,6 +778,7 @@
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFoeW5sd3RjZHJ0a3p5a2NjY2diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc0MTA0MDQsImV4cCI6MjA4Mjk4NjQwNH0.HttRXUS-Qy6VA0t4UE8MIC58tgncg-2bucYfLr14LSA";
 
     const MAX_CHECKPOINT = 5;
+    let supportsRandomRoutes = true;
 
     // ✅ 正解QR（推測対策）
     const CP_KEYS = {
@@ -1478,14 +1479,18 @@
         return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
       }
     }
-    function getUserRoute(userId) {
-      if (!userId) return [1, 2, 3, 4, 5];
+    function buildSequentialRoute(max = MAX_CHECKPOINT) {
+      return Array.from({ length: max }, (_, i) => i + 1);
+    }
+
+    function getUserRoute(userId, useRandom = true) {
+      if (!useRandom || !userId) return buildSequentialRoute();
       // Create seed from UUID (simple sum of char codes)
       let seed = 0;
       for (let i = 0; i < userId.length; i++) seed += userId.charCodeAt(i);
       const rng = mulberry32(seed);
 
-      const arr = [1, 2, 3, 4, 5];
+      const arr = buildSequentialRoute();
       // Fisher-Yates Shuffle
       for (let i = arr.length - 1; i > 0; i--) {
         const j = Math.floor(rng() * (i + 1));
@@ -1494,15 +1499,45 @@
       return arr;
     }
 
+    function normalizeProgress(data, hasClearedCheckpoints) {
+      const base = data ?? { checkpoint: 0, updated_at: null };
+      const checkpoint = base.checkpoint ?? 0;
+      if (hasClearedCheckpoints) {
+        const cleared = Array.isArray(base.cleared_checkpoints) ? base.cleared_checkpoints : [];
+        return { ...base, checkpoint, cleared_checkpoints: cleared };
+      }
+      return {
+        ...base,
+        checkpoint,
+        cleared_checkpoints: buildSequentialRoute(checkpoint)
+      };
+    }
+
     async function getProgress(user_id) {
-      // Fetch cleared_checkpoints if available (after migration)
-      // Fallback for old schema is handled gracefully? 
-      // Actually we'll assume migration runs.
-      const { data, error } = await sb.from("progress").select("checkpoint, updated_at, cleared_checkpoints").eq("user_id", user_id).maybeSingle();
-      if (error) throw error;
-      const base = data ?? { checkpoint: 0, updated_at: null, cleared_checkpoints: [] };
-      if (!base.cleared_checkpoints) base.cleared_checkpoints = []; // Handle null/undefined
-      return base;
+      // Prefer new schema with cleared_checkpoints.
+      try {
+        const { data, error } = await sb
+          .from("progress")
+          .select("checkpoint, updated_at, cleared_checkpoints")
+          .eq("user_id", user_id)
+          .maybeSingle();
+        if (error) throw error;
+        supportsRandomRoutes = true;
+        return normalizeProgress(data, true);
+      } catch (error) {
+        const message = error?.message ?? String(error);
+        if (!message.includes("cleared_checkpoints")) {
+          throw error;
+        }
+        supportsRandomRoutes = false;
+        const { data, error: fallbackError } = await sb
+          .from("progress")
+          .select("checkpoint, updated_at")
+          .eq("user_id", user_id)
+          .maybeSingle();
+        if (fallbackError) throw fallbackError;
+        return normalizeProgress(data, false);
+      }
     }
 
     async function advanceWithPassphrase(user_id, targetCheckpoint, passphrase) {
@@ -2035,7 +2070,7 @@
           return (location.hash = "#/login");
         }
 
-        const myRoute = getUserRoute(me.id);
+        const myRoute = getUserRoute(me.id, supportsRandomRoutes !== false);
         const currentTarget = myRoute.find(cp => !(prog.cleared_checkpoints || []).includes(cp));
 
         if (r.type === "home") {
