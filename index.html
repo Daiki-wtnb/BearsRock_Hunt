@@ -775,7 +775,7 @@
 
     // ====== 設定 ======
     const SUPABASE_URL = "https://ahynlwtcdrtkzykcccgb.supabase.co";
-    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFoeW5sd3RjZHJ0a3p5a2NjY2diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc0MTA0MDQsImV4cCI6MjA4Mjk4NjQwNH0.HttRXUS-Qy6VA0t4UE8MIC58tgncg-2bucYfLr14LSA";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFoeW5sd3RjZHJ0a3p5a2NjY2diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc0MTA04ODQsImV4cCI6MjA4Mjk4NjQwNH0.HttRXUS-Qy6VA0t4UE8MIC58tgncg-2bucYfLr14LSA";
 
     const MAX_CHECKPOINT = 5;
     const MAINTENANCE_MODE = true;
@@ -918,7 +918,6 @@
 
       MAINT_TITLE: "🚧 準備中",
       MAINT_DESC: "ラウンド2の準備中です。しばらくお待ちください。",
-      MAINT_ADMIN: "管理者プレビュー: URL末尾に ?admin=1 を付けてください。",
 
       HINT_1: "毎朝、靴が集まる場所の“上”を見ろ",
       HINT_2: "いい匂いがする。さあどこだろう",
@@ -1017,7 +1016,6 @@
         ERR_TITLE: "Stopped by error",
         MAINT_TITLE: "🚧 Updating",
         MAINT_DESC: "Round 2 is being prepared. Please wait a moment.",
-        MAINT_ADMIN: "Admin preview: add ?admin=1 to the URL.",
         HINT_1: "Look above the place where shoes gather every morning.",
         HINT_2: "Smells good… where could it be?",
         HINT_3: "The place where the guys gather every morning.",
@@ -1107,7 +1105,6 @@
         YOU_BADGE: "你",
         MAINT_TITLE: "🚧 准备中",
         MAINT_DESC: "第二轮正在准备中，请稍候。",
-        MAINT_ADMIN: "管理员预览：在URL末尾加 ?admin=1。",
         HINT_1: "看看每天早上鞋子聚集的地方上方。",
         HINT_2: "闻起来很香……会在哪里呢？",
         HINT_3: "男生们每天早上聚在一起的地方。",
@@ -1197,7 +1194,6 @@
         YOU_BADGE: "你",
         MAINT_TITLE: "🚧 準備中",
         MAINT_DESC: "第二回合正在準備中，請稍候。",
-        MAINT_ADMIN: "管理者預覽：在URL末尾加上 ?admin=1。",
         HINT_1: "看看每天早上鞋子聚集的地方上方。",
         HINT_2: "聞起來很香……會在哪裡呢？",
         HINT_3: "男生們每天早上聚在一起的地方。",
@@ -1287,7 +1283,6 @@
         YOU_BADGE: "Tú",
         MAINT_TITLE: "🚧 En preparación",
         MAINT_DESC: "La ronda 2 se está preparando. Espera un momento.",
-        MAINT_ADMIN: "Vista admin: añade ?admin=1 a la URL.",
         HINT_1: "Mira arriba del lugar donde se juntan los zapatos cada mañana.",
         HINT_2: "Huele bien… ¿dónde será?",
         HINT_3: "El lugar donde se juntan los chicos cada mañana.",
@@ -1635,7 +1630,6 @@
           <div class="card">
             <div class="card-title">${t("MAINT_DESC")}</div>
             <div class="divider"></div>
-            <div class="hint-box">${t("MAINT_ADMIN")}</div>
             <p class="text-muted" style="margin-top:12px;line-height:1.6;">${t("INTRO_NOTE_3")}</p>
           </div>
         </div>
