@@ -51,6 +51,92 @@
 
 alter table public.progress add column if not exists cleared_checkpoints integer[] default '{}';
 
+-- =========================================================
+-- Persisted Routes (per-user)
+-- =========================================================
+create table if not exists public.player_routes (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  route integer[] not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.player_routes enable row level security;
+
+drop policy if exists "player_routes_select_own" on public.player_routes;
+drop policy if exists "player_routes_insert_own" on public.player_routes;
+drop policy if exists "player_routes_update_own" on public.player_routes;
+
+create policy "player_routes_select_own"
+on public.player_routes for select
+to authenticated
+using (auth.uid() = user_id);
+
+create policy "player_routes_insert_own"
+on public.player_routes for insert
+to authenticated
+with check (auth.uid() = user_id);
+
+create policy "player_routes_update_own"
+on public.player_routes for update
+to authenticated
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
+
+drop trigger if exists trg_player_routes_touch on public.player_routes;
+create trigger trg_player_routes_touch
+before update on public.player_routes
+for each row execute function public.touch_updated_at();
+
+create or replace function public.get_or_create_player_route(route integer[])
+returns integer[]
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  uid uuid := auth.uid();
+  existing integer[];
+  route_len integer;
+  distinct_count integer;
+begin
+  if uid is null then
+    raise exception 'not authenticated';
+  end if;
+
+  route_len := array_length(route, 1);
+  if route is null or route_len is null or route_len <> 5 then
+    raise exception 'invalid route length';
+  end if;
+
+  select count(distinct v) into distinct_count
+  from unnest(route) as v;
+  if distinct_count <> 5 then
+    raise exception 'route must be unique';
+  end if;
+
+  if exists(select 1 from unnest(route) as v where v < 1 or v > 5) then
+    raise exception 'route values out of range';
+  end if;
+
+  select pr.route into existing
+  from public.player_routes pr
+  where pr.user_id = uid;
+
+  if existing is not null then
+    return existing;
+  end if;
+
+  insert into public.player_routes(user_id, route)
+  values (uid, route);
+
+  return route;
+end;
+$$;
+
+grant select, insert, update on public.player_routes to authenticated;
+grant execute on function public.get_or_create_player_route(integer[]) to authenticated;
+
 -- Updated claim_checkpoint
 create or replace function public.claim_checkpoint(cp integer, pass text)
 returns integer

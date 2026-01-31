@@ -779,6 +779,7 @@
 
     const MAX_CHECKPOINT = 5;
     let supportsRandomRoutes = true;
+    let supportsStoredRoutes = true;
 
     // ✅ 正解QR（推測対策）
     const CP_KEYS = {
@@ -1499,6 +1500,23 @@
       return arr;
     }
 
+    async function getPlayerRoute(fallbackRoute) {
+      if (!supportsStoredRoutes) return fallbackRoute;
+      try {
+        const { data, error } = await sb.rpc("get_or_create_player_route", { route: fallbackRoute });
+        if (error) throw error;
+        if (Array.isArray(data) && data.length > 0) return data;
+        return fallbackRoute;
+      } catch (error) {
+        const message = error?.message ?? String(error);
+        if (message.includes("get_or_create_player_route") || message.includes("player_routes")) {
+          supportsStoredRoutes = false;
+          return fallbackRoute;
+        }
+        throw error;
+      }
+    }
+
     function normalizeProgress(data, hasClearedCheckpoints) {
       const base = data ?? { checkpoint: 0, updated_at: null };
       const checkpoint = base.checkpoint ?? 0;
@@ -2070,7 +2088,8 @@
           return (location.hash = "#/login");
         }
 
-        const myRoute = getUserRoute(me.id, supportsRandomRoutes !== false);
+        const fallbackRoute = getUserRoute(me.id, supportsRandomRoutes !== false);
+        const myRoute = await getPlayerRoute(fallbackRoute);
         const currentTarget = myRoute.find(cp => !(prog.cleared_checkpoints || []).includes(cp));
 
         if (r.type === "home") {

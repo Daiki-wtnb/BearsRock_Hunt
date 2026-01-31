@@ -1,7 +1,7 @@
 -- =========================================================
 -- BearsRockHunt Minimal DB (clean version)
--- Tables: checkpoint_secrets / players / progress
--- RPC: register_player / claim_player / claim_checkpoint / get_leaderboard / touch_updated_at
+-- Tables: checkpoint_secrets / players / progress / player_routes
+-- RPC: register_player / claim_player / claim_checkpoint / get_leaderboard / get_or_create_player_route / touch_updated_at
 -- =========================================================
 
 -- 0) Extensions (PIN hashing)
@@ -16,9 +16,11 @@ create extension if not exists pgcrypto;
 -- drop function if exists public.claim_checkpoint(integer, text);
 -- drop function if exists public.claim_player(text, text);
 -- drop function if exists public.register_player(text, text, text);
+-- drop function if exists public.get_or_create_player_route(integer[]);
 -- drop function if exists public.touch_updated_at();
 -- drop table if exists public.progress;
 -- drop table if exists public.players;
+-- drop table if exists public.player_routes;
 -- drop table if exists public.checkpoint_secrets;
 
 -- =========================================================
@@ -47,6 +49,14 @@ create table if not exists public.progress (
   updated_at timestamptz not null default now()
 );
 
+-- 1-4) player_routes (RLS ON)
+create table if not exists public.player_routes (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  route integer[] not null,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
 -- =========================================================
 -- 2) SECURITY (RLS)
 -- =========================================================
@@ -54,9 +64,10 @@ create table if not exists public.progress (
 -- checkpoint_secrets は RLS OFF のまま（君の今の状態と同じ）
 alter table public.checkpoint_secrets disable row level security;
 
--- players / progress は RLS ON
+-- players / progress / player_routes は RLS ON
 alter table public.players enable row level security;
 alter table public.progress enable row level security;
+alter table public.player_routes enable row level security;
 
 -- 念のため既存policyを消して作り直す（ある場合だけ）
 drop policy if exists "players_select_own" on public.players;
@@ -66,6 +77,10 @@ drop policy if exists "players_update_own" on public.players;
 drop policy if exists "progress_select_own" on public.progress;
 drop policy if exists "progress_insert_own" on public.progress;
 drop policy if exists "progress_update_own" on public.progress;
+
+drop policy if exists "player_routes_select_own" on public.player_routes;
+drop policy if exists "player_routes_insert_own" on public.player_routes;
+drop policy if exists "player_routes_update_own" on public.player_routes;
 
 -- players: 自分の行だけ select/insert/update
 create policy "players_select_own"
@@ -101,6 +116,23 @@ to authenticated
 using (auth.uid() = user_id)
 with check (auth.uid() = user_id);
 
+-- player_routes: 自分の行だけ select/insert/update
+create policy "player_routes_select_own"
+on public.player_routes for select
+to authenticated
+using (auth.uid() = user_id);
+
+create policy "player_routes_insert_own"
+on public.player_routes for insert
+to authenticated
+with check (auth.uid() = user_id);
+
+create policy "player_routes_update_own"
+on public.player_routes for update
+to authenticated
+using (auth.uid() = user_id)
+with check (auth.uid() = user_id);
+
 -- =========================================================
 -- 3) FUNCTIONS / RPC
 -- =========================================================
@@ -120,6 +152,11 @@ $$;
 drop trigger if exists trg_progress_touch on public.progress;
 create trigger trg_progress_touch
 before update on public.progress
+for each row execute function public.touch_updated_at();
+
+drop trigger if exists trg_player_routes_touch on public.player_routes;
+create trigger trg_player_routes_touch
+before update on public.player_routes
 for each row execute function public.touch_updated_at();
 
 -- 3-2) register_player(nick, pin, room)
@@ -172,6 +209,56 @@ begin
   insert into public.progress(user_id, checkpoint)
   values (uid, 0);
 
+end;
+$$;
+
+-- 3-2b) get_or_create_player_route(route)
+-- 仕様:
+-- - 既にrouteがある場合はそれを返す
+-- - なければ渡されたrouteを保存して返す
+create or replace function public.get_or_create_player_route(route integer[])
+returns integer[]
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  uid uuid := auth.uid();
+  existing integer[];
+  route_len integer;
+  distinct_count integer;
+begin
+  if uid is null then
+    raise exception 'not authenticated';
+  end if;
+
+  route_len := array_length(route, 1);
+  if route is null or route_len is null or route_len <> 5 then
+    raise exception 'invalid route length';
+  end if;
+
+  select count(distinct v) into distinct_count
+  from unnest(route) as v;
+  if distinct_count <> 5 then
+    raise exception 'route must be unique';
+  end if;
+
+  if exists(select 1 from unnest(route) as v where v < 1 or v > 5) then
+    raise exception 'route values out of range';
+  end if;
+
+  select pr.route into existing
+  from public.player_routes pr
+  where pr.user_id = uid;
+
+  if existing is not null then
+    return existing;
+  end if;
+
+  insert into public.player_routes(user_id, route)
+  values (uid, route);
+
+  return route;
 end;
 $$;
 
@@ -302,6 +389,7 @@ $$;
 grant usage on schema public to authenticated;
 grant select, insert, update on public.players to authenticated;
 grant select, insert, update on public.progress to authenticated;
+grant select, insert, update on public.player_routes to authenticated;
 
 -- checkpoint_secrets は関数内で読むだけなので、直接読めなくても良い
 -- ただ、あなたがSQLで中身確認したいなら selectを付けてもOK
@@ -312,5 +400,6 @@ grant execute on function public.register_player(text, text, text) to authentica
 grant execute on function public.claim_player(text, text) to authenticated;
 grant execute on function public.claim_checkpoint(integer, text) to authenticated;
 grant execute on function public.get_leaderboard() to authenticated;
+grant execute on function public.get_or_create_player_route(integer[]) to authenticated;
 
 -- touch_updated_at はトリガー用なので実行権限不要
