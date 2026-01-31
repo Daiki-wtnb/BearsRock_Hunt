@@ -778,7 +778,9 @@
     const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFoeW5sd3RjZHJ0a3p5a2NjY2diIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njc0MTA0MDQsImV4cCI6MjA4Mjk4NjQwNH0.HttRXUS-Qy6VA0t4UE8MIC58tgncg-2bucYfLr14LSA";
 
     const MAX_CHECKPOINT = 5;
+    const MAINTENANCE_MODE = true;
     let supportsRandomRoutes = true;
+    let supportsStoredRoutes = true;
 
     // ✅ 正解QR（推測対策）
     const CP_KEYS = {
@@ -815,7 +817,7 @@
       NAV_RANK: "ランキング",
       NAV_ME: "マイページ",
 
-      INTRO_TITLE: "ーム説明",
+      INTRO_TITLE: "ゲーム説明",
       INTRO_DESC: "BearsRock内に隠されたQRコードを探して進む宝探しゲームです。<br>ヒントを頼りに、順番通りチェックポイントをクリアしてください。",
       INTRO_PRIZE_TITLE: "🎁 景品",
       INTRO_PRIZE_DESC: "全チェックポイントを<b>一番最初にクリアした１名のみ</b>に豪華景品があります！<br>（部屋番号が必要です）",
@@ -893,7 +895,7 @@
       SCAN_TITLE: "📷 スキャン",
       SCAN_CARD_TITLE: "QRコードを読み取る",
       SCAN_IOS_TIP: "iPhoneの方は、標準カメラでQRコードを読み取ってください",
-      SCAN_IOS_DESC: "QRを読むとSafariでページが開きます。<br>開い画面で「到達を確認」を押してください。",
+      SCAN_IOS_DESC: "QRを読むとSafariでページが開きます。<br>開いた画面で「到達を確認」を押してください。",
       SCAN_ANDROID_DESC: "このページは案内だけです（QRは標準カメラでOK）",
 
       ME_TITLE: "👤 マイページ",
@@ -913,6 +915,10 @@
       ERR_HINT_1: "SupabaseのANON KEYを差し替えた？",
       ERR_HINT_2: "RPC（register_player / claim_player / claim_checkpoint / get_leaderboard）は存在する？",
       ERR_HINT_3: "players / progress テーブルはある？",
+
+      MAINT_TITLE: "🚧 準備中",
+      MAINT_DESC: "ラウンド2の準備中です。しばらくお待ちください。",
+      MAINT_ADMIN: "管理者プレビュー: URL末尾に ?admin=1 を付けてください。",
 
       HINT_1: "毎朝、靴が集まる場所の“上”を見ろ",
       HINT_2: "いい匂いがする。さあどこだろう",
@@ -1009,6 +1015,9 @@
         EMPTY: "No players yet",
         YOU_BADGE: "You",
         ERR_TITLE: "Stopped by error",
+        MAINT_TITLE: "🚧 Updating",
+        MAINT_DESC: "Round 2 is being prepared. Please wait a moment.",
+        MAINT_ADMIN: "Admin preview: add ?admin=1 to the URL.",
         HINT_1: "Look above the place where shoes gather every morning.",
         HINT_2: "Smells good… where could it be?",
         HINT_3: "The place where the guys gather every morning.",
@@ -1096,6 +1105,9 @@
         LOADING: "加载中...",
         EMPTY: "暂无玩家",
         YOU_BADGE: "你",
+        MAINT_TITLE: "🚧 准备中",
+        MAINT_DESC: "第二轮正在准备中，请稍候。",
+        MAINT_ADMIN: "管理员预览：在URL末尾加 ?admin=1。",
         HINT_1: "看看每天早上鞋子聚集的地方上方。",
         HINT_2: "闻起来很香……会在哪里呢？",
         HINT_3: "男生们每天早上聚在一起的地方。",
@@ -1183,6 +1195,9 @@
         LOADING: "載入中...",
         EMPTY: "目前沒有人",
         YOU_BADGE: "你",
+        MAINT_TITLE: "🚧 準備中",
+        MAINT_DESC: "第二回合正在準備中，請稍候。",
+        MAINT_ADMIN: "管理者預覽：在URL末尾加上 ?admin=1。",
         HINT_1: "看看每天早上鞋子聚集的地方上方。",
         HINT_2: "聞起來很香……會在哪裡呢？",
         HINT_3: "男生們每天早上聚在一起的地方。",
@@ -1270,6 +1285,9 @@
         LOADING: "Cargando...",
         EMPTY: "Aún no hay jugadores",
         YOU_BADGE: "Tú",
+        MAINT_TITLE: "🚧 En preparación",
+        MAINT_DESC: "La ronda 2 se está preparando. Espera un momento.",
+        MAINT_ADMIN: "Vista admin: añade ?admin=1 a la URL.",
         HINT_1: "Mira arriba del lugar donde se juntan los zapatos cada mañana.",
         HINT_2: "Huele bien… ¿dónde será?",
         HINT_3: "El lugar donde se juntan los chicos cada mañana.",
@@ -1499,6 +1517,23 @@
       return arr;
     }
 
+    async function getPlayerRoute(fallbackRoute) {
+      if (!supportsStoredRoutes) return fallbackRoute;
+      try {
+        const { data, error } = await sb.rpc("get_or_create_player_route", { route: fallbackRoute });
+        if (error) throw error;
+        if (Array.isArray(data) && data.length > 0) return data;
+        return fallbackRoute;
+      } catch (error) {
+        const message = error?.message ?? String(error);
+        if (message.includes("get_or_create_player_route") || message.includes("player_routes")) {
+          supportsStoredRoutes = false;
+          return fallbackRoute;
+        }
+        throw error;
+      }
+    }
+
     function normalizeProgress(data, hasClearedCheckpoints) {
       const base = data ?? { checkpoint: 0, updated_at: null };
       const checkpoint = base.checkpoint ?? 0;
@@ -1583,6 +1618,25 @@
             </p>
 
             <button type="button" style="margin-top:14px;" onclick="location.hash='#/login'">${t("BTN_START")}</button>
+          </div>
+        </div>
+      `));
+    }
+
+    function renderMaintenance() {
+      app.innerHTML = "";
+      app.appendChild(el(`
+        <div>
+          ${headerHtml(t("APP_TITLE"), `<div class="badge">${t("EVENT_BADGE")}</div>`, true)}
+          <div class="checkpoint-card" style="margin-top:6px;">
+            <div class="checkpoint-number">Round 2</div>
+            <div style="font-weight:900;letter-spacing:.08em;">${t("MAINT_TITLE")}</div>
+          </div>
+          <div class="card">
+            <div class="card-title">${t("MAINT_DESC")}</div>
+            <div class="divider"></div>
+            <div class="hint-box">${t("MAINT_ADMIN")}</div>
+            <p class="text-muted" style="margin-top:12px;line-height:1.6;">${t("INTRO_NOTE_3")}</p>
           </div>
         </div>
       `));
@@ -2052,6 +2106,12 @@
       if (r.type === "login") { return renderLogin(); }
       if (r.type === "signup") { return renderSignup(); }
 
+      const params = new URLSearchParams(window.location.search);
+      const isAdminPreview = params.get("admin") === "1";
+      if (MAINTENANCE_MODE && !isAdminPreview) {
+        return renderMaintenance();
+      }
+
       showLoading(t("LOADING"));
       try {
         const me = await ensureAnonLogin();
@@ -2070,7 +2130,8 @@
           return (location.hash = "#/login");
         }
 
-        const myRoute = getUserRoute(me.id, supportsRandomRoutes !== false);
+        const fallbackRoute = getUserRoute(me.id, supportsRandomRoutes !== false);
+        const myRoute = await getPlayerRoute(fallbackRoute);
         const currentTarget = myRoute.find(cp => !(prog.cleared_checkpoints || []).includes(cp));
 
         if (r.type === "home") {
